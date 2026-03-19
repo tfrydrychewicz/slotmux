@@ -8,6 +8,7 @@ import type { TokenCount } from './branded.js';
 import type { ContentItem, MessageRole } from './content.js';
 import type { ContextEvent } from './events.js';
 import type { ContextPlugin } from './plugin.js';
+import type { TokenAccountant } from './token-accountant.js';
 
 // Re-export content, event, and plugin types for consumers that import from config
 export type { ContentItem, MessageRole } from './content.js';
@@ -71,6 +72,11 @@ export type SlotBudget =
 export interface OverflowContext {
   /** Slot name */
   readonly slot: string;
+  /**
+   * Injected by {@link OverflowEngine} / orchestrator so strategies use the same
+   * counter as the rest of the build. Omitted in standalone strategy calls.
+   */
+  readonly tokenAccountant?: TokenAccountant;
   /** Additional context for the strategy */
   readonly [key: string]: unknown;
 }

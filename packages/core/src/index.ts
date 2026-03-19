@@ -75,6 +75,14 @@ export type {
   OverflowResolveRunOptions,
 } from './slots/overflow-engine.js';
 
+// Truncate overflow strategy (§5.2 — Phase 4.2)
+export {
+  truncateStrategy,
+  truncateFifo,
+  sumCachedItemTokens,
+} from './slots/strategies/truncate-strategy.js';
+export type { TokenAccountant } from './types/token-accountant.js';
+
 // Event types (§6.6, §13.1)
 export type {
   ContextEvent,

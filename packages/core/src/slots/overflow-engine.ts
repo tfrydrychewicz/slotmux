@@ -20,6 +20,12 @@ import type {
   WarningEvent,
 } from '../types/events.js';
 import type { ResolvedSlot } from '../types/plugin.js';
+import type { TokenAccountant } from '../types/token-accountant.js';
+
+import { truncateStrategy, truncateFifo } from './strategies/truncate-strategy.js';
+
+/** @deprecated Use {@link truncateFifo} from `contextcraft` (same implementation). */
+export { truncateFifo as builtinTruncateFifo } from './strategies/truncate-strategy.js';
 
 /** Resolved slot plus {@link SlotConfig} for overflow / protection flags. */
 export type OverflowEngineInputSlot = ResolvedSlot & {
@@ -83,21 +89,6 @@ function toResolvedOutput(s: WorkingSlot): ResolvedSlot {
   };
 }
 
-/** Remove oldest non-pinned items (FIFO) until `countTokens(order) <= budget`. */
-export function builtinTruncateFifo(
-  items: ContentItem[],
-  budget: TokenCount,
-  countTokens: (xs: readonly ContentItem[]) => number,
-): ContentItem[] {
-  const order = items.slice();
-  while (countTokens(order) > budget) {
-    const idx = order.findIndex((i) => !i.pinned);
-    if (idx < 0) break;
-    order.splice(idx, 1);
-  }
-  return order;
-}
-
 /** Remove newest non-pinned items (LIFO) until within budget. */
 export function builtinTruncateLatest(
   items: ContentItem[],
@@ -134,7 +125,7 @@ function builtinSlidingWindow(
   );
   let out = items.filter((it) => it.pinned || keepUnpinned.has(it.id));
   if (countTokens(out) > budget) {
-    out = builtinTruncateFifo(out, budget, countTokens);
+    out = truncateFifo(out, budget, countTokens);
   }
   return out;
 }
@@ -192,8 +183,7 @@ export class OverflowEngine {
     this.onEvent = options.onEvent;
 
     const base: Record<NamedOverflowStrategy, OverflowStrategyFn> = {
-      truncate: (items, budget, _ctx) =>
-        Promise.resolve(builtinTruncateFifo(items, budget, count)),
+      truncate: truncateStrategy,
       'truncate-latest': (items, budget, _ctx) =>
         Promise.resolve(builtinTruncateLatest(items, budget, count)),
       'sliding-window': (items, budget, ctx) => {
@@ -310,9 +300,13 @@ export class OverflowEngine {
 
     const { label, fn } = this.resolveStrategy(slot.config.overflow);
     const budget = toTokenCount(slot.budgetTokens);
+    const tokenAccountant: TokenAccountant = {
+      countItems: (items) => this.countTokens(items),
+    };
     const ctx: OverflowContext & { slotConfig?: SlotConfig } = {
       slot: slot.name,
       slotConfig: slot.config,
+      tokenAccountant,
     };
 
     const beforeTokens = used;
