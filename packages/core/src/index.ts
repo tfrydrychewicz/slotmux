@@ -33,6 +33,20 @@ export type {
   CompiledContentImageBase64,
 } from './types/content.js';
 
+// Snapshot types (§6.6)
+export type {
+  SlotMeta,
+  CompressionEvent,
+  EvictionEvent,
+  ContextWarning,
+  SnapshotMeta,
+  SnapshotDiff,
+  SerializedSlot,
+  SerializedMessage,
+  SerializedSnapshot,
+  ContextSnapshot,
+} from './types/snapshot.js';
+
 // Configuration types (§6.6)
 export type {
   ProviderId,
