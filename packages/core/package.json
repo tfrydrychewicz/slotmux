@@ -29,6 +29,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "nanoid": "^5.0.9",
     "@contextcraft/compression": "workspace:*",
     "@contextcraft/providers": "workspace:*",
     "@contextcraft/tokenizers": "workspace:*"
