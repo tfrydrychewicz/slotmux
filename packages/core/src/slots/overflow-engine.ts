@@ -9,6 +9,7 @@ import { toTokenCount } from '../types/branded.js';
 import type {
   OverflowContext,
   OverflowStrategyFn,
+  OverflowStrategyLogger,
   SlotConfig,
   SlotOverflowStrategy,
 } from '../types/config.js';
@@ -44,6 +45,12 @@ export type OverflowEngineOptions = {
 
   /** Observability — overflow, eviction, warnings. */
   onEvent?: (event: ContextEvent) => void;
+
+  /**
+   * Included on {@link OverflowContext} as `logger` for custom / factory-built strategies
+   * (§8.4 — Phase 4.6).
+   */
+  strategyLogger?: OverflowStrategyLogger;
 
   /**
    * Override built-in named strategies (tests or advanced wiring).
@@ -124,11 +131,14 @@ export class OverflowEngine {
   /** Present only when the constructor was given `onEvent` (exactOptionalPropertyTypes). */
   private readonly onEvent: ((event: ContextEvent) => void) | undefined;
 
+  private readonly strategyLogger: OverflowStrategyLogger | undefined;
+
   private readonly builtins: Record<NamedOverflowStrategy, OverflowStrategyFn>;
 
   constructor(options: OverflowEngineOptions) {
     this.countTokens = options.countTokens;
     this.onEvent = options.onEvent;
+    this.strategyLogger = options.strategyLogger;
 
     const base: Record<NamedOverflowStrategy, OverflowStrategyFn> = {
       truncate: truncateStrategy,
@@ -202,6 +212,22 @@ export class OverflowEngine {
     }
   }
 
+  private buildOverflowContext(slot: WorkingSlot): OverflowContext {
+    const tokenAccountant: TokenAccountant = {
+      countItems: (items) => this.countTokens(items),
+    };
+    const base: OverflowContext = {
+      slot: slot.name,
+      slotName: slot.name,
+      slotConfig: slot.config,
+      tokenAccountant,
+    };
+    if (this.strategyLogger !== undefined) {
+      return { ...base, logger: this.strategyLogger };
+    }
+    return base;
+  }
+
   private resolveStrategy(
     overflow: SlotOverflowStrategy | undefined,
   ): { label: string; fn: OverflowStrategyFn } {
@@ -234,14 +260,7 @@ export class OverflowEngine {
 
     const { label, fn } = this.resolveStrategy(slot.config.overflow);
     const budget = toTokenCount(slot.budgetTokens);
-    const tokenAccountant: TokenAccountant = {
-      countItems: (items) => this.countTokens(items),
-    };
-    const ctx: OverflowContext & { slotConfig?: SlotConfig } = {
-      slot: slot.name,
-      slotConfig: slot.config,
-      tokenAccountant,
-    };
+    const ctx = this.buildOverflowContext(slot);
 
     const beforeTokens = used;
     const newContent = await fn(slot.content, budget, ctx);

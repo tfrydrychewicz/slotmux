@@ -5,11 +5,7 @@
  */
 
 import type { TokenCount } from '../../types/branded.js';
-import type {
-  OverflowContext,
-  OverflowStrategyFn,
-  SlotConfig,
-} from '../../types/config.js';
+import type { OverflowContext, OverflowStrategyFn } from '../../types/config.js';
 import type { ContentItem } from '../../types/content.js';
 
 import { resolveOverflowCountItems, truncateFifo } from './truncate-strategy.js';
@@ -22,8 +18,7 @@ export const DEFAULT_SLIDING_WINDOW_SIZE = 10;
  * optional `context.windowSize`, else {@link DEFAULT_SLIDING_WINDOW_SIZE}.
  */
 export function resolveSlidingWindowSize(context: OverflowContext): number {
-  const withCfg = context as OverflowContext & { slotConfig?: SlotConfig };
-  const ws = withCfg.slotConfig?.overflowConfig?.windowSize;
+  const ws = context.slotConfig?.overflowConfig?.windowSize;
   if (
     ws !== undefined &&
     Number.isInteger(ws) &&

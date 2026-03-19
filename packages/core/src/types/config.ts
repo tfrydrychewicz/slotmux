@@ -68,15 +68,38 @@ export type SlotBudget =
 // Overflow Strategy
 // ==========================================
 
+/**
+ * Logger optionally passed to custom overflow strategies via
+ * {@link OverflowEngineOptions.strategyLogger}.
+ */
+export interface OverflowStrategyLogger {
+  info(message: string, ...args: unknown[]): void;
+  warn(message: string, ...args: unknown[]): void;
+  error(message: string, ...args: unknown[]): void;
+  debug?(message: string, ...args: unknown[]): void;
+}
+
 /** Context passed to custom overflow strategy functions */
 export interface OverflowContext {
   /** Slot name */
   readonly slot: string;
   /**
+   * Same as {@link slot}. Set by {@link OverflowEngine} for ergonomic destructuring
+   * (§8.4 — Phase 4.6).
+   */
+  readonly slotName?: string;
+  /**
    * Injected by {@link OverflowEngine} / orchestrator so strategies use the same
    * counter as the rest of the build. Omitted in standalone strategy calls.
    */
   readonly tokenAccountant?: TokenAccountant;
+  /**
+   * Per-slot config when invoked from {@link OverflowEngine} (includes
+   * `overflowConfig`, e.g. `windowSize`).
+   */
+  readonly slotConfig?: SlotConfig;
+  /** Optional logger from {@link OverflowEngineOptions.strategyLogger}. */
+  readonly logger?: OverflowStrategyLogger;
   /** Additional context for the strategy */
   readonly [key: string]: unknown;
 }

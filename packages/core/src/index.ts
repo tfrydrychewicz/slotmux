@@ -75,7 +75,15 @@ export type {
   OverflowResolveRunOptions,
 } from './slots/overflow-engine.js';
 
-// Overflow strategies (§5.2 — Phase 4.2–4.5)
+// Overflow strategies (§5.2 — Phase 4.2–4.6)
+export {
+  defineCompressionStrategy,
+  defineOverflowStrategy,
+} from './slots/strategies/define-overflow-strategy.js';
+export type {
+  OverflowStrategyImplementation,
+  OverflowStrategyImplementationArgs,
+} from './slots/strategies/define-overflow-strategy.js';
 export {
   errorStrategy,
   errorOverflow,
@@ -155,6 +163,7 @@ export type {
   SlotBudgetBoundedFlex,
   OverflowContext,
   OverflowStrategyFn,
+  OverflowStrategyLogger,
   SummarizerFn,
   SlotOverflowStrategy,
   OverflowConfig,
