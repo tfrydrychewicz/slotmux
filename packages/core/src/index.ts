@@ -63,6 +63,18 @@ export type { SlotManagerOptions } from './slots/slot-manager.js';
 export { BudgetAllocator, allocateFlexPool } from './slots/budget-allocator.js';
 export type { BudgetAllocatorOptions } from './slots/budget-allocator.js';
 
+// Overflow engine (§7.2 — Phase 4.1)
+export {
+  OverflowEngine,
+  builtinTruncateFifo,
+  builtinTruncateLatest,
+} from './slots/overflow-engine.js';
+export type {
+  OverflowEngineInputSlot,
+  OverflowEngineOptions,
+  OverflowResolveRunOptions,
+} from './slots/overflow-engine.js';
+
 // Event types (§6.6, §13.1)
 export type {
   ContextEvent,
