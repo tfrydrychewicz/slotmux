@@ -22,4 +22,5 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm test:bench
+      # §2.6 — compare against committed baseline (see benchmarks/README.md)
+      - run: pnpm exec vitest bench --compare benchmarks/baseline.json

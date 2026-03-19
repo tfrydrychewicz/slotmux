@@ -10,6 +10,7 @@
     "test:coverage": "vitest run --coverage",
     "test:property": "vitest run property",
     "test:bench": "vitest bench",
+    "test:bench:baseline": "vitest bench --outputJson benchmarks/baseline.json",
     "lint": "eslint .",
     "size-limit": "pnpm --filter contextcraft exec size-limit",
     "lint:fix": "eslint . --fix",
