@@ -2,16 +2,28 @@
   "name": "contextcraft",
   "version": "0.0.1",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    ">=4.0": {
+      "*": ["./dist/index.d.ts"]
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "test": "echo 'No tests yet'",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit"
@@ -30,5 +42,16 @@
     "tiktoken": { "optional": true },
     "@anthropic-ai/tokenizer": { "optional": true },
     "gpt-tokenizer": { "optional": true }
+  },
+  "size-limit": [
+    {
+      "name": "contextcraft (core)",
+      "path": "dist/index.js",
+      "limit": "15 kB",
+      "gzip": true
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/file": "^11.0.0"
   }
 }
