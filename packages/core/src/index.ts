@@ -54,6 +54,10 @@ export {
 } from './content/content-store.js';
 export type { CreateContentItemParams } from './content/content-store.js';
 
+// Slot manager (§20 — Phase 3.2)
+export { SlotManager } from './slots/slot-manager.js';
+export type { SlotManagerOptions } from './slots/slot-manager.js';
+
 // Event types (§6.6, §13.1)
 export type {
   ContextEvent,
@@ -129,7 +133,9 @@ export {
   slotOverflowStrategySchema,
   overflowConfigSchema,
   validateContextConfig,
+  validateSlotConfig,
   safeParseContextConfig,
+  safeParseSlotConfig,
 } from './config/validator.js';
 export type {
   ParsedContextConfig,

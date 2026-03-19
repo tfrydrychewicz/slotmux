@@ -181,6 +181,32 @@ export type ParsedSlotConfig = z.infer<typeof slotConfigSchema>;
 export type ParsedSlotBudget = z.infer<typeof slotBudgetSchema>;
 
 /**
+ * Validates a single slot configuration (Zod).
+ *
+ * @param data - Raw slot config object
+ * @returns Parsed slot config when valid
+ * @throws {@link InvalidConfigError} When validation fails
+ */
+export function validateSlotConfig(data: unknown): ParsedSlotConfig {
+  const result = slotConfigSchema.safeParse(data);
+  if (!result.success) {
+    const message = prettifyError(result.error);
+    throw new InvalidConfigError(message, {
+      cause: result.error,
+      context: { issues: result.error.issues },
+    });
+  }
+  return result.data;
+}
+
+/**
+ * Safe parse for a single slot — returns Zod result without throwing.
+ */
+export function safeParseSlotConfig(data: unknown) {
+  return slotConfigSchema.safeParse(data);
+}
+
+/**
  * Parses and validates unknown input as {@link ContextConfig}-shaped data.
  *
  * @param data - Raw configuration (e.g. from JSON or user input)
