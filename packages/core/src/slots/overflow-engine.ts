@@ -22,10 +22,14 @@ import type {
 import type { ResolvedSlot } from '../types/plugin.js';
 import type { TokenAccountant } from '../types/token-accountant.js';
 
+import { truncateLatestStrategy } from './strategies/truncate-latest-strategy.js';
 import { truncateStrategy, truncateFifo } from './strategies/truncate-strategy.js';
 
 /** @deprecated Use {@link truncateFifo} from `contextcraft` (same implementation). */
 export { truncateFifo as builtinTruncateFifo } from './strategies/truncate-strategy.js';
+
+/** @deprecated Use {@link truncateLatest} from `contextcraft` (same implementation). */
+export { truncateLatest as builtinTruncateLatest } from './strategies/truncate-latest-strategy.js';
 
 /** Resolved slot plus {@link SlotConfig} for overflow / protection flags. */
 export type OverflowEngineInputSlot = ResolvedSlot & {
@@ -87,27 +91,6 @@ function toResolvedOutput(s: WorkingSlot): ResolvedSlot {
     budgetTokens: s.budgetTokens,
     content: s.content,
   };
-}
-
-/** Remove newest non-pinned items (LIFO) until within budget. */
-export function builtinTruncateLatest(
-  items: ContentItem[],
-  budget: TokenCount,
-  countTokens: (xs: readonly ContentItem[]) => number,
-): ContentItem[] {
-  const order = items.slice();
-  while (countTokens(order) > budget) {
-    let idx = -1;
-    for (let i = order.length - 1; i >= 0; i--) {
-      if (!order[i]!.pinned) {
-        idx = i;
-        break;
-      }
-    }
-    if (idx < 0) break;
-    order.splice(idx, 1);
-  }
-  return order;
 }
 
 function builtinSlidingWindow(
@@ -184,8 +167,7 @@ export class OverflowEngine {
 
     const base: Record<NamedOverflowStrategy, OverflowStrategyFn> = {
       truncate: truncateStrategy,
-      'truncate-latest': (items, budget, _ctx) =>
-        Promise.resolve(builtinTruncateLatest(items, budget, count)),
+      'truncate-latest': truncateLatestStrategy,
       'sliding-window': (items, budget, ctx) => {
         const cfg = (ctx as OverflowContext & { slotConfig?: SlotConfig })
           .slotConfig;

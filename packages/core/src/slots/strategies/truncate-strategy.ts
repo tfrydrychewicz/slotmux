@@ -7,6 +7,7 @@
 import type { TokenCount } from '../../types/branded.js';
 import type { OverflowContext, OverflowStrategyFn } from '../../types/config.js';
 import type { ContentItem } from '../../types/content.js';
+
 /**
  * Sum of {@link ContentItem.tokens} when set; missing `tokens` counts as 0.
  * Used when no {@link TokenAccountant} is on the overflow context.
@@ -19,7 +20,11 @@ export function sumCachedItemTokens(items: readonly ContentItem[]): number {
   return s;
 }
 
-function resolveCounter(
+/**
+ * Token counter for overflow strategies: {@link OverflowContext.tokenAccountant}
+ * or {@link sumCachedItemTokens}.
+ */
+export function resolveOverflowCountItems(
   context: OverflowContext,
 ): (items: readonly ContentItem[]) => number {
   const ta = context.tokenAccountant;
@@ -52,6 +57,6 @@ export function truncateFifo(
  * Uses {@link OverflowContext.tokenAccountant} when present; otherwise {@link sumCachedItemTokens}.
  */
 export const truncateStrategy: OverflowStrategyFn = (items, budget, context) => {
-  const countItems = resolveCounter(context);
+  const countItems = resolveOverflowCountItems(context);
   return Promise.resolve(truncateFifo(items, budget, countItems));
 };
