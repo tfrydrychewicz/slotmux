@@ -15,10 +15,8 @@ import type { ContextConfig, ModelId, SlotConfig } from '../types/config.js';
 import type { MultimodalContent } from '../types/content.js';
 import type { ContextEvent } from '../types/events.js';
 
-import {
-  ContextOrchestrator,
-  type ContextOrchestratorBuildResult,
-} from './context-orchestrator.js';
+import type { ContextBuildParams } from './build-overrides.js';
+import type { ContextOrchestratorBuildResult } from './context-orchestrator.js';
 import { Context, type ContextPushItemInput } from './context.js';
 import { resolveContextSlots } from './create-context.js';
 
@@ -177,13 +175,13 @@ export class ContextBuilder {
   }
 
   /**
-   * Validates config, materializes {@link Context}, runs {@link ContextOrchestrator.build}.
+   * Validates config, materializes {@link Context}, runs {@link Context.build} / orchestrator.
    */
-  async build(): Promise<ContextOrchestratorBuildResult> {
+  async build(params?: ContextBuildParams): Promise<ContextOrchestratorBuildResult> {
     const parsed: ParsedContextConfig = validateContextConfig(this.toContextConfig());
     const context = Context.fromParsedConfig(parsed);
     this.applyOps(context);
-    return ContextOrchestrator.build({ config: parsed, context });
+    return context.build(params);
   }
 }
 

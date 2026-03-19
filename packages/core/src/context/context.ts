@@ -16,6 +16,12 @@ import type { SlotConfig } from '../types/config.js';
 import type { ContentItem, MessageRole, MultimodalContent } from '../types/content.js';
 import type { ContextEvent } from '../types/events.js';
 
+import {
+  mergeParsedConfigForBuild,
+  type ContextBuildParams,
+} from './build-overrides.js';
+import { ContextOrchestrator, type ContextOrchestratorBuildResult } from './context-orchestrator.js';
+
 /** Default slot for {@link Context.system}. */
 export const DEFAULT_SYSTEM_SLOT = 'system';
 
@@ -42,6 +48,11 @@ export type ContextInit = {
 
   /** Override default `'history'` target for {@link Context.user} / {@link Context.assistant}. */
   readonly historySlotName?: string;
+
+  /**
+   * Full validated config — enables {@link Context.build}. Set by {@link Context.fromParsedConfig}.
+   */
+  readonly parsedConfig?: ParsedContextConfig;
 };
 
 function shallowItemCopy(item: ContentItem): ContentItem {
@@ -88,6 +99,8 @@ export class Context {
 
   private readonly slotConfigs: Readonly<Record<string, SlotConfig>>;
 
+  private readonly parsedConfig: ParsedContextConfig | undefined;
+
   constructor(init: ContextInit) {
     const keys = Object.keys(init.slots);
     if (keys.length === 0) {
@@ -101,6 +114,7 @@ export class Context {
     this.onEvent = init.onEvent;
     this.systemSlot = init.systemSlotName ?? DEFAULT_SYSTEM_SLOT;
     this.historySlot = init.historySlotName ?? DEFAULT_HISTORY_SLOT;
+    this.parsedConfig = init.parsedConfig;
   }
 
   /**
@@ -118,8 +132,41 @@ export class Context {
     }
     return new Context({
       slots: slots as Record<string, SlotConfig>,
+      parsedConfig: config,
       ...(config.onEvent !== undefined
         ? { onEvent: config.onEvent as (event: ContextEvent) => void }
+        : {}),
+    });
+  }
+
+  /**
+   * Runs the compile pipeline using the config from {@link Context.fromParsedConfig},
+   * optionally with temporary `reserve` / `maxTokens` / per-slot overrides (§5.6).
+   * Does not mutate the stored parsed config or {@link Context} slot layout.
+   *
+   * @throws {@link InvalidConfigError} If this context was not created with {@link Context.fromParsedConfig}
+   */
+  async build(params?: ContextBuildParams): Promise<ContextOrchestratorBuildResult> {
+    if (this.parsedConfig === undefined) {
+      throw new InvalidConfigError(
+        'Context.build() requires Context.fromParsedConfig() so model, maxTokens, and full config are available',
+        { context: { phase: '5.6' } },
+      );
+    }
+
+    const effective = mergeParsedConfigForBuild(this.parsedConfig, params?.overrides);
+
+    return ContextOrchestrator.build({
+      config: effective,
+      context: this,
+      ...(params?.providerAdapters !== undefined
+        ? { providerAdapters: params.providerAdapters }
+        : {}),
+      ...(params?.previousSnapshot !== undefined
+        ? { previousSnapshot: params.previousSnapshot }
+        : {}),
+      ...(params?.structuralSharing !== undefined
+        ? { structuralSharing: params.structuralSharing }
         : {}),
     });
   }

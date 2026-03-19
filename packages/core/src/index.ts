@@ -251,6 +251,11 @@ export type {
   ContextInit,
   ContextPushItemInput,
 } from './context/context.js';
+export type {
+  ContextBuildOverrides,
+  ContextBuildParams,
+} from './context/build-overrides.js';
+export { mergeParsedConfigForBuild } from './context/build-overrides.js';
 
 // Context builder & orchestrator (§6.5, §5.3 — Phase 5.2)
 export {
