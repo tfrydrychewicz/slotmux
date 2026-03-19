@@ -8,6 +8,9 @@ import {
   CompressionFailedError,
   SnapshotCorruptedError,
   InvalidConfigError,
+  SlotNotFoundError,
+  ItemNotFoundError,
+  MaxItemsExceededError,
 } from '../../src/errors.js';
 
 describe('ContextCraftError', () => {
@@ -101,6 +104,40 @@ describe('InvalidConfigError', () => {
   });
 });
 
+describe('SlotNotFoundError', () => {
+  it('carries slot and recoverable', () => {
+    const err = new SlotNotFoundError('missing', { slot: 'foo' });
+    expect(err.code).toBe('SLOT_NOT_FOUND');
+    expect(err.recoverable).toBe(true);
+    expect(err.slot).toBe('foo');
+  });
+});
+
+describe('ItemNotFoundError', () => {
+  it('carries slot and itemId', () => {
+    const err = new ItemNotFoundError('nope', {
+      slot: 'history',
+      itemId: 'id-1',
+    });
+    expect(err.code).toBe('ITEM_NOT_FOUND');
+    expect(err.slot).toBe('history');
+    expect(err.itemId).toBe('id-1');
+  });
+});
+
+describe('MaxItemsExceededError', () => {
+  it('carries limits', () => {
+    const err = new MaxItemsExceededError('full', {
+      slot: 'tiny',
+      maxItems: 2,
+      currentCount: 2,
+    });
+    expect(err.code).toBe('MAX_ITEMS_EXCEEDED');
+    expect(err.maxItems).toBe(2);
+    expect(err.currentCount).toBe(2);
+  });
+});
+
 describe('Error inheritance', () => {
   it('all errors extend ContextCraftError', () => {
     expect(new BudgetExceededError('x')).toBeInstanceOf(ContextCraftError);
@@ -109,5 +146,16 @@ describe('Error inheritance', () => {
     expect(new CompressionFailedError('x', { fallbackStrategy: 'y' })).toBeInstanceOf(ContextCraftError);
     expect(new SnapshotCorruptedError('x')).toBeInstanceOf(ContextCraftError);
     expect(new InvalidConfigError('x')).toBeInstanceOf(ContextCraftError);
+    expect(new SlotNotFoundError('x', { slot: 's' })).toBeInstanceOf(ContextCraftError);
+    expect(new ItemNotFoundError('x', { slot: 's', itemId: 'i' })).toBeInstanceOf(
+      ContextCraftError,
+    );
+    expect(
+      new MaxItemsExceededError('x', {
+        slot: 's',
+        maxItems: 1,
+        currentCount: 1,
+      }),
+    ).toBeInstanceOf(ContextCraftError);
   });
 });

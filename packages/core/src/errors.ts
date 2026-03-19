@@ -13,6 +13,9 @@
  * @see {@link CompressionFailedError}
  * @see {@link SnapshotCorruptedError}
  * @see {@link InvalidConfigError}
+ * @see {@link SlotNotFoundError}
+ * @see {@link ItemNotFoundError}
+ * @see {@link MaxItemsExceededError}
  */
 export class ContextCraftError extends Error {
   override readonly name: string = 'ContextCraftError';
@@ -242,5 +245,115 @@ export class InvalidConfigError extends ContextCraftError {
       recoverable: false,
     });
     Object.setPrototypeOf(this, InvalidConfigError.prototype);
+  }
+}
+
+/**
+ * Slot name is not registered on the content store.
+ */
+export class SlotNotFoundError extends ContextCraftError {
+  override readonly name = 'SlotNotFoundError';
+
+  override readonly code = 'SLOT_NOT_FOUND';
+
+  override readonly recoverable = true;
+
+  readonly slot: string;
+
+  constructor(
+    message: string,
+    options: { slot: string; context?: Record<string, unknown>; cause?: unknown },
+  ) {
+    super(message, {
+      ...options,
+      code: 'SLOT_NOT_FOUND',
+      recoverable: true,
+      context: { ...options.context, slot: options.slot },
+    });
+    this.slot = options.slot;
+    Object.setPrototypeOf(this, SlotNotFoundError.prototype);
+  }
+}
+
+/**
+ * No content item with the given id exists in the slot.
+ */
+export class ItemNotFoundError extends ContextCraftError {
+  override readonly name = 'ItemNotFoundError';
+
+  override readonly code = 'ITEM_NOT_FOUND';
+
+  override readonly recoverable = true;
+
+  readonly slot: string;
+
+  readonly itemId: string;
+
+  constructor(
+    message: string,
+    options: {
+      slot: string;
+      itemId: string;
+      context?: Record<string, unknown>;
+      cause?: unknown;
+    },
+  ) {
+    super(message, {
+      ...options,
+      code: 'ITEM_NOT_FOUND',
+      recoverable: true,
+      context: {
+        ...options.context,
+        slot: options.slot,
+        itemId: options.itemId,
+      },
+    });
+    this.slot = options.slot;
+    this.itemId = options.itemId;
+    Object.setPrototypeOf(this, ItemNotFoundError.prototype);
+  }
+}
+
+/**
+ * {@link SlotConfig.maxItems} would be exceeded.
+ */
+export class MaxItemsExceededError extends ContextCraftError {
+  override readonly name = 'MaxItemsExceededError';
+
+  override readonly code = 'MAX_ITEMS_EXCEEDED';
+
+  override readonly recoverable = true;
+
+  readonly slot: string;
+
+  readonly maxItems: number;
+
+  readonly currentCount: number;
+
+  constructor(
+    message: string,
+    options: {
+      slot: string;
+      maxItems: number;
+      currentCount: number;
+      context?: Record<string, unknown>;
+      cause?: unknown;
+    },
+  ) {
+    super(message, {
+      ...options,
+      code: 'MAX_ITEMS_EXCEEDED',
+      recoverable: true,
+      context: {
+        ...options.context,
+        slot: options.slot,
+        maxItems: options.maxItems,
+        currentCount: options.currentCount,
+      },
+    });
+    this.slot = options.slot;
+    this.maxItems = options.maxItems;
+    this.currentCount = options.currentCount;
+    Object.setPrototypeOf(this, MaxItemsExceededError.prototype);
   }
 }

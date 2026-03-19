@@ -15,6 +15,9 @@ export {
   CompressionFailedError,
   SnapshotCorruptedError,
   InvalidConfigError,
+  SlotNotFoundError,
+  ItemNotFoundError,
+  MaxItemsExceededError,
 } from './errors.js';
 
 // Branded types (§6.6)
@@ -43,6 +46,13 @@ export type {
   CompiledContentImageUrl,
   CompiledContentImageBase64,
 } from './types/content.js';
+
+// Content store (§20 — Phase 3.1)
+export {
+  ContentStore,
+  createContentItem,
+} from './content/content-store.js';
+export type { CreateContentItemParams } from './content/content-store.js';
 
 // Event types (§6.6, §13.1)
 export type {
