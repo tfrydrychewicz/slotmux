@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { ContextSnapshot } from '../../src/snapshot/context-snapshot.js';
 import { createContentId, toTokenCount } from '../../src/types/branded.js';
 import type { ContentItem } from '../../src/types/content.js';
 import type { ContextEvent } from '../../src/types/events.js';
-import type { ContextSnapshot, ContextWarning } from '../../src/types/snapshot.js';
+import type { ContextWarning } from '../../src/types/snapshot.js';
 
 function makeItem(): ContentItem {
   return {
@@ -29,22 +30,13 @@ function makeSnapshot(): ContextSnapshot {
     buildTimeMs: 1,
     builtAt: Date.now(),
   };
-  return {
+  return ContextSnapshot.create({
     id: 'snap-1',
     messages,
     meta,
-    format: () => messages,
-    serialize: () => ({
-      version: '1.0' as const,
-      id: 'snap-1',
-      model: 'gpt-4-turbo',
-      slots: {},
-      messages: [...messages],
-      meta,
-      checksum: 'x',
-    }),
-    diff: () => ({ added: [], removed: [], modified: [] }),
-  };
+    model: 'gpt-4-turbo',
+    immutable: false,
+  });
 }
 
 describe('ContextEvent', () => {

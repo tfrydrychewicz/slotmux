@@ -12,8 +12,9 @@ import {
 } from '../slots/budget-allocator.js';
 import { OverflowEngine } from '../slots/overflow-engine.js';
 import { sumCachedItemTokens } from '../slots/strategies/truncate-strategy.js';
-import { createContentId, toTokenCount } from '../types/branded.js';
-import type { SlotConfig } from '../types/config.js';
+import { ContextSnapshot } from '../snapshot/context-snapshot.js';
+import { toTokenCount } from '../types/branded.js';
+import type { ProviderId, SlotConfig } from '../types/config.js';
 import type {
   CompiledContentPart,
   CompiledMessage,
@@ -22,13 +23,11 @@ import type {
 } from '../types/content.js';
 import type { ContextEvent } from '../types/events.js';
 import type { ContextPlugin, ResolvedSlot } from '../types/plugin.js';
+import type { ProviderAdapter } from '../types/provider.js';
 import type {
-  ContextSnapshot,
   ContextWarning,
   EvictionEvent,
-  SerializedSnapshot,
   SlotMeta,
-  SnapshotDiff,
   SnapshotMeta,
 } from '../types/snapshot.js';
 import type { TokenAccountant } from '../types/token-accountant.js';
@@ -159,6 +158,12 @@ async function runAfterSnapshotPlugins(
 export type ContextOrchestratorBuildInput = {
   readonly config: ParsedContextConfig;
   readonly context: Context;
+  /** Optional adapters for {@link ContextSnapshot.format}(provider). */
+  readonly providerAdapters?: Partial<Record<ProviderId, ProviderAdapter>>;
+  /** Prior snapshot for §18.2 structural sharing of unchanged messages. */
+  readonly previousSnapshot?: ContextSnapshot;
+  /** When false, disables reuse of message references from `previousSnapshot`. */
+  readonly structuralSharing?: boolean;
 };
 
 export type ContextOrchestratorBuildResult = {
@@ -167,22 +172,6 @@ export type ContextOrchestratorBuildResult = {
 };
 
 const DEFAULT_MAX_TOKENS = 8192;
-
-/** Deterministic 256-bit-style hex fingerprint for {@link SerializedSnapshot.checksum} (sync, no Node crypto). */
-function checksumHex(payload: string): string {
-  const parts: string[] = [];
-  let acc = payload;
-  for (let r = 0; r < 8; r++) {
-    let h = 2166136261;
-    for (let i = 0; i < acc.length; i++) {
-      h ^= acc.charCodeAt(i);
-      h = Math.imul(h, 16777619) >>> 0;
-    }
-    parts.push(h.toString(16).padStart(8, '0'));
-    acc = `${h}:${payload}`;
-  }
-  return parts.join('');
-}
 
 function emitEvent(
   config: ParsedContextConfig,
@@ -303,89 +292,6 @@ function buildSlotMetaMap(params: {
   return o;
 }
 
-function cloneCompiledMessage(m: CompiledMessage): CompiledMessage {
-  const out: CompiledMessage = {
-    role: m.role,
-    content: typeof m.content === 'string' ? m.content : [...m.content],
-  };
-  if (m.name !== undefined) {
-    out.name = m.name;
-  }
-  return out;
-}
-
-function createContextSnapshotImpl(params: {
-  readonly messages: readonly CompiledMessage[];
-  readonly meta: SnapshotMeta;
-  readonly model: string;
-}): ContextSnapshot {
-  const id = createContentId();
-  const messageList = params.messages.map(cloneCompiledMessage);
-  const meta = { ...params.meta };
-
-  const snapshot: ContextSnapshot = {
-    id,
-    get messages(): readonly Readonly<CompiledMessage>[] {
-      return messageList as readonly Readonly<CompiledMessage>[];
-    },
-    meta,
-    format(_provider) {
-      return messageList.map(cloneCompiledMessage);
-    },
-    serialize(): SerializedSnapshot {
-      const payload = JSON.stringify({
-        messages: messageList,
-        meta,
-        model: params.model,
-      });
-      const checksum = checksumHex(payload);
-      return {
-        version: '1.0',
-        id,
-        model: params.model,
-        slots: { ...meta.slots },
-        messages: messageList.map(cloneCompiledMessage),
-        meta,
-        checksum,
-      };
-    },
-    diff(other: ContextSnapshot): SnapshotDiff {
-      const added: CompiledMessage[] = [];
-      const removed: CompiledMessage[] = [];
-      const modified: Array<{
-        index: number;
-        before: Readonly<CompiledMessage>;
-        after: Readonly<CompiledMessage>;
-      }> = [];
-      const a = messageList;
-      const b = other.messages;
-      const min = Math.min(a.length, b.length);
-      for (let i = 0; i < min; i++) {
-        if (JSON.stringify(a[i]) !== JSON.stringify(b[i])) {
-          modified.push({
-            index: i,
-            before: a[i]!,
-            after: b[i]!,
-          });
-        }
-      }
-      if (a.length > b.length) {
-        for (let i = b.length; i < a.length; i++) {
-          removed.push(a[i]!);
-        }
-      }
-      if (b.length > a.length) {
-        for (let i = a.length; i < b.length; i++) {
-          added.push(b[i]!);
-        }
-      }
-      return { added, removed, modified };
-    },
-  };
-
-  return snapshot;
-}
-
 /**
  * Runs the §5.4 pipeline: plugin hooks, budget resolution, token accounting,
  * overflow, compilation, snapshot materialization, ephemeral cleanup, and `build:complete`.
@@ -395,7 +301,8 @@ export class ContextOrchestrator {
     input: ContextOrchestratorBuildInput,
   ): Promise<ContextOrchestratorBuildResult> {
     const t0 = Date.now();
-    const { config, context } = input;
+    const { config, context, providerAdapters, previousSnapshot, structuralSharing } =
+      input;
     const baseSlots = config.slots as Record<string, SlotConfig>;
     if (config.slots === undefined || Object.keys(config.slots).length === 0) {
       throw new InvalidConfigError('ContextOrchestrator.build: config.slots is required', {
@@ -505,10 +412,14 @@ export class ContextOrchestrator {
       builtAt,
     };
 
-    const snapshot = createContextSnapshotImpl({
+    const snapshot = ContextSnapshot.create({
       messages,
       meta: snapshotMeta,
       model: config.model,
+      immutable: config.immutableSnapshots !== false,
+      ...(providerAdapters !== undefined ? { providerAdapters } : {}),
+      ...(previousSnapshot !== undefined ? { previousSnapshot } : {}),
+      ...(structuralSharing !== undefined ? { structuralSharing } : {}),
     });
 
     await runAfterSnapshotPlugins(plugins, snapshot);

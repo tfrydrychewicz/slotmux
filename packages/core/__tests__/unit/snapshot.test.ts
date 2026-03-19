@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { ContextSnapshot } from '../../src/snapshot/context-snapshot.js';
 import { createContentId, toTokenCount } from '../../src/types/branded.js';
+import type { ProviderId } from '../../src/types/config.js';
 import type { CompiledMessage, ContentItem } from '../../src/types/content.js';
 import type {
   SlotMeta,
@@ -10,7 +12,6 @@ import type {
   SnapshotMeta,
   SnapshotDiff,
   SerializedSnapshot,
-  ContextSnapshot,
 } from '../../src/types/snapshot.js';
 
 describe('SlotMeta', () => {
@@ -144,7 +145,7 @@ describe('SerializedSnapshot', () => {
 });
 
 describe('ContextSnapshot', () => {
-  it('accepts snapshot-shaped object with required methods', () => {
+  it('create + format + serialize + diff', () => {
     const messages: CompiledMessage[] = [{ role: 'user', content: 'Hi' }];
     const meta: SnapshotMeta = {
       totalTokens: toTokenCount(5),
@@ -159,35 +160,58 @@ describe('ContextSnapshot', () => {
       builtAt: Date.now(),
     };
 
-    const snapshot: ContextSnapshot = {
+    const snapshot = ContextSnapshot.create({
       id: 'snap-1',
       messages,
       meta,
-      format(provider) {
-        expect(provider).toBeDefined();
-        return messages;
-      },
-      serialize() {
-        return {
-          version: '1.0',
-          id: 'snap-1',
-          model: 'gpt-4-turbo',
-          slots: {},
-          messages: [...messages],
-          meta,
-          checksum: 'x',
-        };
-      },
-      diff(other) {
-        expect(other.id).toBeDefined();
-        return { added: [], removed: [], modified: [] };
-      },
-    };
+      model: 'gpt-4-turbo',
+      immutable: false,
+    });
 
     expect(snapshot.id).toBe('snap-1');
     expect(snapshot.messages).toHaveLength(1);
     expect(snapshot.format('openai')).toEqual(messages);
     expect(snapshot.serialize().version).toBe('1.0');
     expect(snapshot.diff(snapshot).added).toHaveLength(0);
+  });
+
+  it('format delegates to provider adapter when registered', () => {
+    const snapshot = ContextSnapshot.create({
+      id: 'a',
+      messages: [{ role: 'user', content: 'x' }],
+      meta: {
+        totalTokens: toTokenCount(1),
+        totalBudget: toTokenCount(100),
+        utilization: 0.01,
+        waste: toTokenCount(0),
+        slots: {},
+        compressions: [],
+        evictions: [],
+        warnings: [],
+        buildTimeMs: 0,
+        builtAt: 0,
+      },
+      model: 'm',
+      immutable: false,
+      providerAdapters: {
+        openai: {
+          id: 'openai' as ProviderId,
+          resolveModel: () => ({
+            maxContextTokens: 100,
+            maxOutputTokens: 10,
+            supportsFunctions: false,
+            supportsVision: false,
+            supportsStreaming: true,
+            tokenizerName: 't',
+          }),
+          formatMessages: (msgs) => ({ provider: 'openai', n: msgs.length }),
+          getTokenizer: () => {
+            throw new Error('unused');
+          },
+          calculateOverhead: () => toTokenCount(0),
+        },
+      },
+    });
+    expect(snapshot.format('openai')).toEqual({ provider: 'openai', n: 1 });
   });
 });

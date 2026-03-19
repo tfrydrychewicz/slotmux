@@ -4,11 +4,12 @@
  * @packageDocumentation
  */
 
+import type { ContextSnapshot } from '../snapshot/context-snapshot.js';
+
 import type { TokenCount } from './branded.js';
 import type { SlotConfig, OverflowStrategyFn } from './config.js';
 import type { ContentItem, CompiledMessage } from './content.js';
 import type { ContextEvent } from './events.js';
-import type { ContextSnapshot } from './snapshot.js';
 
 // ==========================================
 // Resolved Slot

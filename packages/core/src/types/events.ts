@@ -4,8 +4,10 @@
  * @packageDocumentation
  */
 
+import type { ContextSnapshot } from '../snapshot/context-snapshot.js';
+
 import type { ContentItem } from './content.js';
-import type { ContextSnapshot, ContextWarning } from './snapshot.js';
+import type { ContextWarning } from './snapshot.js';
 
 // ==========================================
 // Context Event (Discriminated Union)

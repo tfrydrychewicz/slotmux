@@ -6,6 +6,7 @@
 import { expectTypeOf } from 'expect-type';
 import { describe, expect, it } from 'vitest';
 
+import type { ContextSnapshot } from '../../src/snapshot/context-snapshot.js';
 import type { TokenCount, ContentId, SlotPriority } from '../../src/types/branded.js';
 import type {
   OverflowStrategyFn,
@@ -21,7 +22,6 @@ import type { CompiledMessage } from '../../src/types/content.js';
 import type { ContextEvent } from '../../src/types/events.js';
 import type {
   CompressionEvent,
-  ContextSnapshot,
   SnapshotMeta,
   SlotMeta,
 } from '../../src/types/snapshot.js';
@@ -109,6 +109,7 @@ describe('type level: ContextSnapshot immutability', () => {
     expectTypeOf<ContextSnapshot['messages']>().toEqualTypeOf<
       readonly Readonly<CompiledMessage>[]
     >();
+    expectTypeOf<ContextSnapshot['immutable']>().toBeBoolean();
     expectTypeOf<ContextSnapshot['meta']>().toEqualTypeOf<SnapshotMeta>();
     expectTypeOf<ContextSnapshot['meta']['slots']>().toEqualTypeOf<
       Readonly<Record<string, SlotMeta>>

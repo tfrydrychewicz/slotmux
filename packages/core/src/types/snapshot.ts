@@ -5,7 +5,7 @@
  */
 
 import type { TokenCount } from './branded.js';
-import type { ProviderId, ModelId } from './config.js';
+import type { ModelId } from './config.js';
 import type { CompiledMessage, ContentItem } from './content.js';
 
 // ==========================================
@@ -184,23 +184,4 @@ export interface SerializedSnapshot {
 // Context Snapshot
 // ==========================================
 
-/** Immutable compiled context ready for LLM consumption */
-export interface ContextSnapshot {
-  /** Unique snapshot identifier */
-  readonly id: string;
-
-  /** The compiled messages, ready for LLM consumption */
-  readonly messages: readonly Readonly<CompiledMessage>[];
-
-  /** Comprehensive metadata about this compilation */
-  readonly meta: SnapshotMeta;
-
-  /** Format messages for a specific provider */
-  format(provider: ProviderId): unknown;
-
-  /** Export to a serializable format */
-  serialize(): SerializedSnapshot;
-
-  /** Diff against another snapshot */
-  diff(other: ContextSnapshot): SnapshotDiff;
-}
+/** See {@link ContextSnapshot} class in `snapshot/context-snapshot.ts` (Phase 5.5). */

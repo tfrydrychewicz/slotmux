@@ -144,8 +144,14 @@ export type {
   SerializedSlot,
   SerializedMessage,
   SerializedSnapshot,
-  ContextSnapshot,
 } from './types/snapshot.js';
+export {
+  ContextSnapshot,
+} from './snapshot/context-snapshot.js';
+export type {
+  CreateContextSnapshotParams,
+  DeserializeContextSnapshotOptions,
+} from './snapshot/context-snapshot.js';
 
 // Plugin types (§11.1)
 export type {
