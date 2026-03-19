@@ -16,6 +16,16 @@ export type BudgetAllocatorOptions = {
 
 type SlotEntry = { readonly name: string; readonly config: SlotConfig };
 
+/**
+ * Slot records in the same order as {@link BudgetAllocator.resolve} (priority desc, name asc).
+ * Used by {@link ContextOrchestrator} for `beforeBudgetResolve` ↔ slot name round-trip.
+ */
+export function orderedSlotEntriesForBudget(
+  slots: Record<string, SlotConfig>,
+): SlotEntry[] {
+  return sortSlots(toEntries(slots));
+}
+
 function sortSlots(entries: SlotEntry[]): SlotEntry[] {
   return [...entries].sort(
     (a, b) =>

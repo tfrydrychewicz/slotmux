@@ -1,12 +1,15 @@
 /**
- * Build pipeline: budget → overflow → compile → snapshot (§5.3 — Phase 5.4 stub for Phase 5.2).
+ * Build pipeline: plugins → budget → token count → overflow → compile → snapshot (§5.3 — Phase 5.4).
  *
  * @packageDocumentation
  */
 
 import type { ParsedContextConfig } from '../config/validator.js';
 import { InvalidConfigError } from '../errors.js';
-import { BudgetAllocator } from '../slots/budget-allocator.js';
+import {
+  BudgetAllocator,
+  orderedSlotEntriesForBudget,
+} from '../slots/budget-allocator.js';
 import { OverflowEngine } from '../slots/overflow-engine.js';
 import { sumCachedItemTokens } from '../slots/strategies/truncate-strategy.js';
 import { createContentId, toTokenCount } from '../types/branded.js';
@@ -18,7 +21,7 @@ import type {
   MultimodalContent,
 } from '../types/content.js';
 import type { ContextEvent } from '../types/events.js';
-import type { ResolvedSlot } from '../types/plugin.js';
+import type { ContextPlugin, ResolvedSlot } from '../types/plugin.js';
 import type {
   ContextSnapshot,
   ContextWarning,
@@ -28,8 +31,130 @@ import type {
   SnapshotDiff,
   SnapshotMeta,
 } from '../types/snapshot.js';
+import type { TokenAccountant } from '../types/token-accountant.js';
 
 import type { Context } from './context.js';
+
+function resolvePlugins(config: ParsedContextConfig): readonly ContextPlugin[] {
+  const raw = config.plugins;
+  if (raw === undefined || raw.length === 0) {
+    return [];
+  }
+  return raw as ContextPlugin[];
+}
+
+function resolveCountTokens(
+  config: ParsedContextConfig,
+): (items: readonly ContentItem[]) => number {
+  const ta = config.tokenAccountant as TokenAccountant | undefined;
+  if (ta !== undefined) {
+    return (items) => ta.countItems(items);
+  }
+  return sumCachedItemTokens;
+}
+
+async function applyBeforeBudgetResolvePlugins(
+  slots: Record<string, SlotConfig>,
+  plugins: readonly ContextPlugin[],
+): Promise<Record<string, SlotConfig>> {
+  if (plugins.length === 0) {
+    return slots;
+  }
+  const ordered = orderedSlotEntriesForBudget(slots);
+  let configs = ordered.map((e) => e.config);
+  for (const p of plugins) {
+    if (p.beforeBudgetResolve === undefined) {
+      continue;
+    }
+    const out = p.beforeBudgetResolve(configs);
+    const next = await Promise.resolve(out);
+    if (next.length !== ordered.length) {
+      throw new InvalidConfigError(
+        `Plugin "${p.name}" beforeBudgetResolve must return ${ordered.length} slot configs, got ${next.length}`,
+        { context: { plugin: p.name } },
+      );
+    }
+    configs = next;
+  }
+  const nextSlots: Record<string, SlotConfig> = { ...slots };
+  for (let i = 0; i < ordered.length; i++) {
+    nextSlots[ordered[i]!.name] = configs[i]!;
+  }
+  return nextSlots;
+}
+
+async function runAfterBudgetResolve(
+  plugins: readonly ContextPlugin[],
+  resolved: readonly ResolvedSlot[],
+): Promise<void> {
+  for (const p of plugins) {
+    if (p.afterBudgetResolve === undefined) {
+      continue;
+    }
+    await Promise.resolve(p.afterBudgetResolve(resolved));
+  }
+}
+
+async function applyBeforeOverflowForSlot(
+  plugins: readonly ContextPlugin[],
+  slot: string,
+  items: ContentItem[],
+): Promise<ContentItem[]> {
+  let cur = items;
+  for (const p of plugins) {
+    if (p.beforeOverflow === undefined) {
+      continue;
+    }
+    const out = p.beforeOverflow(slot, cur);
+    cur = await Promise.resolve(out);
+  }
+  return cur;
+}
+
+async function runAfterOverflowPlugins(
+  plugins: readonly ContextPlugin[],
+  preBySlot: ReadonlyMap<string, readonly ContentItem[]>,
+  after: readonly ResolvedSlot[],
+): Promise<void> {
+  for (const p of plugins) {
+    if (p.afterOverflow === undefined) {
+      continue;
+    }
+    for (const rs of after) {
+      const pre = preBySlot.get(rs.name) ?? [];
+      const afterIds = new Set(rs.content.map((i) => i.id));
+      const evicted = pre.filter((i) => !afterIds.has(i.id));
+      await Promise.resolve(p.afterOverflow(rs.name, rs.content, evicted));
+    }
+  }
+}
+
+async function applyBeforeSnapshotPlugins(
+  plugins: readonly ContextPlugin[],
+  messages: CompiledMessage[],
+): Promise<CompiledMessage[]> {
+  let cur = messages;
+  for (const p of plugins) {
+    if (p.beforeSnapshot === undefined) {
+      continue;
+    }
+    const out = p.beforeSnapshot(cur);
+    cur = await Promise.resolve(out);
+  }
+  return cur;
+}
+
+async function runAfterSnapshotPlugins(
+  plugins: readonly ContextPlugin[],
+  snapshot: ContextSnapshot,
+): Promise<void> {
+  for (const p of plugins) {
+    if (p.afterSnapshot === undefined) {
+      continue;
+    }
+    await Promise.resolve(p.afterSnapshot(snapshot));
+  }
+}
 
 export type ContextOrchestratorBuildInput = {
   readonly config: ParsedContextConfig;
@@ -154,14 +279,14 @@ export function compileMessagesForSnapshot(
 }
 
 function buildSlotMetaMap(params: {
-  readonly slots: Record<string, SlotConfig>;
   readonly resolvedAfterOverflow: readonly ResolvedSlot[];
   readonly evictionsBySlot: ReadonlyMap<string, number>;
   readonly overflowSlots: ReadonlySet<string>;
+  readonly countTokens: (items: readonly ContentItem[]) => number;
 }): Record<string, SlotMeta> {
   const o: Record<string, SlotMeta> = {};
   for (const rs of params.resolvedAfterOverflow) {
-    const used = sumCachedItemTokens(rs.content);
+    const used = params.countTokens(rs.content);
     const budget = rs.budgetTokens;
     const evicted = params.evictionsBySlot.get(rs.name) ?? 0;
     const overflowTriggered = params.overflowSlots.has(rs.name);
@@ -262,8 +387,8 @@ function createContextSnapshotImpl(params: {
 }
 
 /**
- * Runs budget resolution, overflow, message compilation, and snapshot materialization.
- * Plugin hooks from §5.4 are reserved for a later iteration.
+ * Runs the §5.4 pipeline: plugin hooks, budget resolution, token accounting,
+ * overflow, compilation, snapshot materialization, ephemeral cleanup, and `build:complete`.
  */
 export class ContextOrchestrator {
   static async build(
@@ -271,18 +396,23 @@ export class ContextOrchestrator {
   ): Promise<ContextOrchestratorBuildResult> {
     const t0 = Date.now();
     const { config, context } = input;
-    const slots = config.slots as Record<string, SlotConfig>;
+    const baseSlots = config.slots as Record<string, SlotConfig>;
     if (config.slots === undefined || Object.keys(config.slots).length === 0) {
       throw new InvalidConfigError('ContextOrchestrator.build: config.slots is required', {
         context: { phase: '5.2' },
       });
     }
 
+    const plugins = resolvePlugins(config);
+    const countTokens = resolveCountTokens(config);
+
     const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
     const reserve = config.reserveForResponse ?? 0;
     const totalBudget = Math.max(0, maxTokens - reserve);
 
     emitEvent(config, { type: 'build:start', totalBudget });
+
+    const slots = await applyBeforeBudgetResolvePlugins(baseSlots, plugins);
 
     const evictionsBySlot = new Map<string, number>();
     const overflowSlots = new Set<string>();
@@ -310,39 +440,51 @@ export class ContextOrchestrator {
     });
     const budgetResolved = allocator.resolve(slots, totalBudget);
 
-    const countTokens = (items: readonly ContentItem[]): number =>
-      sumCachedItemTokens(items);
+    await runAfterBudgetResolve(plugins, budgetResolved);
 
     const engine = new OverflowEngine({
       countTokens,
       onEvent: (e) => forward(e),
     });
 
-    const overflowInputs = budgetResolved.map((rs) => ({
-      name: rs.name,
-      priority: rs.priority,
-      budgetTokens: rs.budgetTokens,
-      config: slots[rs.name]!,
-      content: context.getItems(rs.name),
-    }));
+    const overflowInputs = await Promise.all(
+      budgetResolved.map(async (rs) => ({
+        name: rs.name,
+        priority: rs.priority,
+        budgetTokens: rs.budgetTokens,
+        config: slots[rs.name]!,
+        content: await applyBeforeOverflowForSlot(
+          plugins,
+          rs.name,
+          context.getItems(rs.name),
+        ),
+      })),
+    );
+
+    const preOverflowBySlot = new Map<string, readonly ContentItem[]>(
+      overflowInputs.map((s) => [s.name, s.content] as const),
+    );
 
     const afterOverflow = await engine.resolve(overflowInputs, {
       totalBudget,
     });
 
-    const messages = compileMessagesForSnapshot(slots, afterOverflow);
+    await runAfterOverflowPlugins(plugins, preOverflowBySlot, afterOverflow);
+
+    let messages = compileMessagesForSnapshot(slots, afterOverflow);
+    messages = await applyBeforeSnapshotPlugins(plugins, messages);
 
     const slotMeta = buildSlotMetaMap({
-      slots,
       resolvedAfterOverflow: afterOverflow,
       evictionsBySlot,
       overflowSlots,
+      countTokens,
     });
 
     let totalUsed = 0;
     let waste = 0;
     for (const rs of afterOverflow) {
-      const u = sumCachedItemTokens(rs.content);
+      const u = countTokens(rs.content);
       totalUsed += u;
       waste += Math.max(0, rs.budgetTokens - u);
     }
@@ -368,6 +510,8 @@ export class ContextOrchestrator {
       meta: snapshotMeta,
       model: config.model,
     });
+
+    await runAfterSnapshotPlugins(plugins, snapshot);
 
     context.clearEphemeral();
 

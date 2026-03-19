@@ -107,7 +107,7 @@ export interface ContextPlugin {
   ): SlotConfig[] | Promise<SlotConfig[]>;
 
   /** Called after budget resolution, before overflow */
-  afterBudgetResolve?(slots: ResolvedSlot[]): void | Promise<void>;
+  afterBudgetResolve?(slots: readonly ResolvedSlot[]): void | Promise<void>;
 
   /** Called before overflow strategy executes for a slot */
   beforeOverflow?(

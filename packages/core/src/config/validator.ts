@@ -7,6 +7,7 @@
 import { prettifyError, z } from 'zod';
 
 import { InvalidConfigError } from '../errors.js';
+import type { TokenAccountant } from '../types/token-accountant.js';
 
 /** Named overflow strategies */
 export const slotOverflowNamedSchema = z.enum([
@@ -140,6 +141,16 @@ export const contextConfigSchema = z
     ).optional(),
     immutableSnapshots: z.boolean().optional(),
     tokenizer: tokenizerConfigSchema.optional(),
+    tokenAccountant: z
+      .custom<TokenAccountant | undefined>(
+        (val) =>
+          val === undefined ||
+          (typeof val === 'object' &&
+            val !== null &&
+            typeof (val as { countItems?: unknown }).countItems === 'function'),
+        { message: 'tokenAccountant must be an object with countItems(items) => number' },
+      )
+      .optional(),
   })
   .strict()
   .superRefine((data, ctx) => {

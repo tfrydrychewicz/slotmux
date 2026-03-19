@@ -60,7 +60,11 @@ export { SlotManager } from './slots/slot-manager.js';
 export type { SlotManagerOptions } from './slots/slot-manager.js';
 
 // Budget allocator (§7.1 — Phase 3.3)
-export { BudgetAllocator, allocateFlexPool } from './slots/budget-allocator.js';
+export {
+  BudgetAllocator,
+  allocateFlexPool,
+  orderedSlotEntriesForBudget,
+} from './slots/budget-allocator.js';
 export type { BudgetAllocatorOptions } from './slots/budget-allocator.js';
 
 // Overflow engine (§7.2 — Phase 4.1)

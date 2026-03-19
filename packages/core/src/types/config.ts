@@ -249,4 +249,10 @@ export interface ContextConfig {
 
   /** Token counting strategy */
   tokenizer?: TokenizerConfig;
+
+  /**
+   * When set, used for overflow resolution and snapshot slot totals instead of cached
+   * per-item estimates ({@link ContentItem.tokens} / char heuristics).
+   */
+  tokenAccountant?: TokenAccountant;
 }
