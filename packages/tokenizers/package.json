@@ -2,24 +2,20 @@
   "name": "@contextcraft/tokenizers",
   "version": "0.0.1",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.cjs"
-      }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "typesVersions": {
     ">=4.0": {
-      "*": ["./dist/index.d.ts"]
+      "*": [
+        "./dist/index.d.ts"
+      ]
     }
   },
   "scripts": {
@@ -32,13 +28,25 @@
     "contextcraft": "workspace:*"
   },
   "peerDependencies": {
-    "tiktoken": "*",
     "@anthropic-ai/tokenizer": "*",
-    "gpt-tokenizer": "*"
+    "gpt-tokenizer": "*",
+    "tiktoken": "*"
   },
   "peerDependenciesMeta": {
-    "tiktoken": { "optional": true },
-    "@anthropic-ai/tokenizer": { "optional": true },
-    "gpt-tokenizer": { "optional": true }
+    "tiktoken": {
+      "optional": true
+    },
+    "@anthropic-ai/tokenizer": {
+      "optional": true
+    },
+    "gpt-tokenizer": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@anthropic-ai/tokenizer": "^0.0.4",
+    "@types/node": "^22.10.0",
+    "gpt-tokenizer": "^3.4.0",
+    "tiktoken": "^1.0.22"
   }
 }

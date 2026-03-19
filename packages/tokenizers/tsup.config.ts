@@ -2,10 +2,16 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts'],
-  format: ['esm', 'cjs'],
+  // ESM only: `createRequire(import.meta.url)` in load-peer is unreliable in bundled CJS.
+  format: ['esm'],
   dts: true,
   clean: true,
   sourcemap: true,
   target: 'es2022',
-  external: ['contextcraft'],
+  external: [
+    'contextcraft',
+    'tiktoken',
+    '@anthropic-ai/tokenizer',
+    'gpt-tokenizer',
+  ],
 });
