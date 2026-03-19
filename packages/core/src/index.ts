@@ -72,6 +72,13 @@ export type {
   ContextPlugin,
 } from './types/plugin.js';
 
+// Provider types (§10.1)
+export type {
+  Tokenizer,
+  ModelCapabilities,
+  ProviderAdapter,
+} from './types/provider.js';
+
 // Configuration types (§6.6)
 export type {
   ProviderId,
