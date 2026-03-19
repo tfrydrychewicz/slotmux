@@ -7,13 +7,15 @@
 import type { TokenCount } from './branded.js';
 import type { ContentItem, MessageRole } from './content.js';
 import type { ContextEvent } from './events.js';
+import type { ContextPlugin } from './plugin.js';
 
-// Re-export content and event types for consumers that import from config
+// Re-export content, event, and plugin types for consumers that import from config
 export type { ContentItem, MessageRole } from './content.js';
 export type { ContextEvent } from './events.js';
+export type { ContextPlugin } from './plugin.js';
 
 // ==========================================
-// Supporting Types (forward refs / placeholders)
+// Supporting Types
 // ==========================================
 
 /** Supported LLM provider identifiers */
@@ -27,15 +29,6 @@ export type ProviderId =
 
 /** Model identifier — either a known model string or custom config */
 export type ModelId = string;
-
-/**
- * Context plugin (placeholder).
- * Full interface in Phase 1.6.
- */
-export interface ContextPlugin {
-  install?(): void | Promise<void>;
-  [key: string]: unknown;
-}
 
 // ==========================================
 // Slot Budget

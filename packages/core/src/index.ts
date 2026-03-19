@@ -62,11 +62,20 @@ export type {
   ContextSnapshot,
 } from './types/snapshot.js';
 
+// Plugin types (§11.1)
+export type {
+  ResolvedSlot,
+  TokenCountCache,
+  CompressionStrategy,
+  PluginLogger,
+  PluginContext,
+  ContextPlugin,
+} from './types/plugin.js';
+
 // Configuration types (§6.6)
 export type {
   ProviderId,
   ModelId,
-  ContextPlugin,
   SlotBudget,
   SlotBudgetFixed,
   SlotBudgetPercent,
