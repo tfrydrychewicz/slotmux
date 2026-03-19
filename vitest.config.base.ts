@@ -1,6 +1,10 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // Prefer `development` package exports (e.g. contextcraft → src/) so tests run without a prior build.
+  resolve: {
+    conditions: ['development', 'import', 'module', 'default'],
+  },
   test: {
     globals: true,
     environment: 'node',
