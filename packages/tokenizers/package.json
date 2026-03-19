@@ -24,7 +24,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "echo 'No tests yet'",
+    "test": "vitest run",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit"
   },
