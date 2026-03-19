@@ -75,17 +75,23 @@ export type {
   OverflowResolveRunOptions,
 } from './slots/overflow-engine.js';
 
-// Truncate overflow strategies (§5.2 — Phase 4.2–4.3)
+// Overflow strategies (§5.2 — Phase 4.2–4.4)
+export {
+  slidingWindowStrategy,
+  slidingWindow,
+  resolveSlidingWindowSize,
+  DEFAULT_SLIDING_WINDOW_SIZE,
+} from './slots/strategies/sliding-window-strategy.js';
+export {
+  truncateLatestStrategy,
+  truncateLatest,
+} from './slots/strategies/truncate-latest-strategy.js';
 export {
   truncateStrategy,
   truncateFifo,
   sumCachedItemTokens,
   resolveOverflowCountItems,
 } from './slots/strategies/truncate-strategy.js';
-export {
-  truncateLatestStrategy,
-  truncateLatest,
-} from './slots/strategies/truncate-latest-strategy.js';
 export type { TokenAccountant } from './types/token-accountant.js';
 
 // Event types (§6.6, §13.1)

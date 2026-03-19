@@ -22,8 +22,9 @@ import type {
 import type { ResolvedSlot } from '../types/plugin.js';
 import type { TokenAccountant } from '../types/token-accountant.js';
 
+import { slidingWindowStrategy } from './strategies/sliding-window-strategy.js';
 import { truncateLatestStrategy } from './strategies/truncate-latest-strategy.js';
-import { truncateStrategy, truncateFifo } from './strategies/truncate-strategy.js';
+import { truncateStrategy } from './strategies/truncate-strategy.js';
 
 /** @deprecated Use {@link truncateFifo} from `contextcraft` (same implementation). */
 export { truncateFifo as builtinTruncateFifo } from './strategies/truncate-strategy.js';
@@ -93,26 +94,6 @@ function toResolvedOutput(s: WorkingSlot): ResolvedSlot {
   };
 }
 
-function builtinSlidingWindow(
-  items: ContentItem[],
-  budget: TokenCount,
-  countTokens: (xs: readonly ContentItem[]) => number,
-  windowSize: number,
-): ContentItem[] {
-  const ws = Math.max(1, windowSize);
-  const unpinnedWithIndex = items
-    .map((it, index) => ({ it, index }))
-    .filter((x) => !x.it.pinned);
-  const keepUnpinned = new Set(
-    unpinnedWithIndex.slice(-ws).map((x) => x.it.id),
-  );
-  let out = items.filter((it) => it.pinned || keepUnpinned.has(it.id));
-  if (countTokens(out) > budget) {
-    out = truncateFifo(out, budget, countTokens);
-  }
-  return out;
-}
-
 function builtinError(
   items: ContentItem[],
   budget: TokenCount,
@@ -168,17 +149,7 @@ export class OverflowEngine {
     const base: Record<NamedOverflowStrategy, OverflowStrategyFn> = {
       truncate: truncateStrategy,
       'truncate-latest': truncateLatestStrategy,
-      'sliding-window': (items, budget, ctx) => {
-        const cfg = (ctx as OverflowContext & { slotConfig?: SlotConfig })
-          .slotConfig;
-        const ws =
-          cfg?.overflowConfig?.windowSize ??
-          (ctx as { windowSize?: number }).windowSize ??
-          10;
-        return Promise.resolve(
-          builtinSlidingWindow(items, budget, count, ws),
-        );
-      },
+      'sliding-window': slidingWindowStrategy,
       error: (items, budget, ctx) => {
         const slot = typeof ctx.slot === 'string' ? ctx.slot : '';
         return Promise.resolve(builtinError(items, budget, count, slot));
