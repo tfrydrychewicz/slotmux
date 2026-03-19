@@ -147,3 +147,20 @@ export type {
   ParsedSlotConfig,
   ParsedSlotBudget,
 } from './config/validator.js';
+
+// Presets & createContext (§7.3 — Phase 3.5)
+export {
+  CHAT_DEFAULTS,
+  RAG_DEFAULTS,
+  AGENT_DEFAULTS,
+  CONTEXT_PRESETS,
+} from './config/presets.js';
+export type { ContextPresetId } from './config/presets.js';
+export {
+  createContext,
+  resolveContextSlots,
+} from './context/create-context.js';
+export type {
+  CreateContextOptions,
+  CreateContextResult,
+} from './context/create-context.js';
