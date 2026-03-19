@@ -33,6 +33,21 @@ export type {
   CompiledContentImageBase64,
 } from './types/content.js';
 
+// Event types (§6.6, §13.1)
+export type {
+  ContextEvent,
+  ContentAddedEvent,
+  ContentEvictedEvent,
+  ContentPinnedEvent,
+  SlotOverflowEvent,
+  SlotBudgetResolvedEvent,
+  CompressionStartEvent,
+  CompressionCompleteEvent,
+  BuildStartEvent,
+  BuildCompleteEvent,
+  WarningEvent,
+} from './types/events.js';
+
 // Snapshot types (§6.6)
 export type {
   SlotMeta,
@@ -51,7 +66,6 @@ export type {
 export type {
   ProviderId,
   ModelId,
-  ContextEvent,
   ContextPlugin,
   SlotBudget,
   SlotBudgetFixed,

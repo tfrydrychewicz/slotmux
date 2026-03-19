@@ -6,9 +6,11 @@
 
 import type { TokenCount } from './branded.js';
 import type { ContentItem, MessageRole } from './content.js';
+import type { ContextEvent } from './events.js';
 
-// Re-export content types for consumers that import from config
+// Re-export content and event types for consumers that import from config
 export type { ContentItem, MessageRole } from './content.js';
+export type { ContextEvent } from './events.js';
 
 // ==========================================
 // Supporting Types (forward refs / placeholders)
@@ -25,15 +27,6 @@ export type ProviderId =
 
 /** Model identifier — either a known model string or custom config */
 export type ModelId = string;
-
-/**
- * Context event (placeholder).
- * Full discriminated union in Phase 1.5.
- */
-export interface ContextEvent {
-  readonly type: string;
-  [key: string]: unknown;
-}
 
 /**
  * Context plugin (placeholder).
