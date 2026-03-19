@@ -29,3 +29,11 @@ export { SentencePieceTokenizer } from './sentencepiece-tokenizer.js';
 export type { GptTokenizerEncodingName } from './sentencepiece-tokenizer.js';
 
 export { FallbackTokenizer } from './fallback-tokenizer.js';
+
+export { LRUCache } from './lru-cache.js';
+
+export { TokenCountCache } from './token-count-cache.js';
+export type {
+  TokenCountCacheMetrics,
+  TokenCountCacheOptions,
+} from './token-count-cache.js';
