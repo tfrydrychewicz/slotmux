@@ -4,7 +4,10 @@
  * @packageDocumentation
  */
 
-import type { ProgressiveSummarizeTextFn } from '@contextcraft/compression';
+import type {
+  MapReduceSummarizeDeps,
+  ProgressiveSummarizeTextFn,
+} from '@contextcraft/compression';
 
 import { losslessCompressAsOverflow } from '../compression/lossless-bridge.js';
 import { createProgressiveSummarizeOverflow } from '../compression/progressive-overflow-bridge.js';
@@ -70,10 +73,12 @@ export type OverflowEngineOptions = {
   namedStrategies?: Record<string, OverflowStrategyFn>;
 
   /**
-   * Enables built-in `summarize` via progressive layers (§8.1). Without this, `summarize` throws until configured.
+   * Enables built-in `summarize` (§8.1): progressive and/or map-reduce. Without this, `summarize` throws until configured.
    */
   progressiveSummarize?: {
     readonly summarizeText: ProgressiveSummarizeTextFn;
+    /** Required when a slot uses `overflowConfig.summarizer: 'builtin:map-reduce'`. */
+    readonly mapReduce?: MapReduceSummarizeDeps;
   };
 };
 

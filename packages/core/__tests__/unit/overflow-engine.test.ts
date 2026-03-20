@@ -392,7 +392,7 @@ describe('OverflowEngine (§7.2 — Phase 4.1)', () => {
     expect(custom).toHaveBeenCalled();
   });
 
-  it('throws for builtin:map-reduce when progressiveSummarize is set', async () => {
+  it('throws for builtin:map-reduce when mapReduce deps are missing', async () => {
     const item = createContentItem({
       slot: 's',
       role: 'user',
@@ -422,6 +422,65 @@ describe('OverflowEngine (§7.2 — Phase 4.1)', () => {
         ),
       ]),
     ).rejects.toThrow(InvalidConfigError);
+  });
+
+  it('applies map-reduce summarize when mapReduce is configured', async () => {
+    const mk = (content: string, t: number, at: number) =>
+      createContentItem({
+        slot: 's',
+        role: 'user',
+        content,
+        tokens: toTokenCount(t),
+        createdAt: at,
+      });
+
+    const long = (c: string) => c.repeat(30);
+    const items = [
+      mk(long('a'), 30, 1000),
+      mk(long('b'), 30, 2000),
+      mk(long('c'), 30, 3000),
+      mk(long('d'), 30, 4000),
+      mk(long('e'), 30, 5000),
+      mk(long('f'), 30, 6000),
+    ];
+
+    const mapChunk = vi.fn(async () => 'M');
+    const reduceMerge = vi.fn(async () => 'R');
+
+    const engine = new OverflowEngine({
+      countTokens: countSum,
+      progressiveSummarize: {
+        summarizeText: async () => 'unused',
+        mapReduce: {
+          mapChunk,
+          reduceMerge,
+          mapChunkMaxInputTokens: 65,
+          reduceMaxInputTokens: 80,
+        },
+      },
+    });
+
+    const out = await engine.resolve([
+      slot(
+        's',
+        50,
+        50,
+        {
+          priority: 50,
+          budget: { flex: true },
+          overflow: 'summarize',
+          overflowConfig: { preserveLastN: 2, summarizer: 'builtin:map-reduce' },
+        },
+        items,
+      ),
+    ]);
+
+    expect(countSum(out[0]!.content)).toBeLessThanOrEqual(50);
+    expect(mapChunk).toHaveBeenCalled();
+    expect(reduceMerge).toHaveBeenCalled();
+    expect(out[0]!.content.some((i) => typeof i.content === 'string' && i.content === 'R')).toBe(
+      true,
+    );
   });
 
   it('invokes custom overflow function with strategy label custom', async () => {

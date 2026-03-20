@@ -1,12 +1,14 @@
 /**
- * Wires progressive summarization (§8.1 / Phase 8.3) to {@link OverflowStrategyFn}.
+ * Wires built-in summarization (§8.1 — progressive Phase 8.3, map-reduce Phase 8.4) to {@link OverflowStrategyFn}.
  * Implementation lives in `@contextcraft/compression`.
  *
  * @packageDocumentation
  */
 
 import {
+  runMapReduceSummarize,
   runProgressiveSummarize,
+  type MapReduceSummarizeDeps,
   type ProgressiveItem,
   type ProgressiveSummarizeTextFn,
 } from '@contextcraft/compression';
@@ -32,13 +34,30 @@ function summaryBudgetTokensFromConfig(slotBudget: number, sb: SlotBudget | unde
 
 export type ProgressiveSummarizeOverflowDeps = {
   readonly summarizeText: ProgressiveSummarizeTextFn;
+  /**
+   * Required when `overflowConfig.summarizer` is `builtin:map-reduce`.
+   */
+  readonly mapReduce?: MapReduceSummarizeDeps;
 };
+
+function enrichSummaryTokens(
+  raw: readonly ProgressiveItem[],
+  countTextTokens: (text: string) => number,
+): ContentItem[] {
+  return raw.map((item) => {
+    const ci = item as unknown as ContentItem;
+    if (ci.tokens !== undefined) return ci;
+    const plain = typeof item.content === 'string' ? item.content : '';
+    const n = countTextTokens(plain);
+    return { ...ci, tokens: toTokenCount(Math.max(0, Math.floor(n))) };
+  });
+}
 
 /**
  * Built-in `summarize` overflow strategy when {@link OverflowEngineOptions.progressiveSummarize} is set.
  *
  * - `overflowConfig.summarizer` as a function → delegates to that {@link SummarizerFn}.
- * - `builtin:map-reduce` → throws (Phase 8.4).
+ * - `builtin:map-reduce` → {@link runMapReduceSummarize} (requires `deps.mapReduce`).
  * - `builtin:progressive` or omitted → {@link runProgressiveSummarize} with `deps.summarizeText`.
  */
 export function createProgressiveSummarizeOverflow(
@@ -49,11 +68,6 @@ export function createProgressiveSummarizeOverflow(
     const oc = ctx.slotConfig?.overflowConfig;
     if (typeof oc?.summarizer === 'function') {
       return oc.summarizer([...items], budget);
-    }
-    if (oc?.summarizer === 'builtin:map-reduce') {
-      throw new InvalidConfigError('builtin:map-reduce summarizer is not implemented yet', {
-        context: { strategy: 'summarize' },
-      });
     }
 
     const preserveLastN = oc?.preserveLastN ?? 4;
@@ -75,6 +89,26 @@ export function createProgressiveSummarizeOverflow(
       countTokens(arr as unknown as ContentItem[]);
 
     const progressiveItems = items as unknown as ProgressiveItem[];
+    const createId = () => createContentId();
+
+    if (oc?.summarizer === 'builtin:map-reduce') {
+      if (deps.mapReduce === undefined) {
+        throw new InvalidConfigError(
+          'builtin:map-reduce requires progressiveSummarize.mapReduce (mapChunk + reduceMerge)',
+          { context: { strategy: 'summarize' } },
+        );
+      }
+      const raw = await runMapReduceSummarize(progressiveItems, budgetNum, {
+        preserveLastN,
+        mapReduce: deps.mapReduce,
+        countItemsTokens,
+        countTextTokens,
+        summaryBudgetTokens: summaryCap,
+        slot,
+        createId,
+      });
+      return enrichSummaryTokens(raw, countTextTokens);
+    }
 
     const raw = await runProgressiveSummarize(progressiveItems, budgetNum, {
       preserveLastN,
@@ -83,15 +117,11 @@ export function createProgressiveSummarizeOverflow(
       countTextTokens,
       summaryBudgetTokens: summaryCap,
       slot,
-      createId: () => createContentId(),
+      createId,
     });
 
-    return raw.map((item) => {
-      const ci = item as unknown as ContentItem;
-      if (ci.tokens !== undefined) return ci;
-      const plain = typeof item.content === 'string' ? item.content : '';
-      const n = countTextTokens(plain);
-      return { ...ci, tokens: toTokenCount(Math.max(0, Math.floor(n))) };
-    });
+    return enrichSummaryTokens(raw, countTextTokens);
   };
 }
+
+export type { MapReduceSummarizeDeps } from '@contextcraft/compression';

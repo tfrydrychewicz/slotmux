@@ -38,3 +38,17 @@ export type {
   ProgressivePrompts,
   ProgressiveSummarizeTextFn,
 } from './progressive-types.js';
+
+export { DEFAULT_MAP_REDUCE_PROMPTS } from './map-reduce-prompts.js';
+export {
+  chunkBulkForMap,
+  runMapReduceSummarize,
+  splitTextToTokenBudget,
+} from './map-reduce-summarizer.js';
+export type { RunMapReduceSummarizeOptions } from './map-reduce-summarizer.js';
+export type {
+  MapReduceMapChunkFn,
+  MapReducePrompts,
+  MapReduceReduceMergeFn,
+  MapReduceSummarizeDeps,
+} from './map-reduce-types.js';
