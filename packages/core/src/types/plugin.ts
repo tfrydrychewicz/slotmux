@@ -7,10 +7,11 @@
 import type { Logger } from '../logging/logger.js';
 import type { ContextSnapshot } from '../snapshot/context-snapshot.js';
 
-import type { TokenCount } from './branded.js';
+import type { CompressionStrategy } from './compression.js';
 import type { SlotConfig, OverflowStrategyFn } from './config.js';
 import type { ContentItem, CompiledMessage } from './content.js';
 import type { ContextEvent } from './events.js';
+import type { TokenCountCache } from './token-count-cache.js';
 
 // ==========================================
 // Resolved Slot
@@ -32,24 +33,11 @@ export interface ResolvedSlot {
 }
 
 // ==========================================
-// Plugin Context Dependencies (placeholders)
+// Plugin Context Dependencies
 // ==========================================
 
-/** Token count cache — counts tokens for content with caching */
-export interface TokenCountCache {
-  /** Count tokens for content */
-  count(content: string): TokenCount;
-}
-
-/** Compression strategy — compresses content to fit budget */
-export interface CompressionStrategy {
-  /** Compress items to fit within budget */
-  compress(
-    items: ContentItem[],
-    budget: TokenCount,
-    context: { slot: string; [key: string]: unknown },
-  ): ContentItem[] | Promise<ContentItem[]>;
-}
+export type { CompressionStrategy } from './compression.js';
+export type { TokenCountCache } from './token-count-cache.js';
 
 /** Plugin-facing logger — same shape as {@link Logger} (§13.3 / Phase 7.3). */
 export type PluginLogger = Logger;

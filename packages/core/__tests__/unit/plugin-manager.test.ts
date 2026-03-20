@@ -54,6 +54,22 @@ describe('PluginManager', () => {
     await expect(m.register(p)).rejects.toThrow(InvalidConfigError);
   });
 
+  it('throws when registerCompressor name does not match compressor.name', async () => {
+    const m = manager();
+    await expect(
+      m.register({
+        name: 'p',
+        version: '1.0.0',
+        install: (ctx) => {
+          ctx.registerCompressor('a', {
+            name: 'b',
+            compress: (items) => items,
+          });
+        },
+      }),
+    ).rejects.toThrow(InvalidConfigError);
+  });
+
   it('rolls back strategy registrations when install throws', async () => {
     const m = manager();
     const p: ContextPlugin = {
@@ -95,7 +111,9 @@ describe('PluginManager', () => {
       version: '1.0.0',
       install: (ctx) => {
         ctx.registerCompressor('squash', {
-          compress: (items, _b, c) => (c.slot === 'history' ? items.slice(-1) : items),
+          name: 'squash',
+          compress: (items, _b, c) =>
+            c.slotName === 'history' ? items.slice(-1) : items,
         });
       },
     });

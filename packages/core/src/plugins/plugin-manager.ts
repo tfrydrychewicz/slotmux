@@ -4,7 +4,9 @@
  * @packageDocumentation
  */
 
+import { compressionContextFromOverflow } from '../compression/from-overflow-context.js';
 import { InvalidConfigError } from '../errors.js';
+import type { Logger } from '../logging/logger.js';
 import { orderedSlotEntriesForBudget } from '../slots/budget-allocator.js';
 import type { ContextSnapshot } from '../snapshot/context-snapshot.js';
 import type {
@@ -32,13 +34,18 @@ const noopLogger: PluginLogger = {
   error: () => {},
 };
 
-function adaptCompressorToOverflow(compressor: CompressionStrategy): OverflowStrategyFn {
+function adaptCompressorToOverflow(
+  compressor: CompressionStrategy,
+  tokenCounter: TokenCountCache,
+  fallbackLogger: Logger,
+): OverflowStrategyFn {
   return (items, budget, ctx) =>
     Promise.resolve(
-      compressor.compress(items, budget, {
-        slot: ctx.slot,
-        ...(ctx.slotConfig !== undefined ? { slotConfig: ctx.slotConfig } : {}),
-      }),
+      compressor.compress(
+        items,
+        budget,
+        compressionContextFromOverflow(ctx, { tokenCounter, fallbackLogger }),
+      ),
     );
 }
 
@@ -65,6 +72,12 @@ export type PluginManagerOptions = {
    * Use for `[contextcraft:pluginName]` style output (see Phase 7.3).
    */
   readonly createLogger?: (pluginName: string) => PluginLogger;
+
+  /**
+   * When a compressor runs via {@link OverflowEngine} without `strategyLogger`,
+   * this {@link Logger} is passed as {@link CompressionContext.logger}.
+   */
+  readonly compressionFallbackLogger?: Logger;
 };
 
 /** Hook names supported by {@link PluginManager.runHook}. */
@@ -90,6 +103,8 @@ export class PluginManager {
 
   private readonly createLogger: (pluginName: string) => PluginLogger;
 
+  private readonly compressionFallbackLogger: Logger;
+
   private readonly plugins: ContextPlugin[] = [];
 
   private readonly seen = new Set<ContextPlugin>();
@@ -102,6 +117,7 @@ export class PluginManager {
     this.getSlots = options.getSlots;
     this.tokenCounter = options.tokenCounter;
     this.createLogger = options.createLogger ?? (() => noopLogger);
+    this.compressionFallbackLogger = options.compressionFallbackLogger ?? noopLogger;
   }
 
   /** Plugins in registration order. */
@@ -139,11 +155,21 @@ export class PluginManager {
         this.overflowRegs.push({ plugin, name, fn: strategy });
       },
       registerCompressor: (name: string, compressor: CompressionStrategy): void => {
+        if (compressor.name !== name) {
+          throw new InvalidConfigError(
+            `registerCompressor("${name}"): compressor.name must match (got "${compressor.name}")`,
+            { context: { name, compressorName: compressor.name } },
+          );
+        }
         this.compressorRegs.push({ plugin, name, compressor });
         this.overflowRegs.push({
           plugin,
           name,
-          fn: adaptCompressorToOverflow(compressor),
+          fn: adaptCompressorToOverflow(
+            compressor,
+            this.tokenCounter,
+            this.compressionFallbackLogger,
+          ),
         });
       },
       logger: this.createLogger(plugin.name),

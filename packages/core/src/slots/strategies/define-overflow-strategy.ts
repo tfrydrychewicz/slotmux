@@ -65,6 +65,8 @@ export function defineOverflowStrategy(
 
 /**
  * Alias for {@link defineOverflowStrategy} (implementation plan §4.6).
- * Names “compression” historically; this builds **slot overflow** handlers only.
+ *
+ * **Not** the same as {@link CompressionStrategy} / `registerCompressor` (Phase 8.1):
+ * this factory only produces {@link OverflowStrategyFn} values for `SlotConfig.overflow`.
  */
 export const defineCompressionStrategy = defineOverflowStrategy;

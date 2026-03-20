@@ -119,6 +119,15 @@ export type {
 } from './slots/strategies/fallback-chain-strategy.js';
 export type { TokenAccountant } from './types/token-accountant.js';
 
+// Compression (§8 — Phase 8.1)
+export type { CompressionContext, CompressionStrategy } from './types/compression.js';
+export type { TokenCountCache } from './types/token-count-cache.js';
+export {
+  compressionContextFromOverflow,
+  overflowStrategyLoggerToLogger,
+} from './compression/from-overflow-context.js';
+export type { CompressionContextFromOverflowDeps } from './compression/from-overflow-context.js';
+
 // Event types (§6.6, §13.1)
 export type {
   ContextEvent,
@@ -192,8 +201,6 @@ export {
 // Plugin types (§11.1)
 export type {
   ResolvedSlot,
-  TokenCountCache,
-  CompressionStrategy,
   PluginLogger,
   PluginContext,
   ContextPlugin,

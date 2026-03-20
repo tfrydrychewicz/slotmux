@@ -42,15 +42,26 @@ describe('TokenCountCache', () => {
 });
 
 describe('CompressionStrategy', () => {
-  it('accepts compression strategy', () => {
+  it('accepts compression strategy with name and CompressionContext', () => {
     const strategy: CompressionStrategy = {
+      name: 'test-compress',
       compress: (items, budget, ctx) => {
-        expect(ctx.slot).toBeDefined();
+        expect(ctx.slotName).toBe('history');
+        expect(ctx.tokenCounter).toBeDefined();
+        expect(ctx.logger).toBeDefined();
+        void budget;
         return items.slice(0, 5);
       },
     };
     const items: ContentItem[] = [];
-    const result = strategy.compress(items, toTokenCount(100), { slot: 'history' });
+    const result = strategy.compress(items, toTokenCount(100), {
+      slotName: 'history',
+      slotConfig: undefined,
+      config: undefined,
+      tokenCounter: { count: () => toTokenCount(0) },
+      logger: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+      anchorText: undefined,
+    });
     expect(result).toHaveLength(0);
   });
 });
