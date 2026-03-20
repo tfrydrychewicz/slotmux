@@ -11,7 +11,7 @@ export async function tutorialChatbotTypecheck(): Promise<void> {
     model: 'gpt-4o-mini',
     preset: 'chat',
     reserveForResponse: 4096,
-    strictTokenizerPeers: false,
+    lazyContentItemTokens: true,
   });
 
   const ctx = Context.fromParsedConfig(config);

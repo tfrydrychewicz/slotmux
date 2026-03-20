@@ -56,7 +56,7 @@ const { config } = createContext({
   model: 'gpt-4o-mini',
   preset: 'chat',
   reserveForResponse: 4096,
-  strictTokenizerPeers: false, // skip peer-check for quick demo
+  lazyContentItemTokens: true,
 });
 
 // ── 2. Build a live Context from the config ──────────────────────────
@@ -213,7 +213,7 @@ Each time you type a message, slotmux does all of this before the API call:
 1. **`ctx.user(text)`** — Appends a `ContentItem` to the **history** slot.
 2. **`ctx.build()`** — Runs the full compile pipeline:
    - **Budget allocation** — The **system** slot gets its fixed 2 000 tokens; the **history** slot fills the remaining flex budget.
-   - **Token counting** — Each message is counted via the model's tokenizer encoding (or a character-based estimate when no peer tokenizer is installed).
+   - **Token counting** — `lazyContentItemTokens: true` means the pipeline lazily counts each message via the installed `gpt-tokenizer` on first build, then caches the result.
    - **Overflow check** — If history grows past its budget, the configured overflow strategy (summarize / truncate) kicks in automatically.
    - **Compile** — Produces an immutable `ContextSnapshot` containing `messages` (slotmux's internal format) and `meta` (token counts, utilization, per-slot stats, warnings, build time).
 3. **`formatOpenAIMessages(snapshot.messages)`** — Converts slotmux's compiled messages into OpenAI's `{ role, content }` shape with multimodal and tool-call support.
@@ -227,6 +227,7 @@ Each time you type a message, slotmux does all of this before the API call:
 | **Preset slots** | `preset: 'chat'` creates `system` (fixed budget) + `history` (flex budget) automatically. |
 | **Mutable Context** | `ctx.user()` / `ctx.assistant()` append to the right slots; the context grows turn by turn. |
 | **Immutable snapshot** | `ctx.build()` produces a frozen `ContextSnapshot` — safe to cache, serialize, or diff. |
+| **Lazy token counting** | `lazyContentItemTokens: true` auto-counts tokens via the model's tokenizer peer (`gpt-tokenizer`) on each build, caching results. |
 | **Token budgeting** | `reserveForResponse: 4096` leaves room for the model reply; the rest is split across slots. |
 | **Overflow** | The history slot uses `overflow: 'summarize'` — as the conversation grows past the budget, older messages would be compressed. |
 | **Provider formatting** | `formatOpenAIMessages()` handles text, multimodal, and tool messages for OpenAI's API shape. |
