@@ -134,6 +134,15 @@ export type {
   WarningEvent,
 } from './types/events.js';
 
+// Type-safe emitter (§13.1 — Phase 7.1)
+export { TypedEventEmitter } from './events/emitter.js';
+export type { EventWithTypeField } from './events/emitter.js';
+
+/** {@link TypedEventEmitter} for {@link ContextEvent}. */
+export type ContextEventEmitter = import('./events/emitter.js').TypedEventEmitter<
+  import('./types/events.js').ContextEvent
+>;
+
 // Snapshot types (§6.6)
 export type {
   SlotMeta,
