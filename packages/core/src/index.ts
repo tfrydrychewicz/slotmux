@@ -67,15 +67,10 @@ export {
   estimateTokensFromMultimodalContent,
 } from './content/char-token-estimate.js';
 export {
-  computeBuildReuseFingerprint,
-} from './content/build-reuse-fingerprint.js';
-export type { BuildReuseFingerprintSource } from './content/build-reuse-fingerprint.js';
-export {
   fillMissingContentItemTokens,
   sumCachedItemTokensWithLazyFill,
   sumCachedOrEstimatedItemTokens,
   tryResolveTokenizerForLazyFill,
-  wrapContentItemLazyTokens,
 } from './content/lazy-item-tokens.js';
 
 // Slot manager (§20)
@@ -388,8 +383,6 @@ export {
 
 export {
   assertTokenizerPeersAvailable,
-  TOKENIZER_PEER_PACKAGES,
-  tryResolveNpmPackage,
 } from './config/peer-resolve.js';
 export {
   createContext,

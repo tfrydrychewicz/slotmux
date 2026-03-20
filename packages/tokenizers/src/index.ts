@@ -22,16 +22,6 @@ export {
   countCompiledMessages,
 } from './message-count.js';
 
-export {
-  TOKEN_OVERHEAD,
-  getTokenOverhead,
-  ollamaOverhead,
-} from 'slotmux';
-export type {
-  ProviderTokenOverhead,
-  TokenOverheadProviderId,
-} from 'slotmux';
-
 export { Cl100kTokenizer, O200kTokenizer, freeTiktokenEncodings } from './tiktoken-adapters.js';
 
 export { ClaudeTokenizer } from './claude-tokenizer.js';
@@ -40,8 +30,6 @@ export { SentencePieceTokenizer } from './sentencepiece-tokenizer.js';
 export type { GptTokenizerEncodingName } from './sentencepiece-tokenizer.js';
 
 export { FallbackTokenizer } from './fallback-tokenizer.js';
-
-export { LRUCache } from './lru-cache.js';
 
 export { TokenCountCache } from './token-count-cache.js';
 export type {
