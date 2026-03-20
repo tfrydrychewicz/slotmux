@@ -190,6 +190,9 @@ function compileContentItem(item: ContentItem): CompiledMessage {
     if (item.toolCallId !== undefined) {
       m.tool_call_id = item.toolCallId;
     }
+    if (item.toolUses !== undefined) {
+      m.toolUses = item.toolUses;
+    }
     return m;
   }
   const parts: CompiledContentPart[] = [];
@@ -219,6 +222,9 @@ function compileContentItem(item: ContentItem): CompiledMessage {
   }
   if (item.toolCallId !== undefined) {
     m.tool_call_id = item.toolCallId;
+  }
+  if (item.toolUses !== undefined) {
+    m.toolUses = item.toolUses;
   }
   return m;
 }

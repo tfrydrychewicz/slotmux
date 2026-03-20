@@ -21,6 +21,7 @@ export type CreateContentItemParams = {
   content: ContentItem['content'];
   name?: string;
   toolCallId?: string;
+  toolUses?: ContentItem['toolUses'];
   metadata?: Record<string, unknown>;
   pinned?: boolean;
   ephemeral?: boolean;
@@ -37,12 +38,53 @@ export type CreateContentItemParams = {
  * {@link ContentItem.createdAt} (`Date.now()`), unless overridden.
  */
 export function createContentItem(params: CreateContentItemParams): ContentItem {
-  const { id, createdAt, ...rest } = params;
-  return {
-    ...rest,
+  const {
+    id,
+    createdAt,
+    slot,
+    role,
+    content,
+    name,
+    toolCallId,
+    toolUses,
+    metadata,
+    pinned,
+    ephemeral,
+    tokens,
+    summarizes,
+  } = params;
+  const item: ContentItem = {
+    slot,
+    role,
+    content,
     id: id ?? createContentId(),
     createdAt: createdAt ?? Date.now(),
   };
+  if (name !== undefined) {
+    item.name = name;
+  }
+  if (toolCallId !== undefined) {
+    item.toolCallId = toolCallId;
+  }
+  if (toolUses !== undefined) {
+    item.toolUses = toolUses;
+  }
+  if (metadata !== undefined) {
+    item.metadata = metadata;
+  }
+  if (pinned !== undefined) {
+    item.pinned = pinned;
+  }
+  if (ephemeral !== undefined) {
+    item.ephemeral = ephemeral;
+  }
+  if (tokens !== undefined) {
+    item.tokens = tokens;
+  }
+  if (summarizes !== undefined) {
+    item.summarizes = summarizes;
+  }
+  return item;
 }
 
 function shallowCopyItem(item: ContentItem): ContentItem {

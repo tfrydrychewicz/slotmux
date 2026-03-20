@@ -52,6 +52,16 @@ export type MultimodalContent =
   | MultimodalContentImageUrl
   | MultimodalContentImageBase64;
 
+/**
+ * Assistant-issued tool call (Anthropic `tool_use` / cross-provider tool rounds).
+ */
+export interface CompiledToolUse {
+  id: string;
+  name: string;
+  /** JSON-serializable arguments for the tool invocation */
+  input: Record<string, unknown>;
+}
+
 // ==========================================
 // Content Item
 // ==========================================
@@ -93,6 +103,9 @@ export interface ContentItem {
 
   /** OpenAI `tool` role: id of the tool call this message responds to. */
   toolCallId?: string;
+
+  /** Assistant `tool_use` blocks (paired with user `tool_result` / OpenAI `tool`). */
+  toolUses?: readonly CompiledToolUse[];
 }
 
 // ==========================================
@@ -142,4 +155,7 @@ export interface CompiledMessage {
    * Prefer setting {@link ContentItem.toolCallId} at compile time.
    */
   tool_call_id?: string;
+
+  /** Assistant `tool_use` blocks (Anthropic Messages API). */
+  toolUses?: readonly CompiledToolUse[];
 }

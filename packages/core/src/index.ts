@@ -46,6 +46,7 @@ export type {
   CompiledContentText,
   CompiledContentImageUrl,
   CompiledContentImageBase64,
+  CompiledToolUse,
 } from './types/content.js';
 
 // Content store (§20 — Phase 3.1)

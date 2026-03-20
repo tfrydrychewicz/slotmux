@@ -7,6 +7,21 @@
 export const VERSION = '0.0.1';
 
 export {
+  createAnthropicAdapter,
+  AnthropicAdapter,
+  collapseConsecutiveRoles,
+  formatAnthropicMessages,
+} from './anthropic-adapter.js';
+export type {
+  AnthropicContentBlock,
+  AnthropicImageBlock,
+  AnthropicMessageParam,
+  AnthropicMessagesPayload,
+  AnthropicTextBlock,
+  AnthropicToolResultBlock,
+  AnthropicToolUseBlock,
+} from './anthropic-adapter.js';
+export {
   createOpenAIAdapter,
   formatOpenAIMessages,
   OpenAIAdapter,

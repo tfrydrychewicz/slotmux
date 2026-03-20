@@ -20,6 +20,13 @@ export function cloneCompiledMessage(m: CompiledMessage): CompiledMessage {
   if (m.tool_call_id !== undefined) {
     out.tool_call_id = m.tool_call_id;
   }
+  if (m.toolUses !== undefined) {
+    out.toolUses = m.toolUses.map((t) => ({
+      id: t.id,
+      name: t.name,
+      input: { ...t.input },
+    }));
+  }
   return out;
 }
 
