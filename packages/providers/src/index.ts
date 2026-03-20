@@ -22,6 +22,17 @@ export type {
   AnthropicToolUseBlock,
 } from './anthropic-adapter.js';
 export {
+  collapseConsecutiveGeminiRoles,
+  createGoogleAdapter,
+  formatGeminiMessages,
+  GoogleAdapter,
+} from './google-adapter.js';
+export type {
+  GeminiContent,
+  GeminiGenerateContentPayload,
+  GeminiPart,
+} from './google-adapter.js';
+export {
   createOpenAIAdapter,
   formatOpenAIMessages,
   OpenAIAdapter,
