@@ -1,5 +1,6 @@
 /**
- * Mutable runtime context container — slots, content, and events (§6.1, §6.3 — Phase 5.1).
+ * Mutable runtime context container — slots, content, and events (§6.1, §6.3 — Phase 5.1);
+ * checkpoint / restore (§12.2 — Phase 9.3).
  *
  * @packageDocumentation
  */
@@ -20,6 +21,11 @@ import {
   mergeParsedConfigForBuild,
   type ContextBuildParams,
 } from './build-overrides.js';
+import {
+  type ContextCheckpoint,
+  cloneItemsForCheckpoint,
+  slotItemsSignature,
+} from './context-checkpoint.js';
 import { ContextOrchestrator, type ContextOrchestratorBuildResult } from './context-orchestrator.js';
 
 /** Default slot for {@link Context.system}. */
@@ -101,6 +107,11 @@ export class Context {
 
   private readonly parsedConfig: ParsedContextConfig | undefined;
 
+  /** Baseline signatures per slot for §12.2 delta (`changedSincePrevious`). */
+  private checkpointBaselineSigBySlot: Record<string, string> = {};
+
+  private checkpointSeq = 0;
+
   constructor(init: ContextInit) {
     const keys = Object.keys(init.slots);
     if (keys.length === 0) {
@@ -115,6 +126,10 @@ export class Context {
     this.systemSlot = init.systemSlotName ?? DEFAULT_SYSTEM_SLOT;
     this.historySlot = init.historySlotName ?? DEFAULT_HISTORY_SLOT;
     this.parsedConfig = init.parsedConfig;
+
+    for (const slot of this.store.registeredSlots) {
+      this.checkpointBaselineSigBySlot[slot] = slotItemsSignature([]);
+    }
   }
 
   /**
@@ -321,5 +336,67 @@ export class Context {
    */
   clearEphemeral(): void {
     this.store.clearEphemeral();
+  }
+
+  /**
+   * Captures a lightweight checkpoint: **`changedSincePrevious`** lists only slots whose items changed
+   * since the last `checkpoint()` (or since construction). **`slots`** holds a full deep copy of every
+   * registered slot for use with {@link Context.restore} (§12.2 — Phase 9.3).
+   */
+  checkpoint(): ContextCheckpoint {
+    const slots: Record<string, ContentItem[]> = {};
+    const changedSincePrevious: string[] = [];
+
+    for (const slot of this.store.registeredSlots) {
+      const items = this.store.getItems(slot);
+      const cloned = cloneItemsForCheckpoint(items);
+      slots[slot] = cloned;
+      const sig = slotItemsSignature(cloned);
+      const prev = this.checkpointBaselineSigBySlot[slot];
+      if (sig !== prev) {
+        changedSincePrevious.push(slot);
+        this.checkpointBaselineSigBySlot[slot] = sig;
+      }
+    }
+
+    this.checkpointSeq += 1;
+    return {
+      version: '1.0',
+      seq: this.checkpointSeq,
+      changedSincePrevious,
+      slots,
+    };
+  }
+
+  /**
+   * Restores all registered slots from a prior {@link Context.checkpoint} result.
+   * Resets the internal checkpoint baseline so the next `checkpoint()` diffs from this restored state.
+   *
+   * @throws {@link InvalidConfigError} When `checkpoint.version` is unsupported or a registered slot is missing from `checkpoint.slots`.
+   */
+  restore(checkpoint: ContextCheckpoint): void {
+    if (checkpoint.version !== '1.0') {
+      throw new InvalidConfigError(
+        `Context.restore: unsupported checkpoint version "${String(checkpoint.version)}"`,
+        { context: { phase: '9.3', version: checkpoint.version } },
+      );
+    }
+
+    const snapshot: Record<string, ContentItem[]> = {};
+    for (const slot of this.store.registeredSlots) {
+      const raw = checkpoint.slots[slot];
+      if (raw === undefined) {
+        throw new InvalidConfigError(`Context.restore: checkpoint missing slot "${slot}"`, {
+          context: { phase: '9.3', slot },
+        });
+      }
+      snapshot[slot] = cloneItemsForCheckpoint(raw);
+    }
+
+    this.store.replaceAllSlots(snapshot);
+
+    for (const slot of this.store.registeredSlots) {
+      this.checkpointBaselineSigBySlot[slot] = slotItemsSignature(snapshot[slot]!);
+    }
   }
 }

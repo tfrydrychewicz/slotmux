@@ -263,4 +263,39 @@ describe('ContentStore', () => {
     expect(store.getItems('tiny')).toHaveLength(1);
     expect(store.getItems('tiny')[0]!.content).toBe('b');
   });
+
+  it('replaceAllSlots restores every registered slot', () => {
+    const store = new ContentStore(baseSlot());
+    store.addItem(
+      'history',
+      createContentItem({ slot: 'history', role: 'user', content: 'old' }),
+    );
+    const nu = createContentItem({ slot: 'history', role: 'user', content: 'new' });
+    store.replaceAllSlots({
+      history: [nu],
+      system: [],
+    });
+    expect(store.getItems('history').map((i) => i.content)).toEqual(['new']);
+    expect(store.getItems('system')).toHaveLength(0);
+  });
+
+  it('replaceAllSlots throws when a registered slot is missing', () => {
+    const store = new ContentStore(baseSlot());
+    expect(() =>
+      store.replaceAllSlots({
+        history: [],
+      } as Record<string, unknown[]>),
+    ).toThrow(InvalidConfigError);
+  });
+
+  it('replaceAllSlots throws when item.slot mismatches bucket', () => {
+    const store = new ContentStore(baseSlot());
+    const bad = createContentItem({ slot: 'history', role: 'user', content: 'x' });
+    expect(() =>
+      store.replaceAllSlots({
+        history: [],
+        system: [bad],
+      }),
+    ).toThrow(InvalidConfigError);
+  });
 });

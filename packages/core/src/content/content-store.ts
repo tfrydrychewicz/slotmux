@@ -245,4 +245,34 @@ export class ContentStore {
       list.push(...kept);
     }
   }
+
+  /**
+   * Replaces every registered slot’s items from a checkpoint snapshot (§12.2 — Phase 9.3).
+   * Each item’s {@link ContentItem.slot} must match its bucket.
+   *
+   * @throws {@link InvalidConfigError} When a registered slot is missing from `snapshot` or an item has wrong `slot`.
+   */
+  replaceAllSlots(snapshot: Readonly<Record<string, readonly ContentItem[]>>): void {
+    for (const slot of Object.keys(this.slotConfigs)) {
+      const raw = snapshot[slot];
+      if (raw === undefined) {
+        throw new InvalidConfigError(`replaceAllSlots: snapshot missing registered slot "${slot}"`, {
+          context: { slot, phase: '9.3' },
+        });
+      }
+      const list = this.listFor(slot);
+      list.length = 0;
+      for (const item of raw) {
+        if (item.slot !== slot) {
+          throw new InvalidConfigError(
+            `replaceAllSlots: item.slot "${item.slot}" does not match bucket "${slot}"`,
+            {
+              context: { itemSlot: item.slot, bucket: slot, phase: '9.3' },
+            },
+          );
+        }
+        list.push(shallowCopyItem(item));
+      }
+    }
+  }
 }

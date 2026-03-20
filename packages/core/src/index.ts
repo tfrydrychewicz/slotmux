@@ -359,6 +359,7 @@ export type {
   ContextInit,
   ContextPushItemInput,
 } from './context/context.js';
+export type { ContextCheckpoint } from './context/context-checkpoint.js';
 export type {
   ContextBuildOverrides,
   ContextBuildParams,
