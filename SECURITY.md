@@ -4,15 +4,15 @@
 
 Please report security issues responsibly (avoid public issues for undisclosed vulnerabilities). Use the repository’s security policy or maintainer contact if available.
 
-## Supply chain — `ctxforge` core (Phase 13.2 / §19.1)
+## Supply chain — `slotmux` core (Phase 13.2 / §19.1)
 
 ### Runtime dependencies (audited allowlist)
 
-The published **`ctxforge`** package (`packages/core`) intentionally keeps a **small, reviewed** set of **runtime** `dependencies`:
+The published **`slotmux`** package (`packages/core`) intentionally keeps a **small, reviewed** set of **runtime** `dependencies`:
 
 | Package                     | Role                                    |
 |----------------------------|-----------------------------------------|
-| `@ctxforge/compression` | Workspace-linked compression strategies |
+| `@slotmux/compression` | Workspace-linked compression strategies |
 | `nanoid`                   | Content item IDs                        |
 | `zod`                      | Config validation                       |
 

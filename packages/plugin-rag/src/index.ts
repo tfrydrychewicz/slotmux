@@ -1,5 +1,5 @@
 /**
- * @ctxforge/plugin-rag — RAG integration.
+ * @slotmux/plugin-rag — RAG integration.
  *
  * @packageDocumentation
  */

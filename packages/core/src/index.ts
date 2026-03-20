@@ -1,5 +1,5 @@
 /**
- * ctxforge — Intelligent Context Window Manager for AI Applications
+ * slotmux — Intelligent Context Window Manager for AI Applications
  *
  * @packageDocumentation
  */
@@ -8,7 +8,7 @@ export const VERSION = '0.0.1';
 
 // Error types (§15.1)
 export {
-  CtxForgeError,
+  SlotmuxError,
   BudgetExceededError,
   InvalidBudgetError,
   ContextOverflowError,
@@ -169,8 +169,8 @@ export type {
   ProgressiveSummarizeOverflowDeps,
 } from './compression/progressive-overflow-bridge.js';
 export { semanticCompressAsOverflow } from './compression/semantic-overflow-bridge.js';
-export type { EmbedFunction, SemanticScorableItem } from '@ctxforge/compression';
-export { cosineSimilarity, runSemanticCompress } from '@ctxforge/compression';
+export type { EmbedFunction, SemanticScorableItem } from '@slotmux/compression';
+export { cosineSimilarity, runSemanticCompress } from '@slotmux/compression';
 export type {
   LosslessCompressibleItem,
   LosslessCompressorOptions,

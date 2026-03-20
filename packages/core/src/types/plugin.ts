@@ -1,5 +1,5 @@
 /**
- * Plugin types for ctxforge extensibility.
+ * Plugin types for slotmux extensibility.
  *
  * @packageDocumentation
  */

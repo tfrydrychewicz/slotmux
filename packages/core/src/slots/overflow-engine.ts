@@ -7,7 +7,7 @@
 import type {
   MapReduceSummarizeDeps,
   ProgressiveSummarizeTextFn,
-} from '@ctxforge/compression';
+} from '@slotmux/compression';
 
 import { losslessCompressAsOverflow } from '../compression/lossless-bridge.js';
 import { createProgressiveSummarizeOverflow } from '../compression/progressive-overflow-bridge.js';
@@ -39,10 +39,10 @@ import { slidingWindowStrategy } from './strategies/sliding-window-strategy.js';
 import { truncateLatestStrategy } from './strategies/truncate-latest-strategy.js';
 import { truncateStrategy } from './strategies/truncate-strategy.js';
 
-/** @deprecated Use {@link truncateFifo} from `ctxforge` (same implementation). */
+/** @deprecated Use {@link truncateFifo} from `slotmux` (same implementation). */
 export { truncateFifo as builtinTruncateFifo } from './strategies/truncate-strategy.js';
 
-/** @deprecated Use {@link truncateLatest} from `ctxforge` (same implementation). */
+/** @deprecated Use {@link truncateLatest} from `slotmux` (same implementation). */
 export { truncateLatest as builtinTruncateLatest } from './strategies/truncate-latest-strategy.js';
 
 /** Resolved slot plus {@link SlotConfig} for overflow / protection flags. */

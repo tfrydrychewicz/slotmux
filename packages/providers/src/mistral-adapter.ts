@@ -11,13 +11,13 @@ import {
   Cl100kTokenizer,
   FallbackTokenizer,
   O200kTokenizer,
-} from '@ctxforge/tokenizers';
+} from '@slotmux/tokenizers';
 import {
   BaseProviderAdapter,
   type CompiledMessage,
   type ModelId,
   type Tokenizer,
-} from 'ctxforge';
+} from 'slotmux';
 
 import {
   formatOpenAIMessages,

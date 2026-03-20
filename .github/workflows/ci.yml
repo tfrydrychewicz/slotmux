@@ -52,7 +52,7 @@ jobs:
 
       - run: pnpm build
 
-      - run: pnpm --filter @ctxforge/debug exec playwright install chromium --with-deps
+      - run: pnpm --filter @slotmux/debug exec playwright install chromium --with-deps
 
       - run: pnpm test:e2e
 

@@ -1,12 +1,12 @@
 /**
- * @ctxforge/react — hook smoke tests (jsdom).
+ * @slotmux/react — hook smoke tests (jsdom).
  *
  * @packageDocumentation
  */
 
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { SlotOverflow } from 'ctxforge';
-import { reactiveContext, type ReactiveContextInit } from 'ctxforge/reactive';
+import { SlotOverflow } from 'slotmux';
+import { reactiveContext, type ReactiveContextInit } from 'slotmux/reactive';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -53,7 +53,7 @@ function testInit(
   };
 }
 
-describe('@ctxforge/react hooks', () => {
+describe('@slotmux/react hooks', () => {
   it('useReactiveContextMeta tracks initial and debounced build', async () => {
     const ctx = reactiveContext(testInit());
     const { result } = renderHook(() => useReactiveContextMeta(ctx));

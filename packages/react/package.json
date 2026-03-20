@@ -1,7 +1,7 @@
 {
-  "name": "@ctxforge/react",
+  "name": "@slotmux/react",
   "version": "0.0.1",
-  "description": "React hooks for ctxforge reactive context (useSyncExternalStore)",
+  "description": "React hooks for slotmux reactive context (useSyncExternalStore)",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -36,7 +36,7 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "ctxforge": "workspace:*"
+    "slotmux": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.1",

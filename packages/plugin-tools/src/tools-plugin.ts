@@ -4,8 +4,8 @@
  * @packageDocumentation
  */
 
-import type { ContentItem, ContextPlugin, SlotConfig } from 'ctxforge';
-import { AGENT_DEFAULTS, toTokenCount } from 'ctxforge';
+import type { ContentItem, ContextPlugin, SlotConfig } from 'slotmux';
+import { AGENT_DEFAULTS, toTokenCount } from 'slotmux';
 
 import {
   estimateTokensFromText,
@@ -13,7 +13,7 @@ import {
 } from './truncate-result.js';
 import { VERSION } from './version.js';
 
-const PLUGIN_NAME = '@ctxforge/plugin-tools';
+const PLUGIN_NAME = '@slotmux/plugin-tools';
 
 /** Metadata: {@link TOOLS_METADATA_KIND} === `'definition'` marks function / JSON tool schemas. */
 export const TOOLS_METADATA_KIND = 'tools.kind';

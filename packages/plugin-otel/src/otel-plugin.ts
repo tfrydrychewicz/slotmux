@@ -1,5 +1,5 @@
 /**
- * OpenTelemetry plugin for ctxforge (§13.4).
+ * OpenTelemetry plugin for slotmux (§13.4).
  *
  * @packageDocumentation
  */
@@ -14,22 +14,22 @@ import {
   type Tracer,
   SpanStatusCode,
 } from '@opentelemetry/api';
-import type { ContextEvent, ContextPlugin } from 'ctxforge';
+import type { ContextEvent, ContextPlugin } from 'slotmux';
 
 import { VERSION } from './version.js';
 
-const TRACER_NAME = 'ctxforge';
-const METER_NAME = 'ctxforge';
+const TRACER_NAME = 'slotmux';
+const METER_NAME = 'slotmux';
 
 /** Span names emitted by this plugin. */
-export const OTEL_SPAN_BUILD = 'ctxforge.build';
-export const OTEL_SPAN_OVERFLOW = 'ctxforge.overflow';
-export const OTEL_SPAN_COMPRESS = 'ctxforge.compress';
+export const OTEL_SPAN_BUILD = 'slotmux.build';
+export const OTEL_SPAN_OVERFLOW = 'slotmux.overflow';
+export const OTEL_SPAN_COMPRESS = 'slotmux.compress';
 
 /** Metric names (dotted, per §13.4). */
-export const OTEL_METRIC_BUILD_DURATION = 'ctxforge.build.duration';
-export const OTEL_METRIC_UTILIZATION = 'ctxforge.utilization';
-export const OTEL_METRIC_TOKENS_USED = 'ctxforge.tokens.used';
+export const OTEL_METRIC_BUILD_DURATION = 'slotmux.build.duration';
+export const OTEL_METRIC_UTILIZATION = 'slotmux.utilization';
+export const OTEL_METRIC_TOKENS_USED = 'slotmux.tokens.used';
 
 export type OtelPluginOptions = {
   /**
@@ -40,7 +40,7 @@ export type OtelPluginOptions = {
 
   /**
    * Optional parent context (e.g. from `propagation.extract` on incoming HTTP headers).
-   * When set, `ctxforge.build` is a child of that trace.
+   * When set, `slotmux.build` is a child of that trace.
    */
   readonly parentContext?: OtelContext;
 
@@ -58,14 +58,14 @@ function parentCtxForSpan(parentSpan: Span | undefined): OtelContext {
 }
 
 /**
- * Emits spans `ctxforge.build`, `ctxforge.overflow`, `ctxforge.compress`
- * and histograms `ctxforge.build.duration`, `ctxforge.utilization`, `ctxforge.tokens.used`.
+ * Emits spans `slotmux.build`, `slotmux.overflow`, `slotmux.compress`
+ * and histograms `slotmux.build.duration`, `slotmux.utilization`, `slotmux.tokens.used`.
  *
  * @remarks
  * Install an OpenTelemetry SDK (e.g. `@opentelemetry/sdk-node`) in your app so traces and metrics
  * export. This plugin uses the API only. Pipeline events are the same redacted payloads as `onEvent`.
  *
- * **Trace propagation**: Child spans link to `ctxforge.build` via explicit parent context.
+ * **Trace propagation**: Child spans link to `slotmux.build` via explicit parent context.
  * For async context propagation across `await` inside custom strategies, register an SDK that
  * instruments async continuity (AsyncLocalStorage).
  */
@@ -98,7 +98,7 @@ export function otelPlugin(options: OtelPluginOptions = {}): ContextPlugin {
           OTEL_SPAN_BUILD,
           {
             attributes: {
-              'ctxforge.total_budget': ev.totalBudget,
+              'slotmux.total_budget': ev.totalBudget,
               ...(options.serviceName !== undefined
                 ? { 'service.name': options.serviceName }
                 : {}),
@@ -123,10 +123,10 @@ export function otelPlugin(options: OtelPluginOptions = {}): ContextPlugin {
 
         if (buildSpan !== undefined) {
           buildSpan.setAttributes({
-            'ctxforge.build_time_ms': meta.buildTimeMs,
-            'ctxforge.utilization': meta.utilization,
-            'ctxforge.total_tokens': meta.totalTokens,
-            'ctxforge.message_count': ev.snapshot.messages.length,
+            'slotmux.build_time_ms': meta.buildTimeMs,
+            'slotmux.utilization': meta.utilization,
+            'slotmux.total_tokens': meta.totalTokens,
+            'slotmux.message_count': ev.snapshot.messages.length,
           });
           buildSpan.setStatus({ code: SpanStatusCode.OK });
           buildSpan.end();
@@ -143,10 +143,10 @@ export function otelPlugin(options: OtelPluginOptions = {}): ContextPlugin {
           OTEL_SPAN_OVERFLOW,
           {
             attributes: {
-              'ctxforge.slot': ev.slot,
-              'ctxforge.strategy': ev.strategy,
-              'ctxforge.before_tokens': ev.beforeTokens,
-              'ctxforge.after_tokens': ev.afterTokens,
+              'slotmux.slot': ev.slot,
+              'slotmux.strategy': ev.strategy,
+              'slotmux.before_tokens': ev.beforeTokens,
+              'slotmux.after_tokens': ev.afterTokens,
             },
           },
           parentCtxForSpan(buildSpan),
@@ -163,8 +163,8 @@ export function otelPlugin(options: OtelPluginOptions = {}): ContextPlugin {
           OTEL_SPAN_COMPRESS,
           {
             attributes: {
-              'ctxforge.slot': ev.slot,
-              'ctxforge.item_count': ev.itemCount,
+              'slotmux.slot': ev.slot,
+              'slotmux.item_count': ev.itemCount,
             },
           },
           parentCtxForSpan(buildSpan),
@@ -179,9 +179,9 @@ export function otelPlugin(options: OtelPluginOptions = {}): ContextPlugin {
           return;
         }
         span.setAttributes({
-          'ctxforge.before_tokens': ev.beforeTokens,
-          'ctxforge.after_tokens': ev.afterTokens,
-          'ctxforge.ratio': ev.ratio,
+          'slotmux.before_tokens': ev.beforeTokens,
+          'slotmux.after_tokens': ev.afterTokens,
+          'slotmux.ratio': ev.ratio,
         });
         span.setStatus({ code: SpanStatusCode.OK });
         span.end();

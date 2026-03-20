@@ -1,5 +1,5 @@
 {
-  "name": "@ctxforge/docs",
+  "name": "@slotmux/docs",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,8 +9,8 @@
     "docs:api": "typedoc --options ./typedoc.json"
   },
   "devDependencies": {
-    "@ctxforge/providers": "workspace:*",
-    "ctxforge": "workspace:*",
+    "@slotmux/providers": "workspace:*",
+    "slotmux": "workspace:*",
     "typedoc": "~0.27.9",
     "typedoc-plugin-markdown": "~4.4.2",
     "vitepress": "^1.6.3"

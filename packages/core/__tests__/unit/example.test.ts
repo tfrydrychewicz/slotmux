@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { VERSION } from '../../src/index';
 import { makeSlot, makeItem, makeContext } from '../helpers';
 
-describe('ctxforge', () => {
+describe('slotmux', () => {
   it('exports version', () => {
     expect(VERSION).toBe('0.0.1');
   });

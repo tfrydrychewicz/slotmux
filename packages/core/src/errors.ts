@@ -1,11 +1,11 @@
 /**
- * Error types for ctxforge.
+ * Error types for slotmux.
  *
  * @packageDocumentation
  */
 
 /**
- * Base error class for all ctxforge errors.
+ * Base error class for all slotmux errors.
  *
  * @see {@link BudgetExceededError}
  * @see {@link ContextOverflowError}
@@ -18,8 +18,8 @@
  * @see {@link MaxItemsExceededError}
  * @see {@link InvalidBudgetError}
  */
-export class CtxForgeError extends Error {
-  override readonly name: string = 'CtxForgeError';
+export class SlotmuxError extends Error {
+  override readonly name: string = 'SlotmuxError';
 
   readonly code: string;
 
@@ -37,12 +37,12 @@ export class CtxForgeError extends Error {
     },
   ) {
     super(message, options?.cause ? { cause: options.cause } : undefined);
-    this.code = options?.code ?? 'CTX_FORGE_ERROR';
+    this.code = options?.code ?? 'SLOTMUX_ERROR';
     this.recoverable = options?.recoverable ?? false;
     if (options?.context !== undefined) {
       this.context = options.context;
     }
-    Object.setPrototypeOf(this, CtxForgeError.prototype);
+    Object.setPrototypeOf(this, SlotmuxError.prototype);
   }
 }
 
@@ -56,7 +56,7 @@ export class CtxForgeError extends Error {
  * });
  * ```
  */
-export class BudgetExceededError extends CtxForgeError {
+export class BudgetExceededError extends SlotmuxError {
   override readonly name = 'BudgetExceededError';
 
   override readonly code = 'BUDGET_EXCEEDED';
@@ -75,7 +75,7 @@ export class BudgetExceededError extends CtxForgeError {
 /**
  * Slot percentage budgets are invalid (e.g. sum of percents above 100).
  */
-export class InvalidBudgetError extends CtxForgeError {
+export class InvalidBudgetError extends SlotmuxError {
   override readonly name = 'InvalidBudgetError';
 
   override readonly code = 'INVALID_BUDGET';
@@ -101,7 +101,7 @@ export class InvalidBudgetError extends CtxForgeError {
  * });
  * ```
  */
-export class ContextOverflowError extends CtxForgeError {
+export class ContextOverflowError extends SlotmuxError {
   override readonly name = 'ContextOverflowError';
 
   override readonly code = 'CONTEXT_OVERFLOW';
@@ -150,7 +150,7 @@ export class ContextOverflowError extends CtxForgeError {
  * throw new TokenizerNotFoundError('Tokenizer cl100k_base not found. Install tiktoken.');
  * ```
  */
-export class TokenizerNotFoundError extends CtxForgeError {
+export class TokenizerNotFoundError extends SlotmuxError {
   override readonly name = 'TokenizerNotFoundError';
 
   override readonly code = 'TOKENIZER_NOT_FOUND';
@@ -180,7 +180,7 @@ export class TokenizerNotFoundError extends CtxForgeError {
  * });
  * ```
  */
-export class CompressionFailedError extends CtxForgeError {
+export class CompressionFailedError extends SlotmuxError {
   override readonly name = 'CompressionFailedError';
 
   override readonly code = 'COMPRESSION_FAILED';
@@ -218,7 +218,7 @@ export class CompressionFailedError extends CtxForgeError {
  * });
  * ```
  */
-export class SnapshotCorruptedError extends CtxForgeError {
+export class SnapshotCorruptedError extends SlotmuxError {
   override readonly name = 'SnapshotCorruptedError';
 
   override readonly code = 'SNAPSHOT_CORRUPTED';
@@ -248,7 +248,7 @@ export class SnapshotCorruptedError extends CtxForgeError {
  * });
  * ```
  */
-export class InvalidConfigError extends CtxForgeError {
+export class InvalidConfigError extends SlotmuxError {
   override readonly name = 'InvalidConfigError';
 
   override readonly code = 'INVALID_CONFIG';
@@ -271,7 +271,7 @@ export class InvalidConfigError extends CtxForgeError {
 /**
  * Slot name is not registered on the content store.
  */
-export class SlotNotFoundError extends CtxForgeError {
+export class SlotNotFoundError extends SlotmuxError {
   override readonly name = 'SlotNotFoundError';
 
   override readonly code = 'SLOT_NOT_FOUND';
@@ -298,7 +298,7 @@ export class SlotNotFoundError extends CtxForgeError {
 /**
  * No content item with the given id exists in the slot.
  */
-export class ItemNotFoundError extends CtxForgeError {
+export class ItemNotFoundError extends SlotmuxError {
   override readonly name = 'ItemNotFoundError';
 
   override readonly code = 'ITEM_NOT_FOUND';
@@ -337,7 +337,7 @@ export class ItemNotFoundError extends CtxForgeError {
 /**
  * {@link SlotConfig.maxItems} would be exceeded.
  */
-export class MaxItemsExceededError extends CtxForgeError {
+export class MaxItemsExceededError extends SlotmuxError {
   override readonly name = 'MaxItemsExceededError';
 
   override readonly code = 'MAX_ITEMS_EXCEEDED';

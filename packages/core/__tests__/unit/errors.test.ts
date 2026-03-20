@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  CtxForgeError,
+  SlotmuxError,
   BudgetExceededError,
   ContextOverflowError,
   TokenizerNotFoundError,
@@ -14,9 +14,9 @@ import {
   MaxItemsExceededError,
 } from '../../src/errors.js';
 
-describe('CtxForgeError', () => {
+describe('SlotmuxError', () => {
   it('creates error with message and options', () => {
-    const err = new CtxForgeError('Test error', {
+    const err = new SlotmuxError('Test error', {
       code: 'TEST',
       recoverable: true,
       context: { foo: 'bar' },
@@ -25,18 +25,18 @@ describe('CtxForgeError', () => {
     expect(err.code).toBe('TEST');
     expect(err.recoverable).toBe(true);
     expect(err.context).toEqual({ foo: 'bar' });
-    expect(err.name).toBe('CtxForgeError');
+    expect(err.name).toBe('SlotmuxError');
   });
 
-  it('is instanceof Error and CtxForgeError', () => {
-    const err = new CtxForgeError('Test');
+  it('is instanceof Error and SlotmuxError', () => {
+    const err = new SlotmuxError('Test');
     expect(err).toBeInstanceOf(Error);
-    expect(err).toBeInstanceOf(CtxForgeError);
+    expect(err).toBeInstanceOf(SlotmuxError);
   });
 
   it('preserves cause', () => {
     const cause = new Error('Original');
-    const err = new CtxForgeError('Wrapped', { cause });
+    const err = new SlotmuxError('Wrapped', { cause });
     expect(err.cause).toBe(cause);
   });
 });
@@ -148,17 +148,17 @@ describe('MaxItemsExceededError', () => {
 });
 
 describe('Error inheritance', () => {
-  it('all errors extend CtxForgeError', () => {
-    expect(new BudgetExceededError('x')).toBeInstanceOf(CtxForgeError);
-    expect(new ContextOverflowError('x', { slot: 's', budgetTokens: 1, actualTokens: 2 })).toBeInstanceOf(CtxForgeError);
-    expect(new TokenizerNotFoundError('x')).toBeInstanceOf(CtxForgeError);
-    expect(new CompressionFailedError('x', { fallbackStrategy: 'y' })).toBeInstanceOf(CtxForgeError);
-    expect(new SnapshotCorruptedError('x')).toBeInstanceOf(CtxForgeError);
-    expect(new InvalidConfigError('x')).toBeInstanceOf(CtxForgeError);
-    expect(new InvalidBudgetError('x')).toBeInstanceOf(CtxForgeError);
-    expect(new SlotNotFoundError('x', { slot: 's' })).toBeInstanceOf(CtxForgeError);
+  it('all errors extend SlotmuxError', () => {
+    expect(new BudgetExceededError('x')).toBeInstanceOf(SlotmuxError);
+    expect(new ContextOverflowError('x', { slot: 's', budgetTokens: 1, actualTokens: 2 })).toBeInstanceOf(SlotmuxError);
+    expect(new TokenizerNotFoundError('x')).toBeInstanceOf(SlotmuxError);
+    expect(new CompressionFailedError('x', { fallbackStrategy: 'y' })).toBeInstanceOf(SlotmuxError);
+    expect(new SnapshotCorruptedError('x')).toBeInstanceOf(SlotmuxError);
+    expect(new InvalidConfigError('x')).toBeInstanceOf(SlotmuxError);
+    expect(new InvalidBudgetError('x')).toBeInstanceOf(SlotmuxError);
+    expect(new SlotNotFoundError('x', { slot: 's' })).toBeInstanceOf(SlotmuxError);
     expect(new ItemNotFoundError('x', { slot: 's', itemId: 'i' })).toBeInstanceOf(
-      CtxForgeError,
+      SlotmuxError,
     );
     expect(
       new MaxItemsExceededError('x', {
@@ -166,6 +166,6 @@ describe('Error inheritance', () => {
         maxItems: 1,
         currentCount: 1,
       }),
-    ).toBeInstanceOf(CtxForgeError);
+    ).toBeInstanceOf(SlotmuxError);
   });
 });

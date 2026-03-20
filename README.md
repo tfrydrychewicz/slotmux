@@ -1,15 +1,15 @@
-# ctxforge
+# slotmux
 
-[![CI](https://github.com/tfrydrychewicz/ctxforge/actions/workflows/ci.yml/badge.svg)](https://github.com/tfrydrychewicz/ctxforge/actions/workflows/ci.yml)
-[![Docs](https://github.com/tfrydrychewicz/ctxforge/actions/workflows/docs.yml/badge.svg)](https://github.com/tfrydrychewicz/ctxforge/actions/workflows/docs.yml)
-[![npm version](https://img.shields.io/npm/v/ctxforge.svg)](https://www.npmjs.com/package/ctxforge)
+[![CI](https://github.com/tfrydrychewicz/slotmux/actions/workflows/ci.yml/badge.svg)](https://github.com/tfrydrychewicz/slotmux/actions/workflows/ci.yml)
+[![Docs](https://github.com/tfrydrychewicz/slotmux/actions/workflows/docs.yml/badge.svg)](https://github.com/tfrydrychewicz/slotmux/actions/workflows/docs.yml)
+[![npm version](https://img.shields.io/npm/v/slotmux.svg)](https://www.npmjs.com/package/slotmux)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![bundle size](<https://img.shields.io/bundlephobia/minzip/ctxforge?label=core%20(minzip)>)](https://bundlephobia.com/package/ctxforge)
+[![bundle size](<https://img.shields.io/bundlephobia/minzip/slotmux?label=core%20(minzip)>)](https://bundlephobia.com/package/slotmux)
 [![Coverage](<https://img.shields.io/badge/coverage-vitest%20(local)-6E9F18.svg>)](CONTRIBUTING.md)
 
 > **One-liner:** _The memory allocator for LLM context windows._
 
-**In 30 seconds:** ctxforge is a TypeScript library that manages your AI app’s context window like an OS manages RAM. Declare what matters, set per-slot **budgets** and **priorities**, and let ctxforge handle **token counting**, **overflow**, and **compression**—across OpenAI, Anthropic, Google, and other providers—while keeping a **small core bundle** and full **type safety**.
+**In 30 seconds:** slotmux is a TypeScript library that manages your AI app’s context window like an OS manages RAM. Declare what matters, set per-slot **budgets** and **priorities**, and let slotmux handle **token counting**, **overflow**, and **compression**—across OpenAI, Anthropic, Google, and other providers—while keeping a **small core bundle** and full **type safety**.
 
 ---
 
@@ -17,35 +17,35 @@
 
 |                         |                                                                                                                                                      |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Slots & budgets**     | Named regions with fixed, percent, or flex token budgets — [concept docs](https://tfrydrychewicz.github.io/ctxforge/reference/) (more in §15.4). |
-| **Overflow strategies** | Truncate, sliding window, summarization hooks, custom strategies — [guide](https://tfrydrychewicz.github.io/ctxforge/guide/).                    |
+| **Slots & budgets**     | Named regions with fixed, percent, or flex token budgets — [concept docs](https://tfrydrychewicz.github.io/slotmux/reference/) (more in §15.4). |
+| **Overflow strategies** | Truncate, sliding window, summarization hooks, custom strategies — [guide](https://tfrydrychewicz.github.io/slotmux/guide/).                    |
 | **Immutable snapshots** | Every `build()` yields a frozen snapshot safe to cache, diff, and serialize.                                                                         |
-| **Plugins**             | RAG, tools, memory, OTEL — optional `@ctxforge/*` packages.                                                                                      |
-| **Debug inspector**     | Optional UI for timelines and diffs (`@ctxforge/debug`).                                                                                         |
-| **React**               | `ReactiveContext` + hooks via [`@ctxforge/react`](https://github.com/tfrydrychewicz/ctxforge/tree/main/packages/react#readme).               |
+| **Plugins**             | RAG, tools, memory, OTEL — optional `@slotmux/*` packages.                                                                                      |
+| **Debug inspector**     | Optional UI for timelines and diffs (`@slotmux/debug`).                                                                                         |
+| **React**               | `ReactiveContext` + hooks via [`@slotmux/react`](https://github.com/tfrydrychewicz/slotmux/tree/main/packages/react#readme).               |
 
-Full documentation: **[https://tfrydrychewicz.github.io/ctxforge/](https://tfrydrychewicz.github.io/ctxforge/)** (API reference is generated with TypeDoc on deploy).
+Full documentation: **[https://tfrydrychewicz.github.io/slotmux/](https://tfrydrychewicz.github.io/slotmux/)** (API reference is generated with TypeDoc on deploy).
 
 ---
 
 ## Requirements
 
-- **Node.js ≥ 20.19** (tooling and optional `@ctxforge/debug` inspector UI).
+- **Node.js ≥ 20.19** (tooling and optional `@slotmux/debug` inspector UI).
 
 ---
 
 ## Install
 
 ```bash
-pnpm add ctxforge
+pnpm add slotmux
 ```
 
 ```bash
-npm install ctxforge
+npm install slotmux
 ```
 
 ```bash
-yarn add ctxforge
+yarn add slotmux
 ```
 
 Install a **tokenizer** for your models (peer-style; pick what you use):
@@ -66,7 +66,7 @@ pnpm add @anthropic-ai/tokenizer
 Use the **`chat`** preset and the fluent **`contextBuilder()`** API: model + reserve + messages, then `build()`.
 
 ```typescript
-import { contextBuilder } from 'ctxforge';
+import { contextBuilder } from 'slotmux';
 
 const { snapshot } = await contextBuilder()
   .model('gpt-4o-mini')
@@ -84,7 +84,7 @@ void messages;
 void meta;
 ```
 
-For **validated config** and advanced layout, use **`createContext()`** + **`Context.fromParsedConfig()`** (see [Getting started](https://tfrydrychewicz.github.io/ctxforge/guide/getting-started) on the docs site).
+For **validated config** and advanced layout, use **`createContext()`** + **`Context.fromParsedConfig()`** (see [Getting started](https://tfrydrychewicz.github.io/slotmux/guide/getting-started) on the docs site).
 
 ---
 
@@ -92,20 +92,20 @@ For **validated config** and advanced layout, use **`createContext()`** + **`Con
 
 | Package                       | Description                                                           |
 | ----------------------------- | --------------------------------------------------------------------- |
-| `ctxforge`                | Core: slots, budgets, build pipeline, snapshots                       |
-| `@ctxforge/react`         | Hooks + `ReactiveContext` for UI ([README](packages/react/README.md)) |
-| `@ctxforge/tokenizers`    | Token counting adapters                                               |
-| `@ctxforge/providers`     | Provider-specific helpers                                             |
-| `@ctxforge/compression`   | Progressive, semantic, lossless compression                           |
-| `@ctxforge/debug`         | Debug inspector (optional)                                            |
-| `@ctxforge/plugin-rag`    | RAG slot defaults, dedupe, citations                                  |
-| `@ctxforge/plugin-memory` | Memory stores + `memoryPlugin`                                        |
-| `@ctxforge/plugin-tools`  | Tools slot + truncation (`toolsPlugin`)                               |
-| `@ctxforge/plugin-otel`   | OpenTelemetry (optional)                                              |
+| `slotmux`                | Core: slots, budgets, build pipeline, snapshots                       |
+| `@slotmux/react`         | Hooks + `ReactiveContext` for UI ([README](packages/react/README.md)) |
+| `@slotmux/tokenizers`    | Token counting adapters                                               |
+| `@slotmux/providers`     | Provider-specific helpers                                             |
+| `@slotmux/compression`   | Progressive, semantic, lossless compression                           |
+| `@slotmux/debug`         | Debug inspector (optional)                                            |
+| `@slotmux/plugin-rag`    | RAG slot defaults, dedupe, citations                                  |
+| `@slotmux/plugin-memory` | Memory stores + `memoryPlugin`                                        |
+| `@slotmux/plugin-tools`  | Tools slot + truncation (`toolsPlugin`)                               |
+| `@slotmux/plugin-otel`   | OpenTelemetry (optional)                                              |
 
 ### Debug inspector UI
 
-With `attachInspector(ctx)` running, open **`/inspector/`** on the same host/port (e.g. `http://127.0.0.1:4200/inspector/`). Build the debug package first (`pnpm --filter @ctxforge/debug build`). Browser E2E: `pnpm test:e2e` (install Chromium once: `pnpm --filter @ctxforge/debug exec playwright install chromium`).
+With `attachInspector(ctx)` running, open **`/inspector/`** on the same host/port (e.g. `http://127.0.0.1:4200/inspector/`). Build the debug package first (`pnpm --filter @slotmux/debug build`). Browser E2E: `pnpm test:e2e` (install Chromium once: `pnpm --filter @slotmux/debug exec playwright install chromium`).
 
 ---
 
@@ -113,7 +113,7 @@ With `attachInspector(ctx)` running, open **`/inspector/`** on the same host/por
 
 High-level positioning vs common approaches (see **Appendix B** in the design doc for the full product spec).
 
-| Feature                      | ctxforge  | LangChain memory        | tiktoken alone | Manual |
+| Feature                      | slotmux  | LangChain memory        | tiktoken alone | Manual |
 | ---------------------------- | ------------- | ----------------------- | -------------- | ------ |
 | Slot-based allocation        | ✅            | ❌                      | ❌             | ❌     |
 | Declarative budgets          | ✅            | ❌                      | ❌             | ❌     |
@@ -134,7 +134,7 @@ High-level positioning vs common approaches (see **Appendix B** in the design do
 
 | Resource         | Link                                                                                                                                                                                |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Docs site**    | [tfrydrychewicz.github.io/ctxforge](https://tfrydrychewicz.github.io/ctxforge/) · [5‑min chatbot](https://tfrydrychewicz.github.io/ctxforge/guide/build-a-chatbot.html) |
+| **Docs site**    | [tfrydrychewicz.github.io/slotmux](https://tfrydrychewicz.github.io/slotmux/) · [5‑min chatbot](https://tfrydrychewicz.github.io/slotmux/guide/build-a-chatbot.html) |
 | **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md)                                                                                                                                                  |
 | **Changelog**    | [CHANGELOG.md](CHANGELOG.md)                                                                                                                                                        |
 | **License**      | [MIT](LICENSE)                                                                                                                                                                      |

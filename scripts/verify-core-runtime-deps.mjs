@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Supply-chain check: ensure `ctxforge` (packages/core) runtime `dependencies`
+ * Supply-chain check: ensure `slotmux` (packages/core) runtime `dependencies`
  * match the audited allowlist (§19.1). Update this script when intentionally adding a dep.
  *
  * @packageDocumentation
@@ -15,7 +15,7 @@ const pkgPath = join(__dirname, '..', 'packages', 'core', 'package.json');
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 
 /** Exact package names allowed in `dependencies` (sorted). Tokenizers stay in peerDependencies. */
-const ALLOWED_KEYS = ['@ctxforge/compression', 'nanoid', 'zod'];
+const ALLOWED_KEYS = ['@slotmux/compression', 'nanoid', 'zod'];
 
 const deps = pkg.dependencies ?? {};
 const keys = Object.keys(deps).sort();
@@ -29,9 +29,9 @@ if (keys.join(',') !== [...ALLOWED_KEYS].sort().join(',')) {
   process.exit(1);
 }
 
-if (deps['@ctxforge/compression'] !== 'workspace:*') {
+if (deps['@slotmux/compression'] !== 'workspace:*') {
   console.error(
-    '[verify-core-runtime-deps] @ctxforge/compression must use workspace:* (monorepo link).',
+    '[verify-core-runtime-deps] @slotmux/compression must use workspace:* (monorepo link).',
   );
   process.exit(1);
 }

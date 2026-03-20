@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ragPlugin, VERSION } from './index.js';
 
-describe('@ctxforge/plugin-rag', () => {
+describe('@slotmux/plugin-rag', () => {
   it('exports version', () => {
     expect(VERSION).toBe('0.0.1');
   });

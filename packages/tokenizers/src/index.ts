@@ -1,5 +1,5 @@
 /**
- * @ctxforge/tokenizers — Token counting abstractions
+ * @slotmux/tokenizers — Token counting abstractions
  *
  * @packageDocumentation
  */
@@ -26,11 +26,11 @@ export {
   TOKEN_OVERHEAD,
   getTokenOverhead,
   ollamaOverhead,
-} from 'ctxforge';
+} from 'slotmux';
 export type {
   ProviderTokenOverhead,
   TokenOverheadProviderId,
-} from 'ctxforge';
+} from 'slotmux';
 
 export { Cl100kTokenizer, O200kTokenizer, freeTiktokenEncodings } from './tiktoken-adapters.js';
 

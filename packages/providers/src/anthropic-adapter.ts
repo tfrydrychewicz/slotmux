@@ -7,14 +7,14 @@
 import {
   ClaudeTokenizer,
   FallbackTokenizer,
-} from '@ctxforge/tokenizers';
+} from '@slotmux/tokenizers';
 import {
   BaseProviderAdapter,
   type CompiledContentPart,
   type CompiledMessage,
   type ModelId,
   type Tokenizer,
-} from 'ctxforge';
+} from 'slotmux';
 
 /** Anthropic text block. */
 export type AnthropicTextBlock = { type: 'text'; text: string };

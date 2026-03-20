@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  // Prefer `development` package exports (e.g. ctxforge → src/) so tests run without a prior build.
+  // Prefer `development` package exports (e.g. slotmux → src/) so tests run without a prior build.
   resolve: {
     conditions: ['development', 'import', 'module', 'default'],
   },

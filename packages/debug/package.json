@@ -1,5 +1,5 @@
 {
-  "name": "@ctxforge/debug",
+  "name": "@slotmux/debug",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -27,7 +27,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p ui/tsconfig.json"
   },
   "dependencies": {
-    "ctxforge": "workspace:*",
+    "slotmux": "workspace:*",
     "ws": "^8.19.0"
   },
   "devDependencies": {

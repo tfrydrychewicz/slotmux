@@ -4,4 +4,4 @@
  * @packageDocumentation
  */
 
-export type { Tokenizer } from 'ctxforge';
+export type { Tokenizer } from 'slotmux';

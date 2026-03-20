@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { toTokenCount } from 'ctxforge';
+import { toTokenCount } from 'slotmux';
 import { describe, expect, it } from 'vitest';
 
 

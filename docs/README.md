@@ -29,8 +29,8 @@ Private repos need a plan that includes GitHub Pages for that visibility.
 
 ### URL
 
-`https://<owner>.github.io/<repo>/` (e.g. `https://tfrydrychewicz.github.io/ctxforge/`)
+`https://<owner>.github.io/<repo>/` (e.g. `https://tfrydrychewicz.github.io/slotmux/`)
 
 ## Generated API
 
-`docs/reference/api/` is produced by TypeDoc and is gitignored. Run `pnpm --filter @ctxforge/docs docs:api` before `vitepress dev` if you need API pages locally without a full build.
+`docs/reference/api/` is produced by TypeDoc and is gitignored. Run `pnpm --filter @slotmux/docs docs:api` before `vitepress dev` if you need API pages locally without a full build.

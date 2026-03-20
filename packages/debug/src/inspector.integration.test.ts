@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import { Context, validateContextConfig } from 'ctxforge';
+import { Context, validateContextConfig } from 'slotmux';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type RawData, WebSocket } from 'ws';
 
@@ -79,7 +79,7 @@ describe('attachInspector', () => {
       const uiRes = await fetch(`${base}/inspector/`);
       expect(uiRes.ok).toBe(true);
       const html = await uiRes.text();
-      expect(html).toContain('Ctxforge Inspector');
+      expect(html).toContain('Slotmux Inspector');
     } finally {
       await handle.close();
     }
@@ -111,7 +111,7 @@ describe('attachInspector', () => {
     try {
       ctx.system('s');
       await new Promise((r) => setTimeout(r, 50));
-      expect(received.some((m) => m.includes('ctxforge:event'))).toBe(true);
+      expect(received.some((m) => m.includes('slotmux:event'))).toBe(true);
     } finally {
       ws.close();
       await handle.close();

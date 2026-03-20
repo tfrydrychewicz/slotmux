@@ -5,12 +5,12 @@
  */
 
 /**
- * String presets matching built-in `SlotOverflowStrategy` names (`ctxforge` type).
+ * String presets matching built-in `SlotOverflowStrategy` names (`slotmux` type).
  * Use these instead of raw strings for autocomplete and refactors.
  *
  * @example
  * ```ts
- * import { SlotOverflow } from 'ctxforge';
+ * import { SlotOverflow } from 'slotmux';
  * slots: {
  *   history: { priority: 50, budget: { flex: true }, overflow: SlotOverflow.SUMMARIZE },
  * }

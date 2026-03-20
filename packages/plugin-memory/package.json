@@ -1,5 +1,5 @@
 {
-  "name": "@ctxforge/plugin-memory",
+  "name": "@slotmux/plugin-memory",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -31,7 +31,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "ctxforge": "workspace:*"
+    "slotmux": "workspace:*"
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.8.0"

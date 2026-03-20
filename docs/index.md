@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: Ctxforge
+  name: Slotmux
   text: Context window management for AI apps
   tagline: Budgets, slots, token counting, and safe assembly — with a small runtime footprint.
   actions:

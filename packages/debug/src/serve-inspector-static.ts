@@ -69,7 +69,7 @@ export function serveInspectorStatic(pathname: string, res: ServerResponse): boo
     if (fallback === null || !existsSync(fallback)) {
       send503(
         res,
-        'Inspector UI not built. Run: pnpm --filter @ctxforge/debug run build:ui',
+        'Inspector UI not built. Run: pnpm --filter @slotmux/debug run build:ui',
       );
       return true;
     }

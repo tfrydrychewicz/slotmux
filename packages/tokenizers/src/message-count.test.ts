@@ -1,4 +1,4 @@
-import { TOKEN_OVERHEAD } from 'ctxforge';
+import { TOKEN_OVERHEAD } from 'slotmux';
 import { describe, expect, it } from 'vitest';
 
 import { compiledMessageToEstimationString } from './compiled-message-string.js';

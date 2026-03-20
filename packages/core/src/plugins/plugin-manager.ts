@@ -71,7 +71,7 @@ export type PluginManagerOptions = {
 
   /**
    * Scoped logger factory; defaults to no-op loggers.
-   * Use for `[ctxforge:pluginName]` style output (see §13.3 logging).
+   * Use for `[slotmux:pluginName]` style output (see §13.3 logging).
    */
   readonly createLogger?: (pluginName: string) => PluginLogger;
 

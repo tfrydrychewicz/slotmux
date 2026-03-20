@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { ContextEvent } from 'ctxforge';
+import type { ContextEvent } from 'slotmux';
 
 /**
  * Serializes {@link ContextEvent} for HTTP/WebSocket (build:complete uses {@link ContextSnapshot.serialize}).

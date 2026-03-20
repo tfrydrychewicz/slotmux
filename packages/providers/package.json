@@ -1,5 +1,5 @@
 {
-  "name": "@ctxforge/providers",
+  "name": "@slotmux/providers",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -39,12 +39,12 @@
     "gpt-tokenizer": { "optional": true }
   },
   "dependencies": {
-    "@ctxforge/tokenizers": "workspace:*",
-    "ctxforge": "workspace:*"
+    "@slotmux/tokenizers": "workspace:*",
+    "slotmux": "workspace:*"
   },
   "size-limit": [
     {
-      "name": "@ctxforge/providers (barrel)",
+      "name": "@slotmux/providers (barrel)",
       "path": "dist/index.js",
       "limit": "25 kB",
       "gzip": true

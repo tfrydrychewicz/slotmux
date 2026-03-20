@@ -1,10 +1,10 @@
-# Contributing to ctxforge
+# Contributing to slotmux
 
 Thanks for your interest in contributing. This document covers coding standards, the PR process, and commit conventions.
 
 ## Development Setup
 
-Use **Node.js ≥ 20.19** (see root `package.json` `engines`). Older versions (e.g. Node 18) cannot run the full monorepo build because `@ctxforge/debug` uses Vite 8.
+Use **Node.js ≥ 20.19** (see root `package.json` `engines`). Older versions (e.g. Node 18) cannot run the full monorepo build because `@slotmux/debug` uses Vite 8.
 
 ```bash
 pnpm install
@@ -14,7 +14,7 @@ pnpm test
 
 ## Coding Standards
 
-- **TypeScript**: Strict mode, no `any`. Follow the patterns in `ctxforge-design.md`.
+- **TypeScript**: Strict mode, no `any`. Follow the patterns in `slotmux-design.md`.
 - **Tests**: Every new feature needs unit tests. Use `makeSlot`, `makeItem`, `makeContext` from `__tests__/helpers`.
 - **Documentation**: JSDoc on all public APIs with `@param`, `@returns`, `@throws`, `@example`.
 - **Linting**: Run `pnpm lint` before committing. Use `pnpm lint:fix` to auto-fix.

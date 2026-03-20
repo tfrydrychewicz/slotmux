@@ -7,5 +7,5 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   target: 'es2022',
-  external: ['ctxforge', '@opentelemetry/api'],
+  external: ['slotmux', '@opentelemetry/api'],
 });

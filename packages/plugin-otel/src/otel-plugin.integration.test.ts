@@ -5,7 +5,7 @@
  */
 
 import type { Histogram, Meter, Span, Tracer } from '@opentelemetry/api';
-import { Context, ContextOrchestrator, createContext, toTokenCount } from 'ctxforge';
+import { Context, ContextOrchestrator, createContext, toTokenCount } from 'slotmux';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -124,8 +124,8 @@ describe('otelPlugin integration', () => {
 
     const build = finished.find((s) => s.name === OTEL_SPAN_BUILD);
     expect(build?.attributes['service.name']).toBe('integration-test');
-    expect(build?.attributes['ctxforge.total_budget']).toBeGreaterThan(0);
-    expect(build?.attributes['ctxforge.message_count']).toBeGreaterThanOrEqual(0);
+    expect(build?.attributes['slotmux.total_budget']).toBeGreaterThan(0);
+    expect(build?.attributes['slotmux.message_count']).toBeGreaterThanOrEqual(0);
 
     expect(hist.some((h) => h.name === OTEL_METRIC_BUILD_DURATION)).toBe(true);
     expect(hist.some((h) => h.name === OTEL_METRIC_UTILIZATION)).toBe(true);

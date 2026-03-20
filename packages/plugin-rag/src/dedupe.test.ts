@@ -1,4 +1,4 @@
-import type { ContentId } from 'ctxforge';
+import type { ContentId } from 'slotmux';
 import { describe, expect, it } from 'vitest';
 
 import {

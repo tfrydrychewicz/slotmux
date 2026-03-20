@@ -4,8 +4,8 @@
  * @packageDocumentation
  */
 
-import type { ContentItem, ContextPlugin, SlotConfig } from 'ctxforge';
-import { RAG_DEFAULTS, sumCachedItemTokens } from 'ctxforge';
+import type { ContentItem, ContextPlugin, SlotConfig } from 'slotmux';
+import { RAG_DEFAULTS, sumCachedItemTokens } from 'slotmux';
 
 import { dedupeNearDuplicateChunks } from './dedupe.js';
 import { VERSION } from './version.js';
@@ -16,7 +16,7 @@ export const RAG_METADATA_CHUNK_ID = 'rag.chunkId';
 /** Metadata key: relevance score (higher = more important) */
 export const RAG_METADATA_SCORE = 'rag.score';
 
-const PLUGIN_NAME = '@ctxforge/plugin-rag';
+const PLUGIN_NAME = '@slotmux/plugin-rag';
 
 export type RagCitation = {
   readonly chunkId: string;

@@ -1,5 +1,5 @@
 /**
- * @ctxforge/plugin-memory — Long-term memory.
+ * @slotmux/plugin-memory — Long-term memory.
  *
  * @packageDocumentation
  */

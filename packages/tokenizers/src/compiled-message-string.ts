@@ -7,7 +7,7 @@
 import type {
   CompiledContentPart,
   CompiledMessage,
-} from 'ctxforge';
+} from 'slotmux';
 
 function compiledPartsToString(parts: CompiledContentPart[]): string {
   let s = '';

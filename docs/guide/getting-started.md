@@ -5,7 +5,7 @@ For a **fully working terminal chatbot** with context metadata, token budgets, a
 ## Install
 
 ```bash
-pnpm add ctxforge
+pnpm add slotmux
 ```
 
 Optional tokenizers (pick what your models need):
@@ -16,7 +16,7 @@ pnpm add gpt-tokenizer
 
 ## Minimal example
 
-The snippet below is typechecked in CI (`pnpm test:docs`). Source: [`docs/snippets/quickstart.example.ts`](https://github.com/tfrydrychewicz/ctxforge/tree/main/docs/snippets/quickstart.example.ts).
+The snippet below is typechecked in CI (`pnpm test:docs`). Source: [`docs/snippets/quickstart.example.ts`](https://github.com/tfrydrychewicz/slotmux/tree/main/docs/snippets/quickstart.example.ts).
 
 <<< @/snippets/quickstart.example.ts
 
@@ -24,7 +24,7 @@ The snippet below is typechecked in CI (`pnpm test:docs`). Source: [`docs/snippe
 
 | Package           | Role                                      |
 | ----------------- | ----------------------------------------- |
-| `ctxforge`    | Core context manager, slots, token budget |
-| `@ctxforge/*` | Compression, providers, React, debug UI   |
+| `slotmux`    | Core context manager, slots, token budget |
+| `@slotmux/*` | Compression, providers, React, debug UI   |
 
-See the [design document](https://github.com/tfrydrychewicz/ctxforge) in the repository for architecture notes (not shipped in this site).
+See the [design document](https://github.com/tfrydrychewicz/slotmux) in the repository for architecture notes (not shipped in this site).

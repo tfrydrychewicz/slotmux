@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import { Context, createContext, toTokenCount } from 'ctxforge';
+import { Context, createContext, toTokenCount } from 'slotmux';
 import { describe, expect, it } from 'vitest';
 
 import { RAG_METADATA_CHUNK_ID, RAG_METADATA_SCORE, ragPlugin } from './index.js';

@@ -1,6 +1,6 @@
 # Build a terminal chatbot with context management
 
-This tutorial builds a **fully working interactive terminal chatbot** that talks to the OpenAI API. Along the way it demonstrates the key features of ctxforge: slot-based context assembly, token budgeting, overflow awareness, provider formatting, and snapshot metadata.
+This tutorial builds a **fully working interactive terminal chatbot** that talks to the OpenAI API. Along the way it demonstrates the key features of slotmux: slot-based context assembly, token budgeting, overflow awareness, provider formatting, and snapshot metadata.
 
 **Time:** ~5 minutes to read, ~2 minutes to run.
 
@@ -23,13 +23,13 @@ mkdir cc-chatbot && cd cc-chatbot
 npm init -y
 ```
 
-Install ctxforge and a tokenizer:
+Install slotmux and a tokenizer:
 
 ```bash
-npm install ctxforge @ctxforge/providers gpt-tokenizer
+npm install slotmux @slotmux/providers gpt-tokenizer
 ```
 
-Enable ESM (ctxforge is ESM-only):
+Enable ESM (slotmux is ESM-only):
 
 ```bash
 node -e "const p=require('./package.json'); p.type='module'; require('fs').writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
@@ -37,12 +37,12 @@ node -e "const p=require('./package.json'); p.type='module'; require('fs').write
 
 ## 2. The full chatbot — `chat.mjs`
 
-Create a file called **`chat.mjs`** and paste the code below. Every section is annotated so you can follow what ctxforge is doing.
+Create a file called **`chat.mjs`** and paste the code below. Every section is annotated so you can follow what slotmux is doing.
 
 ```javascript
 import * as readline from 'node:readline';
-import { createContext, Context } from 'ctxforge';
-import { formatOpenAIMessages } from '@ctxforge/providers';
+import { createContext, Context } from 'slotmux';
+import { formatOpenAIMessages } from '@slotmux/providers';
 
 // ── 1. Create a validated context config ─────────────────────────────
 //
@@ -127,7 +127,7 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-console.log('ctxforge chatbot — type a message, "!stats" for context info, or "exit" to quit.\n');
+console.log('slotmux chatbot — type a message, "!stats" for context info, or "exit" to quit.\n');
 
 function prompt() {
   rl.question('You > ', async (input) => {
@@ -183,7 +183,7 @@ OPENAI_API_KEY=sk-... node chat.mjs
 You'll see something like:
 
 ```
-ctxforge chatbot — type a message, "!stats" for context info, or "exit" to quit.
+slotmux chatbot — type a message, "!stats" for context info, or "exit" to quit.
 
 You > What can you help me with?
 
@@ -208,15 +208,15 @@ You > exit
 
 ## 4. What happened under the hood
 
-Each time you type a message, ctxforge does all of this before the API call:
+Each time you type a message, slotmux does all of this before the API call:
 
 1. **`ctx.user(text)`** — Appends a `ContentItem` to the **history** slot.
 2. **`ctx.build()`** — Runs the full compile pipeline:
    - **Budget allocation** — The **system** slot gets its fixed 2 000 tokens; the **history** slot fills the remaining flex budget.
    - **Token counting** — Each message is counted via the model's tokenizer encoding (or a character-based estimate when no peer tokenizer is installed).
    - **Overflow check** — If history grows past its budget, the configured overflow strategy (summarize / truncate) kicks in automatically.
-   - **Compile** — Produces an immutable `ContextSnapshot` containing `messages` (ctxforge's internal format) and `meta` (token counts, utilization, per-slot stats, warnings, build time).
-3. **`formatOpenAIMessages(snapshot.messages)`** — Converts ctxforge's compiled messages into OpenAI's `{ role, content }` shape with multimodal and tool-call support.
+   - **Compile** — Produces an immutable `ContextSnapshot` containing `messages` (slotmux's internal format) and `meta` (token counts, utilization, per-slot stats, warnings, build time).
+3. **`formatOpenAIMessages(snapshot.messages)`** — Converts slotmux's compiled messages into OpenAI's `{ role, content }` shape with multimodal and tool-call support.
 4. **`ctx.assistant(reply)`** — Stores the model's reply so it's in scope for the next build.
 
 ## 5. Key features demonstrated
@@ -237,4 +237,4 @@ Each time you type a message, ctxforge does all of this before the API call:
 - **[Getting started](./getting-started)** — minimal install, zero-API snippet.
 - **[API reference](/reference/api/README)** — full exported symbols.
 - Swap `preset: 'chat'` for `preset: 'rag'` or `preset: 'agent'` to explore RAG and tool-calling layouts.
-- Add `@ctxforge/debug` and `attachInspector(ctx)` for a browser-based inspector UI.
+- Add `@slotmux/debug` and `attachInspector(ctx)` for a browser-based inspector UI.

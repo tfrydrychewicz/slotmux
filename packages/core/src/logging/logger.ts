@@ -54,7 +54,7 @@ export interface Logger {
 
 export type ConsoleLoggerOptions = {
   /**
-   * Prepended to every message, e.g. `[ctxforge]`.
+   * Prepended to every message, e.g. `[slotmux]`.
    * When omitted, only `message` is passed through.
    */
   readonly prefix?: string;
@@ -134,10 +134,10 @@ export function createLeveledLogger(delegate: Logger, configured: LogLevel): Log
 }
 
 /**
- * Prefixes messages with `[ctxforge:${scope}]` (plugin / subsystem label).
+ * Prefixes messages with `[slotmux:${scope}]` (plugin / subsystem label).
  */
 export function createScopedLogger(delegate: Logger, scope: string): Logger {
-  const p = `[ctxforge:${scope}]`;
+  const p = `[slotmux:${scope}]`;
   const fmt = (message: string): string => `${p} ${message}`;
 
   return {
@@ -249,7 +249,7 @@ export function createRedactingLogger(options: RedactingLoggerOptions): Logger {
 export type PluginLoggerFactoryOptions = {
   /** Default {@link LogLevel.INFO}. */
   readonly level?: LogLevel;
-  /** Passed to {@link createConsoleLogger} (default `[ctxforge]`). */
+  /** Passed to {@link createConsoleLogger} (default `[slotmux]`). */
   readonly consolePrefix?: string;
   /** When set, applies {@link createRedactingLogger} before scoping. */
   readonly redaction?: RedactionOptions | true;
@@ -257,13 +257,13 @@ export type PluginLoggerFactoryOptions = {
 
 /**
  * Returns a factory suitable for {@link PluginManagerOptions.createLogger}:
- * `[ctxforge:pluginName]` prefix, optional level filter and redaction.
+ * `[slotmux:pluginName]` prefix, optional level filter and redaction.
  */
 export function createPluginLoggerFactory(
   options?: PluginLoggerFactoryOptions,
 ): (pluginName: string) => Logger {
   const level = options?.level ?? LogLevel.INFO;
-  const consolePrefix = options?.consolePrefix ?? '[ctxforge]';
+  const consolePrefix = options?.consolePrefix ?? '[slotmux]';
 
   return (pluginName: string) => {
     let base: Logger = createConsoleLogger({ prefix: consolePrefix });

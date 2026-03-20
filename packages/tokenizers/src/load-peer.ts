@@ -6,7 +6,7 @@
 
 import { createRequire } from 'node:module';
 
-import { TokenizerNotFoundError } from 'ctxforge';
+import { TokenizerNotFoundError } from 'slotmux';
 
 const require = createRequire(import.meta.url);
 

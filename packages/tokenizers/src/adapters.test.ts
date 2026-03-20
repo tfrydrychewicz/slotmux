@@ -1,4 +1,4 @@
-import { TokenizerNotFoundError, toTokenCount } from 'ctxforge';
+import { TokenizerNotFoundError, toTokenCount } from 'slotmux';
 import { describe, expect, it, afterEach } from 'vitest';
 
 import {

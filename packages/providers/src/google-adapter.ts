@@ -9,14 +9,14 @@
 import {
   Cl100kTokenizer,
   FallbackTokenizer,
-} from '@ctxforge/tokenizers';
+} from '@slotmux/tokenizers';
 import {
   BaseProviderAdapter,
   type CompiledContentPart,
   type CompiledMessage,
   type ModelId,
   type Tokenizer,
-} from 'ctxforge';
+} from 'slotmux';
 
 /** Multimodal / tool parts for `contents[].parts` and `systemInstruction.parts`. */
 export type GeminiPart =

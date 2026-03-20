@@ -1,5 +1,5 @@
 /**
- * @ctxforge/compression — compression strategies (see `ctxforge-design.md` package layout).
+ * @slotmux/compression — compression strategies (see `slotmux-design.md` package layout).
  *
  * @packageDocumentation
  */

@@ -7,7 +7,7 @@ function vitepressBase(): string {
 }
 
 export default defineConfig({
-  title: 'Ctxforge',
+  title: 'Slotmux',
   description: 'Intelligent context window management for AI applications',
   base: vitepressBase(),
   themeConfig: {
@@ -42,7 +42,7 @@ export default defineConfig({
     socialLinks: [
       {
         icon: 'github',
-        link: 'https://github.com/tfrydrychewicz/ctxforge',
+        link: 'https://github.com/tfrydrychewicz/slotmux',
       },
     ],
     search: {

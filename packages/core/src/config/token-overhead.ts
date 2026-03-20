@@ -1,7 +1,7 @@
 /**
  * Provider-specific token overhead for compiled message lists (§9.4).
  *
- * Applied on top of BPE (or estimator) length of estimation strings in @ctxforge/tokenizers.
+ * Applied on top of BPE (or estimator) length of estimation strings in @slotmux/tokenizers.
  *
  * @packageDocumentation
  */

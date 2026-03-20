@@ -37,7 +37,7 @@ body:
     id: version
     attributes:
       label: Package version
-      description: Which version of ctxforge are you using?
+      description: Which version of slotmux are you using?
       placeholder: e.g. 0.0.1
   - type: dropdown
     id: environment

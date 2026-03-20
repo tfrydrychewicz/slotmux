@@ -14,7 +14,7 @@ import { resolveModelCapabilitiesForAdapter } from './resolve-model-capabilities
 
 /**
  * Structural token overhead for a compiled message list (role/delimiter/name surcharges only).
- * Does not include content BPE length — pair with tokenizer counts in @ctxforge/tokenizers.
+ * Does not include content BPE length — pair with tokenizer counts in @slotmux/tokenizers.
  */
 export function structuralOverheadForCompiledMessages(
   messages: readonly CompiledMessage[],

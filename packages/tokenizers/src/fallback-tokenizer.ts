@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { CompiledMessage } from 'ctxforge';
+import type { CompiledMessage } from 'slotmux';
 
 import { CharEstimatorTokenizer } from './char-estimator.js';
 import type { Tokenizer } from './tokenizer.js';

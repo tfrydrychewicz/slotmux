@@ -1,5 +1,5 @@
 /**
- * Test utility factories for ctxforge tests.
+ * Test utility factories for slotmux tests.
  *
  * These helpers produce objects matching the expected shapes for slot resolution,
  * overflow engine, and integration tests.

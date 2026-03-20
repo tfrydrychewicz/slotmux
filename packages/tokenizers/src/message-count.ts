@@ -8,7 +8,7 @@ import {
   type CompiledMessage,
   TOKEN_OVERHEAD,
   type ProviderTokenOverhead,
-} from 'ctxforge';
+} from 'slotmux';
 
 import { compiledMessageToEstimationString } from './compiled-message-string.js';
 

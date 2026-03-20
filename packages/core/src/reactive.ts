@@ -1,5 +1,5 @@
 /**
- * Subpath `ctxforge/reactive` — signals and {@link reactiveContext} (§14.2).
+ * Subpath `slotmux/reactive` — signals and {@link reactiveContext} (§14.2).
  *
  * @packageDocumentation
  */

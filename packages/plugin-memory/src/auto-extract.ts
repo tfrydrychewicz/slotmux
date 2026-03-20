@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { CompiledMessage } from 'ctxforge';
+import type { CompiledMessage } from 'slotmux';
 
 function compiledPlainText(m: CompiledMessage): string {
   if (typeof m.content === 'string') {

@@ -4,8 +4,8 @@
  * @packageDocumentation
  */
 
-import type { ReactiveContext } from 'ctxforge/reactive';
 import { useCallback, useSyncExternalStore } from 'react';
+import type { ReactiveContext } from 'slotmux/reactive';
 
 /**
  * Subscribes to {@link ReactiveContext.meta} with concurrent-safe external store semantics.

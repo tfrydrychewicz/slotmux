@@ -8,14 +8,14 @@ import {
   Cl100kTokenizer,
   FallbackTokenizer,
   O200kTokenizer,
-} from '@ctxforge/tokenizers';
+} from '@slotmux/tokenizers';
 import {
   BaseProviderAdapter,
   type CompiledContentPart,
   type CompiledMessage,
   type ModelId,
   type Tokenizer,
-} from 'ctxforge';
+} from 'slotmux';
 
 /** OpenAI `content` part — text or image URL (incl. data URLs for vision). */
 export type OpenAIChatContentPart =

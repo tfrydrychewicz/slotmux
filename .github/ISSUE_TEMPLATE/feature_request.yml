@@ -35,12 +35,12 @@ body:
       label: Affected package
       description: Which package would this affect?
       options:
-        - ctxforge (core)
-        - @ctxforge/tokenizers
-        - @ctxforge/providers
-        - @ctxforge/compression
-        - @ctxforge/debug
-        - @ctxforge/plugin-rag
-        - @ctxforge/plugin-memory
-        - @ctxforge/plugin-tools
+        - slotmux (core)
+        - @slotmux/tokenizers
+        - @slotmux/providers
+        - @slotmux/compression
+        - @slotmux/debug
+        - @slotmux/plugin-rag
+        - @slotmux/plugin-memory
+        - @slotmux/plugin-tools
         - Multiple / unsure

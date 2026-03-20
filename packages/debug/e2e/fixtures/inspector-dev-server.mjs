@@ -21,7 +21,7 @@ const SLOTS = {
   },
 };
 
-const { Context, validateContextConfig } = await import('ctxforge');
+const { Context, validateContextConfig } = await import('slotmux');
 const { attachInspector } = await import('../../dist/index.js');
 
 const parsed = validateContextConfig({

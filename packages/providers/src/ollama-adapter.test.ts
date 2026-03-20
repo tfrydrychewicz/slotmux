@@ -1,8 +1,8 @@
-import type { CompiledMessage } from 'ctxforge';
+import type { CompiledMessage } from 'slotmux';
 import {
   clearRegisteredModels,
   registerModel,
-} from 'ctxforge';
+} from 'slotmux';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {

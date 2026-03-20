@@ -1,5 +1,5 @@
 /**
- * @ctxforge/debug — Debug inspector (§13.2: HTTP/WS server + Preact UI at `/inspector/`).
+ * @slotmux/debug — Debug inspector (§13.2: HTTP/WS server + Preact UI at `/inspector/`).
  *
  * @packageDocumentation
  */

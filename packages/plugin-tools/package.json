@@ -1,5 +1,5 @@
 {
-  "name": "@ctxforge/plugin-tools",
+  "name": "@slotmux/plugin-tools",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -29,6 +29,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "ctxforge": "workspace:*"
+    "slotmux": "workspace:*"
   }
 }

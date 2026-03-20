@@ -9,7 +9,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Inspector UI', () => {
   test('loads shell and shows live data after build', async ({ page }) => {
     await page.goto('/inspector/');
-    await expect(page.locator('h1.inspector__title')).toContainText('Ctxforge Inspector');
+    await expect(page.locator('h1.inspector__title')).toContainText('Slotmux Inspector');
     await expect(page.getByText('Build complete', { exact: false })).toBeVisible({
       timeout: 20_000,
     });

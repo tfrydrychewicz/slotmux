@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { toolsPlugin, VERSION } from './index.js';
 
-describe('@ctxforge/plugin-tools', () => {
+describe('@slotmux/plugin-tools', () => {
   it('exports version', () => {
     expect(VERSION).toBe('0.0.1');
   });

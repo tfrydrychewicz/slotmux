@@ -1,5 +1,5 @@
 /**
- * @ctxforge/react — React hooks for {@link ReactiveContext} (§14.2).
+ * @slotmux/react — React hooks for {@link ReactiveContext} (§14.2).
  *
  * @packageDocumentation
  */

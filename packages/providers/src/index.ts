@@ -1,5 +1,5 @@
 /**
- * @ctxforge/providers — LLM provider adapters
+ * @slotmux/providers — LLM provider adapters
  *
  * @packageDocumentation
  */

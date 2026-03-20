@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { InMemoryMemoryStore, memoryPlugin, VERSION } from './index.js';
 
-describe('@ctxforge/plugin-memory', () => {
+describe('@slotmux/plugin-memory', () => {
   it('exports version', () => {
     expect(VERSION).toBe('0.0.1');
   });

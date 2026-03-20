@@ -13,8 +13,8 @@ import {
   toTokenCount,
   type CompiledMessage,
   type TokenCount,
-} from 'ctxforge';
-import { TOKEN_OVERHEAD } from 'ctxforge';
+} from 'slotmux';
+import { TOKEN_OVERHEAD } from 'slotmux';
 
 import { tryRequireGptTokenizerEncoding } from './load-peer.js';
 import {

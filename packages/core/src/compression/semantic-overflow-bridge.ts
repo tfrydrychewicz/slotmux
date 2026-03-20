@@ -1,6 +1,6 @@
 /**
  * Wires semantic (embedding) selection (§8.2) to {@link OverflowStrategyFn}.
- * Implementation lives in `@ctxforge/compression`.
+ * Implementation lives in `@slotmux/compression`.
  *
  * @packageDocumentation
  */
@@ -9,7 +9,7 @@ import {
   getPlainTextForLossless,
   runSemanticCompress,
   type SemanticScorableItem,
-} from '@ctxforge/compression';
+} from '@slotmux/compression';
 
 import { InvalidConfigError } from '../errors.js';
 import type { OverflowContext, OverflowStrategyFn } from '../types/config.js';

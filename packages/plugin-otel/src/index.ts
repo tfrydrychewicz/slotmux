@@ -1,5 +1,5 @@
 /**
- * @ctxforge/plugin-otel — OpenTelemetry for ctxforge (§13.4).
+ * @slotmux/plugin-otel — OpenTelemetry for slotmux (§13.4).
  *
  * @packageDocumentation
  */

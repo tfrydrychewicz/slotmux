@@ -1,4 +1,4 @@
-import type { CompiledMessage } from 'ctxforge';
+import type { CompiledMessage } from 'slotmux';
 import { describe, expect, it } from 'vitest';
 
 import {

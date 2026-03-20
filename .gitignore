@@ -46,8 +46,8 @@ pnpm-debug.log*
 
 # Project docs (local reference)
 .cursor/
-ctxforge-design.md
-ctxforge-implementation-plan.md
+slotmux-design.md
+slotmux-implementation-plan.md
 
 # TypeDoc → VitePress (regenerate with pnpm docs:api or pnpm docs:build)
 docs/reference/api/

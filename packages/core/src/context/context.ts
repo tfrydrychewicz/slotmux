@@ -127,7 +127,7 @@ export class Context {
   private lastReuseResult: ContextOrchestratorBuildResult | undefined;
 
   /**
-   * Optional subscribers (e.g. `@ctxforge/debug` inspector) receive the same redacted
+   * Optional subscribers (e.g. `@slotmux/debug` inspector) receive the same redacted
    * {@link ContextEvent} stream as `onEvent` (§13.2).
    */
   private readonly inspectorEventListeners = new Set<(event: ContextEvent) => void>();

@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { ContentItem, MultimodalContent } from 'ctxforge';
+import type { ContentItem, MultimodalContent } from 'slotmux';
 
 /** Extract searchable text from a content item. */
 export function ragItemPlainText(item: ContentItem): string {

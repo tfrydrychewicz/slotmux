@@ -66,14 +66,14 @@ describe('createLeveledLogger', () => {
 });
 
 describe('createScopedLogger', () => {
-  it('prefixes message with ctxforge scope', () => {
+  it('prefixes message with slotmux scope', () => {
     const info = vi.fn();
     const log = createScopedLogger(
       { trace: vi.fn(), debug: vi.fn(), info, warn: vi.fn(), error: vi.fn() },
       'my-plugin',
     );
     log.info('hello');
-    expect(info).toHaveBeenCalledWith('[ctxforge:my-plugin] hello');
+    expect(info).toHaveBeenCalledWith('[slotmux:my-plugin] hello');
   });
 });
 
@@ -144,6 +144,6 @@ describe('createPluginLoggerFactory', () => {
     const factory = createPluginLoggerFactory({ level: LogLevel.INFO });
     const log = factory('rag');
     log.info('ready');
-    expect(console.info).toHaveBeenCalledWith('[ctxforge] [ctxforge:rag] ready');
+    expect(console.info).toHaveBeenCalledWith('[slotmux] [slotmux:rag] ready');
   });
 });

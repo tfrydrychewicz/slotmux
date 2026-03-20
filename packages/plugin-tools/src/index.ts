@@ -1,5 +1,5 @@
 /**
- * @ctxforge/plugin-tools — Tool / function-call slot helpers.
+ * @slotmux/plugin-tools — Tool / function-call slot helpers.
  *
  * @packageDocumentation
  */

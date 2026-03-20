@@ -9,7 +9,7 @@ import {
   TOKEN_OVERHEAD,
   type CompiledMessage,
   type TokenCount,
-} from 'ctxforge';
+} from 'slotmux';
 
 import {
   compiledMessageTokenUnits,

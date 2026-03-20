@@ -59,10 +59,10 @@ importers:
 
   docs:
     devDependencies:
-      '@ctxforge/providers':
+      '@slotmux/providers':
         specifier: workspace:*
         version: link:../packages/providers
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../packages/core
       typedoc:
@@ -86,7 +86,7 @@ importers:
       '@anthropic-ai/tokenizer':
         specifier: '*'
         version: 0.0.4
-      '@ctxforge/compression':
+      '@slotmux/compression':
         specifier: workspace:*
         version: link:../compression
       nanoid:
@@ -114,7 +114,7 @@ importers:
 
   packages/debug:
     dependencies:
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../core
       ws:
@@ -139,7 +139,7 @@ importers:
 
   packages/plugin-memory:
     dependencies:
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../core
     optionalDependencies:
@@ -153,7 +153,7 @@ importers:
 
   packages/plugin-otel:
     dependencies:
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -169,13 +169,13 @@ importers:
 
   packages/plugin-rag:
     dependencies:
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../core
 
   packages/plugin-tools:
     dependencies:
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../core
 
@@ -184,10 +184,10 @@ importers:
       '@anthropic-ai/tokenizer':
         specifier: '*'
         version: 0.0.4
-      '@ctxforge/tokenizers':
+      '@slotmux/tokenizers':
         specifier: workspace:*
         version: link:../tokenizers
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -209,7 +209,7 @@ importers:
 
   packages/react:
     dependencies:
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -231,7 +231,7 @@ importers:
 
   packages/tokenizers:
     dependencies:
-      ctxforge:
+      slotmux:
         specifier: workspace:*
         version: link:../core
     devDependencies:

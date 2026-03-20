@@ -10,8 +10,8 @@ import {
   toTokenCount,
   type CompiledMessage,
   type TokenCount,
-} from 'ctxforge';
-import { TOKEN_OVERHEAD } from 'ctxforge';
+} from 'slotmux';
+import { TOKEN_OVERHEAD } from 'slotmux';
 import type { Tiktoken, TiktokenEncoding } from 'tiktoken';
 
 import { tryRequireTiktoken } from './load-peer.js';

@@ -1,4 +1,4 @@
-import { createContext } from 'ctxforge';
+import { createContext } from 'slotmux';
 
 const { config } = createContext({
   model: 'gpt-4o-mini',

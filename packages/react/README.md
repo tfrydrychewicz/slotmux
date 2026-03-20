@@ -1,11 +1,11 @@
-# @ctxforge/react
+# @slotmux/react
 
-React 18+ hooks for [`ctxforge/reactive`](https://github.com/tfrydrychewicz/ctxforge) using [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) so updates work with **Concurrent React** and **Strict Mode** (subscribe in `useEffect` alone is easy to get wrong).
+React 18+ hooks for [`slotmux/reactive`](https://github.com/tfrydrychewicz/slotmux) using [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) so updates work with **Concurrent React** and **Strict Mode** (subscribe in `useEffect` alone is easy to get wrong).
 
 ## Install
 
 ```bash
-pnpm add @ctxforge/react ctxforge react
+pnpm add @slotmux/react slotmux react
 ```
 
 ## Usage
@@ -14,12 +14,12 @@ Keep a **stable** `ReactiveContext` instance (e.g. `useRef` + lazy init, or a st
 
 ```tsx
 import { useMemo, useRef } from 'react';
-import { reactiveContext } from 'ctxforge/reactive';
+import { reactiveContext } from 'slotmux/reactive';
 import {
   useReactiveContextMeta,
   useReactiveContextUtilization,
   useReactiveContextBuildError,
-} from '@ctxforge/react';
+} from '@slotmux/react';
 
 function Panel() {
   const ctxRef = useRef<ReturnType<typeof reactiveContext> | null>(null);
@@ -54,4 +54,4 @@ function Panel() {
 ## Requirements
 
 - **React** `^18 || ^19`
-- **ctxforge** (same major as this package in monorepo releases)
+- **slotmux** (same major as this package in monorepo releases)

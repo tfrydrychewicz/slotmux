@@ -1,5 +1,5 @@
 /**
- * Playwright config for @ctxforge/debug inspector UI.
+ * Playwright config for @slotmux/debug inspector UI.
  *
  * @packageDocumentation
  */
