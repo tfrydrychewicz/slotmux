@@ -17,6 +17,18 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./reactive": {
+      "types": "./dist/reactive.d.ts",
+      "development": "./src/reactive.ts",
+      "import": {
+        "types": "./dist/reactive.d.ts",
+        "default": "./dist/reactive.js"
+      },
+      "require": {
+        "types": "./dist/reactive.d.ts",
+        "default": "./dist/reactive.cjs"
+      }
     }
   },
   "typesVersions": {
@@ -58,6 +70,12 @@
       "name": "contextcraft (core)",
       "path": "dist/index.js",
       "limit": "35 kB",
+      "gzip": true
+    },
+    {
+      "name": "contextcraft/reactive",
+      "path": "dist/reactive.js",
+      "limit": "12 kB",
       "gzip": true
     }
   ],

@@ -8,7 +8,7 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['packages/debug/ui/**/*.{ts,tsx}'],
+    files: ['packages/debug/ui/**/*.{ts,tsx}', 'packages/react/src/**/*.{ts,tsx}'],
     languageOptions: {
       globals: globals.browser,
     },
