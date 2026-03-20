@@ -214,4 +214,29 @@ describe('ContextSnapshot', () => {
     });
     expect(snapshot.format('openai')).toEqual({ provider: 'openai', n: 1 });
   });
+
+  it("format('text') returns plain text concatenation", () => {
+    const snapshot = ContextSnapshot.create({
+      id: 't',
+      messages: [
+        { role: 'system', content: 'Rules' },
+        { role: 'user', content: 'Go' },
+      ],
+      meta: {
+        totalTokens: toTokenCount(1),
+        totalBudget: toTokenCount(100),
+        utilization: 0.01,
+        waste: toTokenCount(0),
+        slots: {},
+        compressions: [],
+        evictions: [],
+        warnings: [],
+        buildTimeMs: 0,
+        builtAt: 0,
+      },
+      model: 'm',
+      immutable: false,
+    });
+    expect(snapshot.format('text')).toBe('Rules\n\nGo');
+  });
 });

@@ -6,7 +6,7 @@
 
 import { SnapshotCorruptedError } from '../errors.js';
 import { createContentId } from '../types/branded.js';
-import type { ProviderId } from '../types/config.js';
+import type { ProviderId, SnapshotFormatTarget } from '../types/config.js';
 import type { CompiledMessage } from '../types/content.js';
 import type { ProviderAdapter } from '../types/provider.js';
 import type {
@@ -17,6 +17,7 @@ import type {
 
 import { cloneCompiledMessage, compiledMessageJson } from './clone-compiled-message.js';
 import { deepFreeze } from './deep-freeze.js';
+import { formatCompiledMessagesAsPlainText } from './format-plain-text.js';
 import { sha256HexUtf8 } from './sha256-hex.js';
 
 export type CreateContextSnapshotParams = {
@@ -238,9 +239,12 @@ export class ContextSnapshot {
     return snap;
   }
 
-  format(provider: ProviderId): unknown {
-    const adapter = this._providerAdapters?.[provider];
+  format(target: SnapshotFormatTarget): unknown {
     const readonlyMsgs = this._messages as readonly CompiledMessage[];
+    if (target === 'text') {
+      return formatCompiledMessagesAsPlainText(readonlyMsgs);
+    }
+    const adapter = this._providerAdapters?.[target];
     if (adapter !== undefined) {
       return adapter.formatMessages(readonlyMsgs);
     }

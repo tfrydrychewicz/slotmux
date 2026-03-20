@@ -28,6 +28,11 @@ export type ProviderId =
   | 'ollama'
   | 'custom';
 
+/**
+ * Targets for {@link ContextSnapshot.format}: LLM providers plus plain-text export (§6.4).
+ */
+export type SnapshotFormatTarget = ProviderId | 'text';
+
 /** Model identifier — either a known model string or custom config */
 export type ModelId = string;
 

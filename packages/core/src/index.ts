@@ -153,6 +153,10 @@ export type {
   CreateContextSnapshotParams,
   DeserializeContextSnapshotOptions,
 } from './snapshot/context-snapshot.js';
+export {
+  compiledMessageToPlainText,
+  formatCompiledMessagesAsPlainText,
+} from './snapshot/format-plain-text.js';
 
 // Plugin types (§11.1)
 export type {
@@ -185,6 +189,7 @@ export {
 // Configuration types (§6.6)
 export type {
   ProviderId,
+  SnapshotFormatTarget,
   ModelId,
   SlotBudget,
   SlotBudgetFixed,
