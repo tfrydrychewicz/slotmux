@@ -10,6 +10,7 @@ import type { ContentItem } from '../../src/types/content.js';
 
 const tokenCounter = { count: (s: string) => toTokenCount(s.length) };
 const fallbackLogger = {
+  trace: vi.fn(),
   debug: vi.fn(),
   info: vi.fn(),
   warn: vi.fn(),

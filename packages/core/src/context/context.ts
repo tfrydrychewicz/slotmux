@@ -12,6 +12,7 @@ import {
   type CreateContentItemParams,
 } from '../content/content-store.js';
 import { InvalidConfigError } from '../errors.js';
+import { createContextEventRedactor } from '../logging/redaction-engine.js';
 import type { ContentId } from '../types/branded.js';
 import type { SlotConfig } from '../types/config.js';
 import type { ContentItem, MessageRole, MultimodalContent } from '../types/content.js';
@@ -99,6 +100,8 @@ export class Context {
 
   private readonly onEvent: ((event: ContextEvent) => void) | undefined;
 
+  private readonly contextEventRedactor: ((event: ContextEvent) => ContextEvent) | undefined;
+
   private readonly systemSlot: string;
 
   private readonly historySlot: string;
@@ -123,6 +126,8 @@ export class Context {
     this.slotConfigs = slots;
     this.store = new ContentStore({ ...slots });
     this.onEvent = init.onEvent;
+    this.contextEventRedactor =
+      init.parsedConfig !== undefined ? createContextEventRedactor(init.parsedConfig) : undefined;
     this.systemSlot = init.systemSlotName ?? DEFAULT_SYSTEM_SLOT;
     this.historySlot = init.historySlotName ?? DEFAULT_HISTORY_SLOT;
     this.parsedConfig = init.parsedConfig;
@@ -204,8 +209,17 @@ export class Context {
     return this.slotConfigs[slot]?.defaultRole ?? 'user';
   }
 
+  private deliverContextEvent(event: ContextEvent): void {
+    if (this.onEvent === undefined) {
+      return;
+    }
+    const e =
+      this.contextEventRedactor !== undefined ? this.contextEventRedactor(event) : event;
+    this.onEvent(e);
+  }
+
   private emitContentAdded(slot: string, item: ContentItem): void {
-    this.onEvent?.({
+    this.deliverContextEvent({
       type: 'content:added',
       slot,
       item: shallowItemCopy(item),
@@ -314,7 +328,7 @@ export class Context {
     const id = resolveContentRef(itemOrId);
     this.store.pinItem(slot, id);
     const item = this.store.getItem(slot, id);
-    this.onEvent?.({
+    this.deliverContextEvent({
       type: 'content:pinned',
       slot,
       item: shallowItemCopy(item),

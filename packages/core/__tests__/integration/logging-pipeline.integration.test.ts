@@ -34,6 +34,9 @@ const CHAT_TRUNCATE_HISTORY = {
 function captureLogger(): { readonly log: Logger; readonly calls: string[] } {
   const calls: string[] = [];
   const log: Logger = {
+    trace: (m, ...args) => {
+      calls.push(`trace:${String(m)}${args.length ? `:${JSON.stringify(args)}` : ''}`);
+    },
     debug: (m, ...args) => {
       calls.push(`debug:${String(m)}${args.length ? `:${JSON.stringify(args)}` : ''}`);
     },
@@ -99,6 +102,7 @@ describe('Logging pipeline integration (Phase 10.1 — §13.3)', () => {
       maxTokens: 500,
       slots: slotsWithLoggingOverflow,
       logger: {
+        trace: vi.fn(),
         debug,
         info: vi.fn(),
         warn: vi.fn(),

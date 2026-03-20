@@ -5,6 +5,7 @@
  */
 
 import type { LogLevel, Logger } from '../logging/logger.js';
+import type { RedactionOptions } from '../logging/redact.js';
 
 import type { TokenCount } from './branded.js';
 import type { ContentItem, MessageRole } from './content.js';
@@ -84,6 +85,7 @@ export interface OverflowStrategyLogger {
   warn(message: string, ...args: unknown[]): void;
   error(message: string, ...args: unknown[]): void;
   debug?(message: string, ...args: unknown[]): void;
+  trace?(message: string, ...args: unknown[]): void;
 }
 
 /** Context passed to custom overflow strategy functions */
@@ -294,4 +296,10 @@ export interface ContextConfig {
    * When {@link logger} is omitted, level is ignored.
    */
   logLevel?: LogLevel;
+
+  /**
+   * When set, redacts PII in {@link onEvent} payloads and in {@link logger} output (not in stored context).
+   * {@link LogLevel.TRACE} disables redaction for observability (§19.2 — Phase 10.2).
+   */
+  redaction?: true | RedactionOptions;
 }

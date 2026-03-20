@@ -26,6 +26,8 @@ export enum LogLevel {
   WARN = 1,
   INFO = 2,
   DEBUG = 3,
+  /** Most verbose; with {@link ContextConfig.redaction} set, disables redaction for logs/events (§19.2 — Phase 10.2). */
+  TRACE = 4,
 }
 
 function shouldEmit(configured: LogLevel, messageLevel: LogLevel): boolean {
@@ -43,6 +45,7 @@ function shouldEmit(configured: LogLevel, messageLevel: LogLevel): boolean {
  * Application / library logger (§13.3).
  */
 export interface Logger {
+  trace(message: string, ...args: unknown[]): void;
   debug(message: string, ...args: unknown[]): void;
   info(message: string, ...args: unknown[]): void;
   warn(message: string, ...args: unknown[]): void;
@@ -66,6 +69,9 @@ export function createConsoleLogger(options?: ConsoleLoggerOptions): Logger {
     prefix !== undefined ? `${prefix} ${message}` : message;
 
   return {
+    trace: (message, ...args) => {
+      console.debug(fmt(`[trace] ${message}`), ...args);
+    },
     debug: (message, ...args) => {
       console.debug(fmt(message), ...args);
     },
@@ -83,6 +89,7 @@ export function createConsoleLogger(options?: ConsoleLoggerOptions): Logger {
 
 /** No-op sink — default when no {@link ContextConfig.logger} is set. */
 export const noopLogger: Logger = {
+  trace: () => {},
   debug: () => {},
   info: () => {},
   warn: () => {},
@@ -98,6 +105,11 @@ export function createLeveledLogger(delegate: Logger, configured: LogLevel): Log
   }
 
   return {
+    trace: (message, ...args) => {
+      if (shouldEmit(configured, LogLevel.TRACE)) {
+        delegate.trace(message, ...args);
+      }
+    },
     debug: (message, ...args) => {
       if (shouldEmit(configured, LogLevel.DEBUG)) {
         delegate.debug(message, ...args);
@@ -129,6 +141,7 @@ export function createScopedLogger(delegate: Logger, scope: string): Logger {
   const fmt = (message: string): string => `${p} ${message}`;
 
   return {
+    trace: (message, ...args) => delegate.trace(fmt(message), ...args),
     debug: (message, ...args) => delegate.debug(fmt(message), ...args),
     info: (message, ...args) => delegate.info(fmt(message), ...args),
     warn: (message, ...args) => delegate.warn(fmt(message), ...args),
@@ -171,6 +184,7 @@ export function createContextualLogger(delegate: Logger, fields: LogContextField
   const fmt = (message: string): string => `${prefix}${message}`;
 
   return {
+    trace: (message, ...args) => delegate.trace(fmt(message), ...args),
     debug: (message, ...args) => delegate.debug(fmt(message), ...args),
     info: (message, ...args) => delegate.info(fmt(message), ...args),
     warn: (message, ...args) => delegate.warn(fmt(message), ...args),
@@ -214,6 +228,9 @@ export function createRedactingLogger(options: RedactingLoggerOptions): Logger {
     args.map((a) => redactUnknown(a, ropts));
 
   return {
+    trace: (message, ...args) => {
+      delegate.trace(redactString(message, ropts.patterns, ropts.replacement), ...redactArgs(args));
+    },
     debug: (message, ...args) => {
       delegate.debug(redactString(message, ropts.patterns, ropts.replacement), ...redactArgs(args));
     },

@@ -17,6 +17,9 @@ export function overflowStrategyLoggerToLogger(
   log: OverflowContext['logger'],
 ): Logger {
   return {
+    trace: (message, ...args) => {
+      log?.trace?.(message, ...args);
+    },
     debug: (message, ...args) => {
       log?.debug?.(message, ...args);
     },

@@ -210,6 +210,13 @@ export {
   redactUnknown,
 } from './logging/redact.js';
 export type { RedactionOptions } from './logging/redact.js';
+export {
+  createContextEventRedactor,
+  RedactionEngine,
+  redactContextEvent,
+  shouldRedactObservability,
+} from './logging/redaction-engine.js';
+export type { ObservabilityRedactionConfig } from './logging/redaction-engine.js';
 
 // Snapshot types (§6.6)
 export type {

@@ -13,12 +13,28 @@ import {
 import type { Logger } from '../../src/logging/logger.js';
 
 describe('createLeveledLogger', () => {
+  it('at TRACE forwards trace and debug', () => {
+    const inner: Logger = {
+      trace: vi.fn(),
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    const log = createLeveledLogger(inner, LogLevel.TRACE);
+    log.trace('t');
+    log.debug('d');
+    expect(inner.trace).toHaveBeenCalledWith('t');
+    expect(inner.debug).toHaveBeenCalledWith('d');
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it('at INFO omits debug but keeps info, warn, error', () => {
     const inner: Logger = {
+      trace: vi.fn(),
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
@@ -37,6 +53,7 @@ describe('createLeveledLogger', () => {
 
   it('SILENT drops all', () => {
     const inner: Logger = {
+      trace: vi.fn(),
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),
@@ -51,7 +68,10 @@ describe('createLeveledLogger', () => {
 describe('createScopedLogger', () => {
   it('prefixes message with contextcraft scope', () => {
     const info = vi.fn();
-    const log = createScopedLogger({ debug: vi.fn(), info, warn: vi.fn(), error: vi.fn() }, 'my-plugin');
+    const log = createScopedLogger(
+      { trace: vi.fn(), debug: vi.fn(), info, warn: vi.fn(), error: vi.fn() },
+      'my-plugin',
+    );
     log.info('hello');
     expect(info).toHaveBeenCalledWith('[contextcraft:my-plugin] hello');
   });
@@ -61,7 +81,7 @@ describe('createRedactingLogger', () => {
   it('redacts message and object args', () => {
     const info = vi.fn();
     const log = createRedactingLogger({
-      delegate: { debug: vi.fn(), info, warn: vi.fn(), error: vi.fn() },
+      delegate: { trace: vi.fn(), debug: vi.fn(), info, warn: vi.fn(), error: vi.fn() },
       redaction: true,
     });
     log.info('reach me@x.com', { ssn: '123-45-6789' });
@@ -87,7 +107,7 @@ describe('createContextualLogger', () => {
   it('prefixes with op and slot when both set', () => {
     const info = vi.fn();
     const log = createContextualLogger(
-      { debug: vi.fn(), info, warn: vi.fn(), error: vi.fn() },
+      { trace: vi.fn(), debug: vi.fn(), info, warn: vi.fn(), error: vi.fn() },
       { operationId: 'op-1', slot: 'history' },
     );
     log.info('hello');
@@ -96,6 +116,7 @@ describe('createContextualLogger', () => {
 
   it('returns delegate unchanged when no fields', () => {
     const inner: Logger = {
+      trace: vi.fn(),
       debug: vi.fn(),
       info: vi.fn(),
       warn: vi.fn(),

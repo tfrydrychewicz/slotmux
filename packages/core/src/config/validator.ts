@@ -173,6 +173,17 @@ export const contextConfigSchema = z
       )
       .optional(),
     logLevel: z.nativeEnum(LogLevel).optional(),
+    redaction: z
+      .union([
+        z.literal(true),
+        z
+          .object({
+            patterns: z.array(z.custom<RegExp>((val) => val instanceof RegExp)),
+            replacement: z.string().optional(),
+          })
+          .strict(),
+      ])
+      .optional(),
   })
   .strict()
   .superRefine((data, ctx) => {

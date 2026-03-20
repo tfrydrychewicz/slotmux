@@ -15,6 +15,14 @@ describe('redactString', () => {
     expect(redactString('Contact a@b.co please')).toBe('Contact [REDACTED] please');
   });
 
+  it('redacts 16-digit card-style groups', () => {
+    expect(redactString('pay 4111-1111-1111-1111 ok')).toBe('pay [REDACTED] ok');
+  });
+
+  it('redacts Amex-style 15 digits', () => {
+    expect(redactString('card 378282246310005 end')).toBe('card [REDACTED] end');
+  });
+
   it('uses custom replacement', () => {
     expect(
       redactString('123-45-6789', DEFAULT_REDACTION_PATTERNS, '***'),

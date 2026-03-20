@@ -59,7 +59,13 @@ describe('CompressionStrategy', () => {
       slotConfig: undefined,
       config: undefined,
       tokenCounter: { count: () => toTokenCount(0) },
-      logger: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+      logger: {
+        trace: () => {},
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+      },
       anchorText: undefined,
     });
     expect(result).toHaveLength(0);
@@ -69,11 +75,13 @@ describe('CompressionStrategy', () => {
 describe('PluginLogger', () => {
   it('accepts logger with required methods', () => {
     const logger: PluginLogger = {
+      trace: () => {},
       debug: () => {},
       info: () => {},
       warn: () => {},
       error: () => {},
     };
+    expect(logger.trace).toBeDefined();
     expect(logger.debug).toBeDefined();
     expect(logger.info).toBeDefined();
     expect(logger.warn).toBeDefined();
@@ -88,7 +96,13 @@ describe('PluginContext', () => {
       tokenCounter: { count: () => toTokenCount(0) },
       registerOverflowStrategy: () => {},
       registerCompressor: () => {},
-      logger: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+      logger: {
+        trace: () => {},
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+      },
     };
     expect(ctx.getSlots()).toEqual({});
   });

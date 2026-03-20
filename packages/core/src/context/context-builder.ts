@@ -12,6 +12,7 @@ import {
 } from '../config/validator.js';
 import { InvalidConfigError } from '../errors.js';
 import { LogLevel, type Logger } from '../logging/logger.js';
+import type { RedactionOptions } from '../logging/redact.js';
 import type { ContextConfig, ModelId, SlotConfig } from '../types/config.js';
 import type { MultimodalContent } from '../types/content.js';
 import type { ContextEvent } from '../types/events.js';
@@ -52,6 +53,8 @@ export class ContextBuilder {
   private _logger: Logger | undefined;
 
   private _logLevel: LogLevel | undefined;
+
+  private _redaction: true | RedactionOptions | undefined;
 
   private readonly _ops: BuilderOp[] = [];
 
@@ -103,6 +106,15 @@ export class ContextBuilder {
   /** Minimum log level when {@link logger} is set (defaults to {@link LogLevel.INFO}). */
   logLevel(level: LogLevel): this {
     this._logLevel = level;
+    return this;
+  }
+
+  /**
+   * Enable PII redaction for {@link onEvent} and {@link logger} (§19.2 — Phase 10.2).
+   * Use `true` for default patterns; pass `{ patterns }` to customize.
+   */
+  redaction(options: true | RedactionOptions): this {
+    this._redaction = options;
     return this;
   }
 
@@ -170,6 +182,7 @@ export class ContextBuilder {
         : {}),
       ...(this._logger !== undefined ? { logger: this._logger } : {}),
       ...(this._logLevel !== undefined ? { logLevel: this._logLevel } : {}),
+      ...(this._redaction !== undefined ? { redaction: this._redaction } : {}),
     };
   }
 

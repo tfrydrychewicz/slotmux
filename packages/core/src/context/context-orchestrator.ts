@@ -9,11 +9,17 @@ import { InvalidConfigError } from '../errors.js';
 import {
   createContextualLogger,
   createLeveledLogger,
+  createRedactingLogger,
   LogLevel,
   newBuildOperationId,
   noopLogger,
 } from '../logging/logger.js';
 import { overflowStrategyLoggerFromLogger } from '../logging/overflow-strategy-logger.js';
+import type { RedactionOptions } from '../logging/redact.js';
+import {
+  createContextEventRedactor,
+  shouldRedactObservability,
+} from '../logging/redaction-engine.js';
 import type { PluginManager } from '../plugins/plugin-manager.js';
 import {
   BudgetAllocator,
@@ -191,14 +197,6 @@ export type ContextOrchestratorBuildResult = {
 
 const DEFAULT_MAX_TOKENS = 8192;
 
-function emitEvent(
-  config: ParsedContextConfig,
-  event: ContextEvent,
-): void {
-  const fn = config.onEvent as ((e: ContextEvent) => void) | undefined;
-  fn?.(event);
-}
-
 function compileContentItem(item: ContentItem): CompiledMessage {
   if (typeof item.content === 'string') {
     const m: CompiledMessage = { role: item.role, content: item.content };
@@ -350,12 +348,26 @@ export class ContextOrchestrator {
     const operationId = operationIdInput ?? newBuildOperationId();
     const userLogger = config.logger;
     const hasUserLogger = userLogger !== undefined;
-    const baseLogger = hasUserLogger
+    let baseLogger: import('../logging/logger.js').Logger = hasUserLogger
       ? createLeveledLogger(userLogger, config.logLevel ?? LogLevel.INFO)
       : noopLogger;
+    if (hasUserLogger && shouldRedactObservability(config)) {
+      const r: RedactionOptions | true =
+        config.redaction === true ? true : (config.redaction as RedactionOptions);
+      baseLogger = createRedactingLogger({ delegate: baseLogger, redaction: r });
+    }
     const pipelineLog = hasUserLogger
       ? createContextualLogger(baseLogger, { operationId })
       : noopLogger;
+
+    const eventRedactor = createContextEventRedactor(config);
+    const emitToConsumer = (ev: ContextEvent): void => {
+      const fn = config.onEvent as ((e: ContextEvent) => void) | undefined;
+      if (fn === undefined) {
+        return;
+      }
+      fn(eventRedactor !== undefined ? eventRedactor(ev) : ev);
+    };
 
     const baseSlots = config.slots as Record<string, SlotConfig>;
     if (config.slots === undefined || Object.keys(config.slots).length === 0) {
@@ -372,7 +384,7 @@ export class ContextOrchestrator {
     const reserve = config.reserveForResponse ?? 0;
     const totalBudget = Math.max(0, maxTokens - reserve);
 
-    emitEvent(config, { type: 'build:start', totalBudget });
+    emitToConsumer({ type: 'build:start', totalBudget });
     pipelineLog.debug(`build: pipeline started (totalBudget=${totalBudget})`);
 
     const slots =
@@ -386,7 +398,7 @@ export class ContextOrchestrator {
     const evictionsMeta: EvictionEvent[] = [];
 
     const forward = (e: ContextEvent): void => {
-      emitEvent(config, e);
+      emitToConsumer(e);
       if (e.type === 'warning') {
         pipelineLog.warn(e.warning.message, e.warning);
       }
@@ -526,7 +538,7 @@ export class ContextOrchestrator {
 
     context.clearEphemeral();
 
-    emitEvent(config, { type: 'build:complete', snapshot });
+    emitToConsumer({ type: 'build:complete', snapshot });
     pipelineLog.debug(
       `build: complete (messages=${snapshot.messages.length}, buildTimeMs=${snapshot.meta.buildTimeMs})`,
     );

@@ -16,7 +16,7 @@ describe('createFallbackChainStrategy (§15.2 — Phase 4.7)', () => {
     const warn = vi.fn();
     const ctx: OverflowContext = {
       slot: 's',
-      logger: { warn, info: vi.fn(), error: vi.fn() },
+      logger: { trace: vi.fn(), warn, info: vi.fn(), error: vi.fn(), debug: vi.fn() },
     };
 
     const a = createContentItem({

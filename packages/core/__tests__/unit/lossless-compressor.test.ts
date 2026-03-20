@@ -322,7 +322,13 @@ describe('LosslessCompressor (Phase 8.2)', () => {
       slotConfig: { priority: 1, budget: { flex: true } },
       config: {},
       tokenCounter: { count: () => toTokenCount(0) },
-      logger: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+      logger: {
+        trace: () => {},
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+      },
       anchorText: undefined,
     });
     expect(out[0]!.content).toBe('i.e. yes');

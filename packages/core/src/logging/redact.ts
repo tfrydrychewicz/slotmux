@@ -4,16 +4,23 @@
  * @packageDocumentation
  */
 
-/** Default patterns: US SSN-style and email (design §19.2). */
+/**
+ * Default patterns: US SSN-style, email, common card number groupings (design §19.2 / Phase 10.2).
+ * Does not replace Luhn validation — heuristic redaction for logs/events only.
+ */
 export const DEFAULT_REDACTION_PATTERNS: readonly RegExp[] = [
   /\b\d{3}-\d{2}-\d{4}\b/g,
   /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/gi,
+  /** 16-digit groups (Visa/MC/Discover-style). */
+  /\b(?:\d{4}[-\s]?){3}\d{4}\b/g,
+  /** Amex-style 15 digits starting with 34 or 37. */
+  /\b3[47]\d{13}\b/g,
 ];
 
 export type RedactionOptions = {
   readonly patterns: readonly RegExp[];
   /** Replacement text (default `[REDACTED]`). */
-  readonly replacement?: string;
+  readonly replacement?: string | undefined;
 };
 
 const DEFAULT_REPLACEMENT = '[REDACTED]';

@@ -11,6 +11,9 @@ import type { Logger } from './logger.js';
 /** Maps full {@link Logger} to the shape passed on {@link OverflowContext.logger}. */
 export function overflowStrategyLoggerFromLogger(log: Logger): OverflowStrategyLogger {
   return {
+    trace: (message, ...args) => {
+      log.trace(message, ...args);
+    },
     debug: (message, ...args) => {
       log.debug(message, ...args);
     },
