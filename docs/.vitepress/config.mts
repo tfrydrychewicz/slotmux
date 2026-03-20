@@ -86,6 +86,14 @@ export default defineConfig({
         ],
       },
       {
+        text: 'Plugins',
+        items: [
+          { text: 'RAG', link: '/plugins/rag' },
+          { text: 'Memory', link: '/plugins/memory' },
+          { text: 'Tools', link: '/plugins/tools' },
+        ],
+      },
+      {
         text: 'Production',
         items: [
           { text: 'Error handling', link: '/guides/error-handling' },
