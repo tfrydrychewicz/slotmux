@@ -4,6 +4,8 @@ Thanks for your interest in contributing. This document covers coding standards,
 
 ## Development Setup
 
+Use **Node.js ≥ 20.19** (see root `package.json` `engines`). Older versions (e.g. Node 18) cannot run the full monorepo build because `@contextcraft/debug` uses Vite 8.
+
 ```bash
 pnpm install
 pnpm build

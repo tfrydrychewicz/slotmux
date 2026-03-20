@@ -7,6 +7,10 @@
 
 contextcraft is a TypeScript library that manages your AI app's context window like an OS manages RAM. Declare what matters, set priorities, and let contextcraft handle token counting, overflow, and compression — across any LLM provider.
 
+## Requirements
+
+- **Node.js** ≥ **20.19** (required for this repo’s toolchain, including Vite 8 for `@contextcraft/debug`’s inspector UI build)
+
 ## Install
 
 ```bash
