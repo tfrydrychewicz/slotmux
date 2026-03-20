@@ -9,8 +9,8 @@
  */
 
 import { Injectable, signal, type OnDestroy } from '@angular/core';
-import { reactiveContext, type ReactiveContext } from 'slotmux/reactive';
 import type { SnapshotMeta } from 'slotmux';
+import { reactiveContext, type ReactiveContext } from 'slotmux/reactive';
 
 @Injectable({ providedIn: 'root' })
 export class SlotmuxService implements OnDestroy {

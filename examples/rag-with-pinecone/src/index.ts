@@ -1,7 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
-import { createContext, Context } from 'slotmux';
-import { formatOpenAIMessages } from '@slotmux/providers';
 import { ragPlugin } from '@slotmux/plugin-rag';
+import { formatOpenAIMessages } from '@slotmux/providers';
+import { createContext, Context } from 'slotmux';
 
 const OPENAI_KEY = process.env['OPENAI_API_KEY'];
 const PINECONE_KEY = process.env['PINECONE_API_KEY'];

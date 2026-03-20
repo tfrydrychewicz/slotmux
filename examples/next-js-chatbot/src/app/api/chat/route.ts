@@ -1,6 +1,6 @@
+import { formatOpenAIMessages } from '@slotmux/providers';
 import { NextResponse } from 'next/server';
 import { createContext, Context } from 'slotmux';
-import { formatOpenAIMessages } from '@slotmux/providers';
 
 export async function POST(request: Request) {
   const { messages } = (await request.json()) as {

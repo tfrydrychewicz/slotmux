@@ -10,8 +10,8 @@
  * service/component patterns from the src/ directory. See README.md.
  */
 
-import { reactiveContext } from 'slotmux/reactive';
 import type { SnapshotMeta } from 'slotmux';
+import { reactiveContext } from 'slotmux/reactive';
 
 // --- Simulates the Angular service (SlotmuxService) ---
 

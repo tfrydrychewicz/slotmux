@@ -1,8 +1,8 @@
-import { createContext, Context } from 'slotmux';
 import {
   formatOpenAIMessages,
   formatAnthropicMessages,
 } from '@slotmux/providers';
+import { createContext, Context } from 'slotmux';
 
 const OPENAI_KEY = process.env['OPENAI_API_KEY'];
 const ANTHROPIC_KEY = process.env['ANTHROPIC_API_KEY'];

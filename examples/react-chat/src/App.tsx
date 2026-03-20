@@ -1,10 +1,10 @@
-import { useRef, useState, useCallback, type FormEvent } from 'react';
-import { reactiveContext } from 'slotmux/reactive';
 import {
   useReactiveContextMeta,
   useReactiveContextUtilization,
   useReactiveContextBuildError,
 } from '@slotmux/react';
+import { useRef, useState, useCallback, type FormEvent } from 'react';
+import { reactiveContext } from 'slotmux/reactive';
 
 const rctx = reactiveContext({
   model: 'gpt-5.4-mini',

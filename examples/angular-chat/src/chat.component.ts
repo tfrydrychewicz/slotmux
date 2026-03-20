@@ -7,6 +7,7 @@
 
 import { Component, signal, viewChild, type ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { SlotmuxService } from './slotmux.service';
 
 type Message = { role: 'user' | 'assistant'; content: string };

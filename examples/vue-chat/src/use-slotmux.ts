@@ -1,6 +1,6 @@
-import { ref, computed, onUnmounted } from 'vue';
-import { reactiveContext } from 'slotmux/reactive';
 import type { SnapshotMeta } from 'slotmux';
+import { reactiveContext } from 'slotmux/reactive';
+import { ref, computed, onUnmounted } from 'vue';
 
 const rctx = reactiveContext({
   model: 'gpt-5.4-mini',

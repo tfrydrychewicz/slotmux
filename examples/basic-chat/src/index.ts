@@ -1,8 +1,8 @@
-import * as readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
+import * as readline from 'node:readline/promises';
 
-import { createContext, Context } from 'slotmux';
 import { formatOpenAIMessages } from '@slotmux/providers';
+import { createContext, Context } from 'slotmux';
 
 const OPENAI_KEY = process.env['OPENAI_API_KEY'];
 if (!OPENAI_KEY) {
