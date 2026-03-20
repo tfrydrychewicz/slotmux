@@ -217,7 +217,7 @@ Same slot definitions, same overflow strategies, same token budgets — whether 
 
 Slotmux is not a prototype tool. It ships with SHA-256 snapshot checksums, PII redaction on events and logs, prompt injection sanitization, per-slot resource limits, and an error hierarchy with `recoverable` flags for graceful degradation.
 
-Performance is enforced in CI: builds under 5ms for 100 messages, sub-millisecond cached token counting, and structural sharing across snapshots to minimize GC pressure. All in **7 kB gzipped**.
+Performance is enforced in CI: single-digit-millisecond builds for typical workloads, sub-millisecond cached token counting, and structural sharing across snapshots to minimize GC pressure. All in **7 kB gzipped**.
 
 </div>
 

@@ -5,10 +5,12 @@ on:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
   pull-requests: write
+  actions: read
 
 jobs:
   benchmark:
@@ -30,6 +32,28 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
+      - name: Download baseline from latest main run
+        id: dl_baseline
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: benchmark.yml
+          branch: main
+          name: benchmark-baseline
+          path: benchmarks/
+          search_artifacts: true
+          if_no_files_found: warn
+
+      - name: Use downloaded baseline
+        if: steps.dl_baseline.outcome == 'success'
+        run: |
+          if [ -f benchmarks/current.json ]; then
+            cp benchmarks/current.json benchmarks/baseline.json
+            echo "Using baseline from previous CI run"
+          else
+            echo "Downloaded artifact did not contain current.json, keeping committed baseline"
+          fi
+
       - name: Vitest bench (JSON for CI)
         run: pnpm exec vitest bench --outputJson benchmarks/current.json
 
@@ -47,6 +71,15 @@ jobs:
       - name: Job summary
         if: steps.report.outputs.exists == 'true'
         run: head -n 80 benchmark-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload baseline for future runs
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-baseline
+          path: benchmarks/current.json
+          overwrite: true
+          retention-days: 90
 
       - name: Upload benchmark artifacts (trend / history)
         uses: actions/upload-artifact@v4

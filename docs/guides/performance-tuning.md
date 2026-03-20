@@ -4,18 +4,18 @@ Slotmux is designed to be fast by default — sub-millisecond token counting, ca
 
 ## Performance targets
 
-Slotmux enforces these performance SLAs in CI:
+These are slotmux's design-level performance targets. CI enforces them with a 1.6x tolerance to account for shared-runner variance. Your local hardware will typically beat these numbers.
 
 | Operation | Target | Conditions |
 | --- | --- | --- |
 | Single message token count | mean < 0.1ms | Cached tokenizer |
-| 1000 cached token lookups | total < 1ms | L1 cache hits |
+| Token cache hit | p99 < 1ms per hit | L1 cache (warm keys) |
 | `Context.build()` | p99 < 5ms | 100 messages, 3 slots |
 | `Context.build()` | p99 < 20ms | 1000 messages, 5 slots |
 | `BudgetAllocator.resolve` | p99 < 0.5ms | 20 slots |
 | `ContextSnapshot.serialize` | p99 < 10ms | ~50K token payload |
 
-If your builds are slower than these targets, something is misconfigured or you've hit an edge case this guide can help with.
+If your builds are significantly slower than these targets, something is misconfigured or you've hit an edge case this guide can help with.
 
 ## Lazy token counting
 
