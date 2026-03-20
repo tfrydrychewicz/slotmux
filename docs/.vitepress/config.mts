@@ -6,11 +6,13 @@ function vitepressBase(): string {
   return withSlash === '//' ? '/' : withSlash;
 }
 
+const base = vitepressBase();
+
 export default defineConfig({
   title: 'Slotmux',
   description: 'Intelligent context window management for AI applications',
-  base: vitepressBase(),
-  head: [['link', { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }]],
+  base,
+  head: [['link', { rel: 'icon', type: 'image/x-icon', href: `${base}favicon.ico` }]],
   themeConfig: {
     logo: '/slotmux.svg',
     nav: [
