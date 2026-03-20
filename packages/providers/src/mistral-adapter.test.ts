@@ -51,7 +51,7 @@ describe('MistralAdapter', () => {
   it('uses mistral provider and delegates formatting', () => {
     const a: MistralAdapter = createMistralAdapter();
     expect(a.id).toBe('mistral');
-    expect(a.resolveModel('mistral-large-latest').maxContextTokens).toBe(128_000);
+    expect(a.resolveModel('mistral-large-latest').maxContextTokens).toBe(256_000);
     expect(
       a.formatMessages([{ role: 'user', content: 'x' }]),
     ).toEqual([{ role: 'user', content: 'x' }]);

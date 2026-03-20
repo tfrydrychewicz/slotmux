@@ -12,6 +12,7 @@ export default defineConfig({
       '__tests__/types/**/*.test.ts',
       '__tests__/integration/**/*.test.ts',
       '__tests__/property/**/*.test.ts',
+      '__tests__/e2e/**/*.test.ts',
     ],
     benchmark: {
       include: ['__tests__/benchmarks/**/*.bench.ts'],
