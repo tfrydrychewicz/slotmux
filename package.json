@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --filter='!./examples/*'",
     "test": "vitest run",
     "test:e2e": "pnpm --filter @slotmux/debug test:e2e",
     "test:watch": "vitest",
@@ -28,7 +28,7 @@
     "verify:core-runtime-deps": "node scripts/verify-core-runtime-deps.mjs",
     "size-limit": "pnpm --filter slotmux exec size-limit && pnpm --filter @slotmux/providers exec size-limit",
     "lint:fix": "eslint . --fix",
-    "typecheck": "turbo run typecheck",
+    "typecheck": "turbo run typecheck --filter='!./examples/*'",
     "docs:dev": "pnpm --filter @slotmux/docs dev",
     "docs:build": "pnpm --filter @slotmux/docs run site:build",
     "docs:preview": "pnpm --filter @slotmux/docs preview",
