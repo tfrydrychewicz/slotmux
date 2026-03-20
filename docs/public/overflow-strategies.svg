@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" fill="none">
+  <style>
+    text { font-family: system-ui, -apple-system, sans-serif; }
+  </style>
+
+  <!-- Title -->
+  <text x="360" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#e2e2e2">Per-slot overflow strategies</text>
+  <text x="360" y="44" text-anchor="middle" font-size="11.5" fill="#999">Each slot can handle overflow differently</text>
+
+  <!-- ===== Column 1: Truncate ===== -->
+  <text x="125" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#22c55e">Chat History</text>
+  <text x="125" y="88" text-anchor="middle" font-size="10" fill="#86efac">sliding-window</text>
+
+  <!-- Before -->
+  <rect x="30" y="100" width="190" height="140" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+  <text x="36" y="114" font-size="8" font-weight="600" fill="#64748b">BEFORE</text>
+
+  <rect x="40" y="120" width="170" height="16" rx="3" fill="#22c55e" opacity="0.2"/>
+  <text x="50" y="132" font-size="8.5" fill="#6b7280">msg 1: "Hello..."</text>
+  <line x1="40" y1="120" x2="210" y2="136" stroke="#ef4444" stroke-width="1.5" opacity="0.6"/>
+
+  <rect x="40" y="140" width="170" height="16" rx="3" fill="#22c55e" opacity="0.2"/>
+  <text x="50" y="152" font-size="8.5" fill="#6b7280">msg 2: "Can you..."</text>
+  <line x1="40" y1="140" x2="210" y2="156" stroke="#ef4444" stroke-width="1.5" opacity="0.6"/>
+
+  <rect x="40" y="160" width="170" height="16" rx="3" fill="#22c55e" opacity="0.45"/>
+  <text x="50" y="172" font-size="8.5" fill="#dcfce7">msg 3: "What about..."</text>
+
+  <rect x="40" y="180" width="170" height="16" rx="3" fill="#22c55e" opacity="0.45"/>
+  <text x="50" y="192" font-size="8.5" fill="#dcfce7">msg 4: "Thanks!"</text>
+
+  <rect x="40" y="200" width="170" height="16" rx="3" fill="#22c55e" opacity="0.45"/>
+  <text x="50" y="212" font-size="8.5" fill="#dcfce7">msg 5: "One more..."</text>
+
+  <rect x="40" y="220" width="170" height="16" rx="3" fill="#22c55e" opacity="0.45"/>
+  <text x="50" y="232" font-size="8.5" fill="#dcfce7">msg 6: "Compare..."</text>
+
+  <!-- Arrow -->
+  <text x="125" y="260" text-anchor="middle" font-size="16" fill="#64748b">&#x25BC;</text>
+
+  <!-- After -->
+  <rect x="30" y="272" width="190" height="60" rx="6" fill="#1a1a2e" stroke="#22c55e" stroke-width="1"/>
+  <text x="36" y="286" font-size="8" font-weight="600" fill="#22c55e">AFTER</text>
+
+  <rect x="40" y="292" width="170" height="14" rx="3" fill="#22c55e" opacity="0.45"/>
+  <text x="50" y="303" font-size="8.5" fill="#dcfce7">msg 4, msg 5, msg 6</text>
+
+  <text x="40" y="322" font-size="8.5" fill="#64748b">Oldest messages slide out</text>
+
+  <!-- ===== Column 2: Summarize ===== -->
+  <text x="365" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#f59e0b">RAG Documents</text>
+  <text x="365" y="88" text-anchor="middle" font-size="10" fill="#fbbf24">summarize</text>
+
+  <!-- Before -->
+  <rect x="270" y="100" width="190" height="140" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+  <text x="276" y="114" font-size="8" font-weight="600" fill="#64748b">BEFORE</text>
+
+  <rect x="280" y="120" width="170" height="28" rx="3" fill="#f59e0b" opacity="0.35"/>
+  <text x="290" y="138" font-size="8.5" fill="#fef3c7">Doc #1: Architecture (3,200 tok)</text>
+
+  <rect x="280" y="152" width="170" height="28" rx="3" fill="#f59e0b" opacity="0.35"/>
+  <text x="290" y="170" font-size="8.5" fill="#fef3c7">Doc #2: API Reference (4,100 tok)</text>
+
+  <rect x="280" y="184" width="170" height="28" rx="3" fill="#f59e0b" opacity="0.35"/>
+  <text x="290" y="202" font-size="8.5" fill="#fef3c7">Doc #3: Migration guide (2,800 tok)</text>
+
+  <rect x="280" y="216" width="170" height="20" rx="3" fill="#ef4444" opacity="0.2"/>
+  <text x="290" y="230" font-size="8.5" fill="#f87171">Total: 10,100 / budget: 5,000</text>
+
+  <!-- Arrow -->
+  <text x="365" y="260" text-anchor="middle" font-size="16" fill="#64748b">&#x25BC;</text>
+
+  <!-- After -->
+  <rect x="270" y="272" width="190" height="60" rx="6" fill="#1a1a2e" stroke="#f59e0b" stroke-width="1"/>
+  <text x="276" y="286" font-size="8" font-weight="600" fill="#f59e0b">AFTER</text>
+
+  <rect x="280" y="292" width="170" height="14" rx="3" fill="#f59e0b" opacity="0.4"/>
+  <text x="290" y="303" font-size="8.5" fill="#fef3c7">Doc #1 + #2 + #3 (summarized)</text>
+
+  <text x="280" y="322" font-size="8.5" fill="#64748b">Compressed to fit, meaning preserved</text>
+
+  <!-- ===== Column 3: Semantic ===== -->
+  <text x="600" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#a855f7">Tool Results</text>
+  <text x="600" y="88" text-anchor="middle" font-size="10" fill="#c084fc">semantic</text>
+
+  <!-- Before -->
+  <rect x="505" y="100" width="190" height="140" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+  <text x="511" y="114" font-size="8" font-weight="600" fill="#64748b">BEFORE</text>
+
+  <rect x="515" y="120" width="170" height="22" rx="3" fill="#a855f7" opacity="0.45"/>
+  <text x="525" y="135" font-size="8.5" fill="#e9d5ff">search("weather") &#x2192; relevant</text>
+
+  <rect x="515" y="146" width="170" height="22" rx="3" fill="#a855f7" opacity="0.15"/>
+  <text x="525" y="161" font-size="8.5" fill="#6b7280">search("news") &#x2192; off-topic</text>
+
+  <rect x="515" y="172" width="170" height="22" rx="3" fill="#a855f7" opacity="0.45"/>
+  <text x="525" y="187" font-size="8.5" fill="#e9d5ff">calc("temp conv") &#x2192; relevant</text>
+
+  <rect x="515" y="198" width="170" height="22" rx="3" fill="#a855f7" opacity="0.15"/>
+  <text x="525" y="213" font-size="8.5" fill="#6b7280">search("stocks") &#x2192; off-topic</text>
+
+  <!-- Arrow -->
+  <text x="600" y="260" text-anchor="middle" font-size="16" fill="#64748b">&#x25BC;</text>
+
+  <!-- After -->
+  <rect x="505" y="272" width="190" height="60" rx="6" fill="#1a1a2e" stroke="#a855f7" stroke-width="1"/>
+  <text x="511" y="286" font-size="8" font-weight="600" fill="#a855f7">AFTER</text>
+
+  <rect x="515" y="292" width="170" height="14" rx="3" fill="#a855f7" opacity="0.45"/>
+  <text x="525" y="303" font-size="8.5" fill="#e9d5ff">weather + temp conv (relevant)</text>
+
+  <text x="515" y="322" font-size="8.5" fill="#64748b">Keeps most relevant by similarity</text>
+</svg>

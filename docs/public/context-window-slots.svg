@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420" fill="none">
+  <style>
+    text { font-family: system-ui, -apple-system, sans-serif; }
+  </style>
+
+  <!-- Title -->
+  <text x="260" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#e2e2e2">With slotmux</text>
+  <text x="260" y="48" text-anchor="middle" font-size="11.5" fill="#999">Each slot has its own budget, priority, and overflow strategy</text>
+
+  <!-- Context window outline -->
+  <rect x="80" y="68" width="360" height="340" rx="8" fill="#1a1a2e" stroke="#22c55e" stroke-width="1.5" opacity="0.95"/>
+
+  <!-- Slot: System (fixed budget) -->
+  <rect x="96" y="80" width="328" height="44" rx="5" fill="#4a6cf7" opacity="0.2" stroke="#4a6cf7" stroke-width="1"/>
+  <rect x="96" y="80" width="200" height="44" rx="5" fill="#4a6cf7" opacity="0.6"/>
+  <text x="110" y="98" font-size="10" font-weight="700" fill="#a5b4fc">SYSTEM</text>
+  <text x="110" y="114" font-size="10" fill="#cbd5e1">You are a helpful assistant...</text>
+  <text x="416" y="98" text-anchor="end" font-size="9" fill="#64748b">fixed: 2,000</text>
+  <text x="416" y="112" text-anchor="end" font-size="9" fill="#ef4444">overflow: error</text>
+
+  <!-- Slot: Docs (percent budget) -->
+  <rect x="96" y="132" width="328" height="90" rx="5" fill="#f59e0b" opacity="0.12" stroke="#f59e0b" stroke-width="1"/>
+  <rect x="96" y="132" width="280" height="90" rx="5" fill="#f59e0b" opacity="0.35"/>
+  <text x="110" y="150" font-size="10" font-weight="700" fill="#fbbf24">DOCS (RAG)</text>
+  <text x="416" y="148" text-anchor="end" font-size="9" fill="#64748b">budget: 40%</text>
+  <text x="416" y="162" text-anchor="end" font-size="9" fill="#f59e0b">overflow: summarize</text>
+
+  <rect x="106" y="160" width="260" height="20" rx="3" fill="#f59e0b" opacity="0.4"/>
+  <text x="116" y="174" font-size="9.5" fill="#fef3c7">Doc #1: Architecture overview</text>
+
+  <rect x="106" y="184" width="260" height="20" rx="3" fill="#f59e0b" opacity="0.4"/>
+  <text x="116" y="198" font-size="9.5" fill="#fef3c7">Doc #2: API reference (summarized)</text>
+
+  <!-- Pin icon on Doc #1 -->
+  <text x="374" y="175" font-size="13" fill="#fbbf24">&#x1F4CC;</text>
+  <text x="374" y="199" font-size="8" fill="#a3a3a3">pinned</text>
+
+  <!-- Slot: Tools (flex budget) -->
+  <rect x="96" y="230" width="328" height="52" rx="5" fill="#a855f7" opacity="0.12" stroke="#a855f7" stroke-width="1"/>
+  <rect x="96" y="230" width="160" height="52" rx="5" fill="#a855f7" opacity="0.35"/>
+  <text x="110" y="248" font-size="10" font-weight="700" fill="#c084fc">TOOLS</text>
+  <text x="416" y="248" text-anchor="end" font-size="9" fill="#64748b">budget: flex</text>
+  <text x="416" y="262" text-anchor="end" font-size="9" fill="#a855f7">overflow: truncate</text>
+
+  <rect x="106" y="258" width="140" height="16" rx="3" fill="#a855f7" opacity="0.35"/>
+  <text x="116" y="270" font-size="9" fill="#e9d5ff">search_web() result</text>
+
+  <!-- Slot: History (flex budget) -->
+  <rect x="96" y="290" width="328" height="80" rx="5" fill="#22c55e" opacity="0.12" stroke="#22c55e" stroke-width="1"/>
+  <rect x="96" y="290" width="260" height="80" rx="5" fill="#22c55e" opacity="0.3"/>
+  <text x="110" y="308" font-size="10" font-weight="700" fill="#86efac">HISTORY</text>
+  <text x="416" y="308" text-anchor="end" font-size="9" fill="#64748b">budget: flex</text>
+  <text x="416" y="322" text-anchor="end" font-size="9" fill="#22c55e">overflow: sliding-window</text>
+
+  <rect x="106" y="316" width="240" height="16" rx="3" fill="#22c55e" opacity="0.3"/>
+  <text x="116" y="328" font-size="9" fill="#dcfce7">User: "Summarize this document..."</text>
+
+  <rect x="106" y="336" width="240" height="16" rx="3" fill="#22c55e" opacity="0.25"/>
+  <text x="116" y="348" font-size="9" fill="#dcfce7">Assistant: "Here's a summary..."</text>
+
+  <rect x="106" y="356" width="240" height="16" rx="3" fill="#22c55e" opacity="0.2"/>
+  <text x="116" y="368" font-size="9" fill="#dcfce7">User: "Now compare with..."</text>
+
+  <!-- Reserved for response -->
+  <rect x="96" y="378" width="328" height="22" rx="5" fill="#334155" opacity="0.5" stroke="#475569" stroke-width="1" stroke-dasharray="4 2"/>
+  <text x="260" y="393" text-anchor="middle" font-size="9" fill="#94a3b8">Reserved for model response (4,096 tokens)</text>
+
+  <!-- Checkmark indicator -->
+  <text x="452" y="215" font-size="22" fill="#22c55e">&#x2713;</text>
+  <text x="449" y="232" font-size="9" font-weight="600" fill="#22c55e">Fits!</text>
+</svg>

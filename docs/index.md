@@ -3,11 +3,11 @@ layout: home
 
 hero:
   name: Slotmux
-  text: The memory allocator for LLM context windows
+  text: Your LLM app has a token budget. Slotmux manages it.
   image:
     src: /slotmux.svg
     alt: Slotmux logo
-  tagline: Stop concatenating strings and hoping they fit. Declare slots, set budgets, call build() — slotmux handles the rest.
+  tagline: "Organize your context into slots with budgets. Pin what matters. Overflow intelligently. Build once, send to any provider."
   actions:
     - theme: brand
       text: Get started
@@ -22,50 +22,59 @@ hero:
 features:
   - icon: 🧱
     title: Slots, not strings
-    details: Partition your context into named slots — system prompt, history, documents, tools. Each with its own budget, priority, and overflow strategy.
+    details: "Every piece of context gets a named slot — system prompt, chat history, documents, tools. Each slot has its own token budget and overflow strategy. No more guessing if your prompt fits."
   - icon: 🎯
-    title: Token budgets that work
-    details: Fixed, percentage, flex, or bounded allocations. Resolved top-down by priority, with response tokens reserved. The total never exceeds the context window.
+    title: Budgets that actually work
+    details: "Fixed tokens, percentages, flex, or bounded ranges. Slotmux resolves budgets by priority, reserves space for the response, and guarantees you never exceed the context window."
   - icon: 🔄
-    title: 8 overflow strategies
-    details: Truncate, sliding window, summarize, semantic, compress, error, or build your own. Pick per slot. Fallback chains cascade automatically.
-  - icon: 📸
-    title: Immutable snapshots
-    details: Every build() returns a frozen snapshot — messages, metadata, timing, per-slot stats. Safe to cache, serialize, diff, and replay.
+    title: Smart overflow, per slot
+    details: "RAG docs overflowing? Summarize them. Chat history too long? Slide the window. Tool results piling up? Keep the most relevant. Eight strategies built in, or bring your own."
+  - icon: 📌
+    title: Pin what matters
+    details: "Mark a document or instruction as pinned. Slotmux will never compress or drop it, no matter how tight the budget gets. Critical context stays critical."
   - icon: 🔌
-    title: Any LLM provider
-    details: Compile once, format for OpenAI, Anthropic, Google, Mistral, or Ollama. Same context logic everywhere. Swap models without rewriting prompts.
+    title: Build once, send anywhere
+    details: "Compile your context once. Format it for OpenAI, Anthropic, Google, Mistral, or Ollama. Same logic, same budgets — just swap the provider. Model-agnostic by design."
   - icon: ⚡
-    title: 7 kB. Zero dependencies.
-    details: Tree-shakeable ESM core. Sub-millisecond token counting. Lazy evaluation. No framework lock-in. TypeScript-first with Zod-backed validation.
+    title: 7 kB. Zero lock-in.
+    details: "Tree-shakeable ESM core. Sub-millisecond token counting. Works with React, Vue, Angular, or plain Node.js. TypeScript-first with Zod-backed config validation."
 ---
 
 <style>
-.problem-section {
+.section-block {
   max-width: 960px;
-  margin: 4rem auto 0;
+  margin: 3rem auto 0;
   padding: 0 24px;
 }
-.problem-section h2 {
+.section-block h2 {
   font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
-.problem-section p {
+.section-block h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.section-block p {
   color: var(--vp-c-text-2);
   font-size: 1.05rem;
   line-height: 1.7;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
-.code-demo {
-  max-width: 960px;
-  margin: 2rem auto 4rem;
-  padding: 0 24px;
+.diagram-row {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  margin: 2rem 0;
 }
-.code-demo h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+.diagram-row img {
+  border-radius: 8px;
+}
+@media (max-width: 768px) {
+  .diagram-row {
+    flex-direction: column;
+  }
 }
 .cta-section {
   text-align: center;
@@ -83,19 +92,55 @@ features:
 }
 </style>
 
-<div class="problem-section">
+<div class="section-block">
 
-## The problem
+## The problem you already have
 
-Every LLM application manages a context window. System prompts, conversation history, RAG documents, tool results, agent scratchpads — they all compete for the same finite token budget. Most teams handle this with string concatenation, manual counting, and silent truncation. It works until it doesn't.
+If you're building an app that talks to an LLM, you're managing a context window — whether you know it or not. System prompts, chat history, RAG documents, tool results: they all share one token budget.
 
-Slotmux replaces that fragile glue code with a **declarative system**. You describe what each section of your prompt needs. Slotmux figures out how to make it fit.
+Most teams handle this by concatenating strings, counting tokens manually, and truncating from the top when things don't fit. A critical instruction disappears. A document gets silently dropped. The model hallucinates because it lost something it needed.
+
+<p align="center">
+  <img src="/context-window-problem.svg" alt="Context window overflowing without slotmux" style="max-width: 520px; width: 100%;" />
+</p>
 
 </div>
 
-<div class="code-demo">
+<div class="section-block">
 
-### Three lines to a production-ready context
+## Slots: a better mental model
+
+Instead of one big blob of text, slotmux lets you organize context into **named slots** — each with its own token budget, priority, and overflow strategy. Think of it like a memory allocator, but for your prompt.
+
+The system prompt gets a fixed budget. RAG documents get 40% of the remaining space. Chat history fills whatever is left. And there's always room reserved for the model's response.
+
+If a user said something important, or a document is critical — **pin it**. Slotmux will never compress or drop pinned content, no matter how tight the budget gets.
+
+<p align="center">
+  <img src="/context-window-slots.svg" alt="Context window organized into slots with budgets" style="max-width: 520px; width: 100%;" />
+</p>
+
+</div>
+
+<div class="section-block">
+
+## What happens when a slot overflows?
+
+This is where slotmux gets interesting. Instead of one global "truncate from the top" strategy, you choose what happens when **each individual slot** runs out of space.
+
+Your RAG documents overflow? **Summarize** them progressively — the meaning is preserved. Chat history grows too long? Use a **sliding window** to keep recent messages. Tool results piling up? Keep only the most **semantically relevant** ones based on embedding similarity.
+
+<p align="center">
+  <img src="/overflow-strategies.svg" alt="Three overflow strategies side by side" style="max-width: 720px; width: 100%;" />
+</p>
+
+Eight strategies built in: `truncate`, `truncate-latest`, `sliding-window`, `summarize`, `semantic`, `compress`, `error`, and `fallback-chain`. Or write your own with a simple async function.
+
+</div>
+
+<div class="section-block">
+
+### The simplest case
 
 ```typescript
 import { createContext, Context } from 'slotmux';
@@ -103,7 +148,7 @@ import { formatOpenAIMessages } from '@slotmux/providers';
 
 const { config } = createContext({
   model: 'gpt-5.4',
-  preset: 'chat',                  // system + history slots, ready to go
+  preset: 'chat',
   reserveForResponse: 4096,
 });
 
@@ -113,21 +158,19 @@ ctx.user('What is the capital of France?');
 
 const { snapshot } = await ctx.build();
 const messages = formatOpenAIMessages(snapshot.messages);
-
-// snapshot.meta → utilization: 0.02, totalTokens: 24, buildTimeMs: 1
 ```
 
-### Scale to complex applications
+### A real-world RAG agent
 
 ```typescript
 createContext({
   model: 'claude-sonnet-4-20250514',
   reserveForResponse: 8192,
   slots: {
-    system:  { priority: 100, budget: { fixed: 2000 },   overflow: 'error' },
-    docs:    { priority: 80,  budget: { percent: 40 },   overflow: 'semantic' },
-    tools:   { priority: 70,  budget: { flex: true },     overflow: 'truncate' },
-    history: { priority: 50,  budget: { flex: true },     overflow: 'summarize' },
+    system:  { priority: 100, budget: { fixed: 2000 },  overflow: 'error' },
+    docs:    { priority: 80,  budget: { percent: 40 },  overflow: 'summarize' },
+    tools:   { priority: 70,  budget: { flex: true },   overflow: 'semantic' },
+    history: { priority: 50,  budget: { flex: true },   overflow: 'sliding-window' },
   },
   plugins: [ragPlugin({ maxChunks: 20 }), sanitizePlugin()],
 });
@@ -135,17 +178,26 @@ createContext({
 
 </div>
 
-<div class="problem-section">
+<div class="section-block">
 
-## Built for production
+## Build once, send to any provider
 
-Slotmux is not a prototype tool. It ships with SHA-256 snapshot checksums, PII redaction on events and logs, prompt injection sanitization, per-slot resource limits with early warnings, and an error hierarchy with `recoverable` flags for graceful degradation.
+Slotmux compiles your context into its own format. Then you format it for whatever provider you're using — or multiple providers at once:
 
-Performance is enforced in CI: builds under 5ms for 100 messages, sub-millisecond cached token counting, and structural sharing across snapshots to minimize GC pressure.
+```typescript
+import { formatOpenAIMessages, formatAnthropicMessages } from '@slotmux/providers';
+
+const { snapshot } = await ctx.build();
+
+const forGPT    = formatOpenAIMessages(snapshot.messages);
+const forClaude = formatAnthropicMessages(snapshot.messages);
+```
+
+Same slot definitions, same overflow strategies, same token budgets — whether you're talking to GPT, Claude, Gemini, Mistral, or a local model through Ollama.
 
 </div>
 
-<div class="problem-section">
+<div class="section-block">
 
 ## Works with your stack
 
@@ -156,6 +208,16 @@ Performance is enforced in CI: builds under 5ms for 100 messages, sub-millisecon
 | **Angular** | [Injectable services](/guides/angular) with Signals and `async` pipe |
 | **Node.js** | Direct API — no framework needed |
 | **Any provider** | OpenAI, Anthropic, Google, Mistral, Ollama — [one snapshot, any format](/concepts/providers) |
+
+</div>
+
+<div class="section-block">
+
+## Built for production
+
+Slotmux is not a prototype tool. It ships with SHA-256 snapshot checksums, PII redaction on events and logs, prompt injection sanitization, per-slot resource limits, and an error hierarchy with `recoverable` flags for graceful degradation.
+
+Performance is enforced in CI: builds under 5ms for 100 messages, sub-millisecond cached token counting, and structural sharing across snapshots to minimize GC pressure. All in **7 kB gzipped**.
 
 </div>
 

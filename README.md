@@ -4,7 +4,7 @@
 
 <p align="center">
   <b>slotmux</b><br/>
-  <i>The memory allocator for LLM context windows.</i>
+  <i>Your LLM app has a token budget. Slotmux manages it.</i>
 </p>
 
 <p align="center">
@@ -17,16 +17,32 @@
 
 ---
 
-Your LLM app is a conversation with a budget. System prompts, chat history, retrieved documents, tool outputs — they all compete for the same finite context window. Today you manage that with string concatenation and hope. Slotmux gives you **structure**.
+## The problem
 
-Declare named **slots** with token budgets and priorities. Push content. Call `build()`. Slotmux allocates budgets, counts tokens, handles overflow, and gives you an immutable snapshot with compiled messages ready for any provider — in **7 kB gzipped**.
+Every LLM has a context window — a hard limit on how many tokens it can see at once. Your system prompt, chat history, RAG documents, and tool results all share that one budget.
+
+What happens when the conversation grows? You're cutting from the top and hoping it fits. A critical instruction gets silently truncated. A retrieved document vanishes. The model hallucinates because it lost context it needed.
+
+<p align="center">
+  <img src="docs/public/context-window-problem.svg" alt="Context window overflowing without slotmux" width="520" />
+</p>
+
+## The solution: slots with budgets
+
+Slotmux organizes your context into **named slots** — system prompt, history, documents, tools — each with its own token budget and overflow strategy. You declare what you need; slotmux figures out how to make it fit.
+
+Important content? **Pin it** — slotmux will never compress or drop it. Flexible budget? Use **flex** allocation and let slotmux distribute remaining tokens automatically.
+
+<p align="center">
+  <img src="docs/public/context-window-slots.svg" alt="Context window organized into slots with budgets" width="520" />
+</p>
 
 ```typescript
 import { createContext, Context } from 'slotmux';
 import { formatOpenAIMessages } from '@slotmux/providers';
 
 const { config } = createContext({
-  model: 'gpt-5.4-mini',
+  model: 'gpt-5.4',
   preset: 'chat',
   reserveForResponse: 4096,
   lazyContentItemTokens: true,
@@ -38,76 +54,63 @@ ctx.user('What is slotmux?');
 
 const { snapshot } = await ctx.build();
 const messages = formatOpenAIMessages(snapshot.messages);
-
-// snapshot.meta → { totalTokens: 19, utilization: 0.02%, buildTimeMs: 2, ... }
 ```
 
-## Why slotmux
+## Per-slot overflow: the killer feature
 
-### Slots, not strings
+When a slot runs out of space, you decide what happens — **per slot**. Not a one-size-fits-all truncation, but a strategy tailored to each type of content.
 
-Every piece of context lives in a named **slot** — system prompt, conversation history, retrieved docs, tool results. Each slot has its own token budget, overflow strategy, and compile position. No more guessing whether your prompt fits.
+Your RAG documents overflow? **Summarize** them progressively — the meaning is preserved. Chat history grows too long? Use a **sliding window** to keep recent messages. Tool results piling up? Keep the most **semantically relevant** ones.
 
-### Token budgets that actually work
-
-Allocate tokens with **fixed**, **percent**, **flex**, or **bounded flex** budgets. Slotmux resolves them top-down by priority, reserves space for the model's response, and guarantees the total never exceeds the context window.
+<p align="center">
+  <img src="docs/public/overflow-strategies.svg" alt="Three overflow strategies: sliding-window, summarize, semantic" width="720" />
+</p>
 
 ```typescript
 createContext({
   model: 'claude-sonnet-4-20250514',
   reserveForResponse: 8192,
   slots: {
-    system:  { priority: 100, budget: { fixed: 2000 },   overflow: 'error' },
-    docs:    { priority: 80,  budget: { percent: 40 },   overflow: 'semantic' },
-    history: { priority: 50,  budget: { flex: true },     overflow: 'truncate' },
+    system:  { priority: 100, budget: { fixed: 2000 },  overflow: 'error' },
+    docs:    { priority: 80,  budget: { percent: 40 },  overflow: 'summarize' },
+    tools:   { priority: 70,  budget: { flex: true },   overflow: 'semantic' },
+    history: { priority: 50,  budget: { flex: true },   overflow: 'sliding-window' },
   },
 });
 ```
 
-### Eight overflow strategies
+Eight strategies built in — `truncate`, `truncate-latest`, `sliding-window`, `summarize`, `semantic`, `compress`, `error`, `fallback-chain` — or bring your own.
 
-When content exceeds its budget, slotmux doesn't silently drop messages. You choose what happens — per slot:
+## Build once, send anywhere
 
-| Strategy | Behavior |
-| --- | --- |
-| `truncate` | FIFO — drop oldest items first |
-| `truncate-latest` | LIFO — drop newest items first |
-| `sliding-window` | Keep last N items, then truncate |
-| `summarize` | Progressive or map-reduce summarization |
-| `semantic` | Keep the most relevant items by embedding similarity |
-| `compress` | Lossless text compression (stop words, whitespace) |
-| `error` | Throw if the slot overflows |
-| `fallback-chain` | Summarize → compress → truncate → error |
-
-Bring your own strategy with a simple async function.
-
-### Immutable snapshots
-
-Every `build()` produces a frozen `ContextSnapshot` — messages, token counts, per-slot metadata, warnings, build timing. Snapshots are safe to cache, serialize, diff, and replay. Structural sharing across builds keeps memory allocation minimal.
+Slotmux doesn't care which model you're using. Build your context once, then format it for any provider:
 
 ```typescript
-const diff = snap2.diff(snap1);
-// → { added: [...], removed: [...], modified: [...], slotsModified: ['history'] }
+import { formatOpenAIMessages, formatAnthropicMessages } from '@slotmux/providers';
 
-const wire = snapshot.serialize();   // JSON-safe, SHA-256 checksummed
-const restored = ContextSnapshot.deserialize(wire);
+const { snapshot } = await ctx.build();
+
+const openaiMessages    = formatOpenAIMessages(snapshot.messages);
+const anthropicMessages = formatAnthropicMessages(snapshot.messages);
 ```
 
-### Provider agnostic
+Same slot logic, same overflow strategies, same token budgets — whether you're talking to GPT, Claude, Gemini, Mistral, or a local model. Switch providers without rewriting your context management.
 
-Slotmux compiles to its own intermediate format. Formatters convert to any provider's shape:
+## Get started in 30 seconds
+
+```bash
+npm install slotmux
+```
+
+Three presets to get you going instantly:
 
 ```typescript
-import { formatOpenAIMessages } from '@slotmux/providers';
-import { formatAnthropicMessages } from '@slotmux/providers';
-import { formatGoogleMessages } from '@slotmux/providers';
+createContext({ model: 'gpt-5.4', preset: 'chat' });    // system + history
+createContext({ model: 'gpt-5.4', preset: 'rag' });     // system + docs + history
+createContext({ model: 'gpt-5.4', preset: 'agent' });   // system + tools + scratchpad + history
 ```
 
-Works with OpenAI, Anthropic, Google, Mistral, local models — same context logic everywhere.
-
-### Tiny runtime
-
-The core is **7 kB gzipped**. No framework lock-in, no heavy dependencies. Tree-shakeable ESM with full TypeScript types and Zod-backed config validation.
+Or define your own slot layout — see the [documentation](https://tfrydrychewicz.github.io/slotmux/concepts/slots).
 
 ## Packages
 
@@ -123,35 +126,6 @@ The core is **7 kB gzipped**. No framework lock-in, no heavy dependencies. Tree-
 | `@slotmux/plugin-memory` | — | Persistent memory stores |
 | `@slotmux/plugin-otel` | — | OpenTelemetry traces and metrics |
 | `@slotmux/debug` | — | Browser-based inspector UI for timelines and diffs |
-
-## Install
-
-```bash
-npm install slotmux
-```
-
-Add a tokenizer for accurate token counting:
-
-```bash
-npm install gpt-tokenizer          # OpenAI models
-```
-
-## Quick start
-
-Three presets get you started instantly:
-
-```typescript
-// Chat — system + history slots
-createContext({ model: 'gpt-5.4', preset: 'chat' });
-
-// RAG — system + documents + history + output slots
-createContext({ model: 'gpt-5.4', preset: 'rag' });
-
-// Agent — system + tools + scratchpad + history slots
-createContext({ model: 'gpt-5.4', preset: 'agent' });
-```
-
-Or define your own slot layout from scratch — see the [concepts documentation](https://tfrydrychewicz.github.io/slotmux/concepts/slots).
 
 ## How it compares
 
