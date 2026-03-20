@@ -11,5 +11,5 @@ jobs:
     # Placeholder: enable when docs site exists (e.g. VitePress in docs/)
     if: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: echo "Docs deployment will be configured when docs site is added"
