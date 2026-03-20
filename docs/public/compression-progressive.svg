@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 180" fill="none">
+  <style>text { font-family: system-ui, -apple-system, sans-serif; }</style>
+  <text x="240" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#e2e2e2">Progressive summarization (zones)</text>
+  <text x="240" y="34" text-anchor="middle" font-size="9" fill="#a3a3a3">Older content is compressed more aggressively</text>
+
+  <rect x="20" y="48" width="440" height="120" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+
+  <rect x="30" y="58" width="134" height="100" rx="4" fill="#ef4444" opacity="0.08" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="97" y="72" text-anchor="middle" font-size="8" font-weight="600" fill="#f87171">ZONE 3 (old)</text>
+  <text x="97" y="92" text-anchor="middle" font-size="8" fill="#6b7280">&#x2022; Key topics discussed</text>
+  <text x="97" y="104" text-anchor="middle" font-size="8" fill="#6b7280">&#x2022; Decisions made</text>
+  <text x="97" y="120" text-anchor="middle" font-size="7" fill="#ef4444">Aggressive summary</text>
+  <text x="97" y="148" text-anchor="middle" font-size="8" fill="#64748b">~200 tokens</text>
+
+  <rect x="172" y="58" width="134" height="100" rx="4" fill="#f59e0b" opacity="0.08" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="239" y="72" text-anchor="middle" font-size="8" font-weight="600" fill="#fbbf24">ZONE 2 (mid-range)</text>
+  <text x="239" y="88" text-anchor="middle" font-size="8" fill="#94a3b8">User asked about APIs.</text>
+  <text x="239" y="100" text-anchor="middle" font-size="8" fill="#94a3b8">Discussed auth options.</text>
+  <text x="239" y="112" text-anchor="middle" font-size="8" fill="#94a3b8">Chose JWT approach.</text>
+  <text x="239" y="120" text-anchor="middle" font-size="7" fill="#f59e0b">Moderate summary</text>
+  <text x="239" y="148" text-anchor="middle" font-size="8" fill="#64748b">~800 tokens</text>
+
+  <rect x="314" y="58" width="138" height="100" rx="4" fill="#22c55e" opacity="0.08" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="383" y="72" text-anchor="middle" font-size="8" font-weight="600" fill="#22c55e">ZONE 1 (recent)</text>
+  <text x="383" y="88" text-anchor="middle" font-size="8" fill="#dcfce7">User: "Show me the</text>
+  <text x="383" y="100" text-anchor="middle" font-size="8" fill="#dcfce7">JWT implementation"</text>
+  <text x="383" y="114" text-anchor="middle" font-size="8" fill="#dcfce7">Asst: "Here is the</text>
+  <text x="383" y="126" text-anchor="middle" font-size="8" fill="#dcfce7">complete code..."</text>
+  <text x="383" y="136" text-anchor="middle" font-size="7" fill="#22c55e">Kept verbatim</text>
+  <text x="383" y="148" text-anchor="middle" font-size="8" fill="#64748b">~2,000 tokens</text>
+</svg>

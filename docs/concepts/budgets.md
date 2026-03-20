@@ -23,6 +23,10 @@ const { config } = createContext({
 
 Slotmux supports four budget shapes:
 
+<p align="center">
+  <img src="/budget-types.svg" alt="Budget types: fixed, percent, flex, bounded flex" style="max-width: 560px; width: 100%;" />
+</p>
+
 ### Fixed
 
 A hard token allocation. The slot gets exactly this many tokens.

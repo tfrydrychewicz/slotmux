@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 170" fill="none">
+  <style>text { font-family: system-ui, -apple-system, sans-serif; }</style>
+  <text x="220" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#e2e2e2">summarize (progressive)</text>
+  <rect x="16" y="30" width="180" height="130" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+  <text x="106" y="44" text-anchor="middle" font-size="8" font-weight="600" fill="#64748b">BEFORE</text>
+  <rect x="24" y="50" width="164" height="14" rx="2" fill="#f59e0b" opacity="0.35"/>
+  <text x="106" y="60" text-anchor="middle" font-size="8" fill="#fef3c7">msg 1 (old)</text>
+  <rect x="24" y="68" width="164" height="14" rx="2" fill="#f59e0b" opacity="0.35"/>
+  <text x="106" y="78" text-anchor="middle" font-size="8" fill="#fef3c7">msg 2</text>
+  <rect x="24" y="86" width="164" height="14" rx="2" fill="#f59e0b" opacity="0.35"/>
+  <text x="106" y="96" text-anchor="middle" font-size="8" fill="#fef3c7">msg 3</text>
+  <rect x="24" y="104" width="164" height="14" rx="2" fill="#f59e0b" opacity="0.45"/>
+  <text x="106" y="114" text-anchor="middle" font-size="8" fill="#fef3c7">msg 4</text>
+  <rect x="24" y="122" width="164" height="14" rx="2" fill="#22c55e" opacity="0.5"/>
+  <text x="106" y="132" text-anchor="middle" font-size="8" fill="#dcfce7">msg 5 (recent)</text>
+  <rect x="24" y="140" width="164" height="14" rx="2" fill="#22c55e" opacity="0.6"/>
+  <text x="106" y="150" text-anchor="middle" font-size="8" fill="#dcfce7">msg 6 (newest)</text>
+  <text x="220" y="100" text-anchor="middle" font-size="16" fill="#64748b">&#x2192;</text>
+  <rect x="244" y="30" width="180" height="130" rx="6" fill="#1a1a2e" stroke="#f59e0b" stroke-width="1"/>
+  <text x="334" y="44" text-anchor="middle" font-size="8" font-weight="600" fill="#f59e0b">AFTER</text>
+  <rect x="252" y="52" width="164" height="28" rx="3" fill="#f59e0b" opacity="0.3"/>
+  <text x="334" y="66" text-anchor="middle" font-size="8" fill="#fbbf24">Summary of msgs 1-4</text>
+  <text x="334" y="76" text-anchor="middle" font-size="7" fill="#a3a3a3">(compressed to fit budget)</text>
+  <rect x="252" y="86" width="164" height="14" rx="2" fill="#22c55e" opacity="0.5"/>
+  <text x="334" y="96" text-anchor="middle" font-size="8" fill="#dcfce7">msg 5 (preserved)</text>
+  <rect x="252" y="104" width="164" height="14" rx="2" fill="#22c55e" opacity="0.6"/>
+  <text x="334" y="114" text-anchor="middle" font-size="8" fill="#dcfce7">msg 6 (preserved)</text>
+  <text x="334" y="145" text-anchor="middle" font-size="8" fill="#64748b">preserveLastN: 2</text>
+</svg>

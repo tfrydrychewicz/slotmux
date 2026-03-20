@@ -6,6 +6,10 @@ Slotmux provides three compression families for reducing token usage without los
 
 Progressive summarization condenses content through multiple layers of increasing abstraction. It's designed for conversation history where you want to preserve recent detail while compacting older turns.
 
+<p align="center">
+  <img src="/compression-progressive.svg" alt="Progressive summarization zones" style="max-width: 480px; width: 100%;" />
+</p>
+
 ### How it works
 
 Content is divided into **zones** based on age and importance:
@@ -45,6 +49,10 @@ const result = await runProgressiveSummarize({
 
 An alternative to progressive summarization that works better for large batches of independent content (e.g. retrieved documents).
 
+<p align="center">
+  <img src="/compression-map-reduce.svg" alt="Map-reduce summarization pipeline" style="max-width: 480px; width: 100%;" />
+</p>
+
 ### How it works
 
 1. **Map** — Split content into chunks that fit a token budget, then summarize each chunk independently.
@@ -77,6 +85,10 @@ const result = await runMapReduceSummarize({
 ## Semantic compression
 
 Semantic compression uses embedding similarity to selectively keep the most relevant content. Unlike summarization, it doesn't rewrite text — it filters items based on how relevant they are to an anchor.
+
+<p align="center">
+  <img src="/compression-semantic.svg" alt="Semantic compression via similarity filtering" style="max-width: 500px; width: 100%;" />
+</p>
 
 ### How it works
 
@@ -121,6 +133,10 @@ const result = await runSemanticCompress({
 ## Lossless compression
 
 Lossless compression reduces token count through mechanical text transformations that preserve meaning: stop-word removal, whitespace normalization, and redundancy elimination. No LLM call is required.
+
+<p align="center">
+  <img src="/compression-lossless.svg" alt="Lossless compression text transformation" style="max-width: 480px; width: 100%;" />
+</p>
 
 ### How it works
 

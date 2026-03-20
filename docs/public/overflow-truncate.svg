@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 160" fill="none">
+  <style>text { font-family: system-ui, -apple-system, sans-serif; }</style>
+  <text x="130" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#e2e2e2">truncate (FIFO)</text>
+  <text x="390" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#e2e2e2">truncate-latest (LIFO)</text>
+  <line x1="260" y1="8" x2="260" y2="155" stroke="#333" stroke-width="1"/>
+
+  <rect x="16" y="30" width="228" height="120" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+  <rect x="24" y="40" width="212" height="18" rx="3" fill="#ef4444" opacity="0.25"/><line x1="24" y1="40" x2="236" y2="58" stroke="#ef4444" stroke-width="1" opacity="0.5"/>
+  <text x="130" y="53" text-anchor="middle" font-size="9" fill="#f87171">msg 1 (oldest) -- removed</text>
+  <rect x="24" y="62" width="212" height="18" rx="3" fill="#ef4444" opacity="0.25"/><line x1="24" y1="62" x2="236" y2="80" stroke="#ef4444" stroke-width="1" opacity="0.5"/>
+  <text x="130" y="75" text-anchor="middle" font-size="9" fill="#f87171">msg 2 -- removed</text>
+  <rect x="24" y="84" width="212" height="18" rx="3" fill="#22c55e" opacity="0.4"/>
+  <text x="130" y="97" text-anchor="middle" font-size="9" fill="#dcfce7">msg 3 -- kept</text>
+  <rect x="24" y="106" width="212" height="18" rx="3" fill="#22c55e" opacity="0.5"/>
+  <text x="130" y="119" text-anchor="middle" font-size="9" fill="#dcfce7">msg 4 -- kept</text>
+  <rect x="24" y="128" width="212" height="18" rx="3" fill="#22c55e" opacity="0.6"/>
+  <text x="130" y="141" text-anchor="middle" font-size="9" fill="#dcfce7">msg 5 (newest) -- kept</text>
+
+  <rect x="276" y="30" width="228" height="120" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+  <rect x="284" y="40" width="212" height="18" rx="3" fill="#22c55e" opacity="0.6"/>
+  <text x="390" y="53" text-anchor="middle" font-size="9" fill="#dcfce7">msg 1 (oldest) -- kept</text>
+  <rect x="284" y="62" width="212" height="18" rx="3" fill="#22c55e" opacity="0.5"/>
+  <text x="390" y="75" text-anchor="middle" font-size="9" fill="#dcfce7">msg 2 -- kept</text>
+  <rect x="284" y="84" width="212" height="18" rx="3" fill="#22c55e" opacity="0.4"/>
+  <text x="390" y="97" text-anchor="middle" font-size="9" fill="#dcfce7">msg 3 -- kept</text>
+  <rect x="284" y="106" width="212" height="18" rx="3" fill="#ef4444" opacity="0.25"/><line x1="284" y1="106" x2="496" y2="124" stroke="#ef4444" stroke-width="1" opacity="0.5"/>
+  <text x="390" y="119" text-anchor="middle" font-size="9" fill="#f87171">msg 4 -- removed</text>
+  <rect x="284" y="128" width="212" height="18" rx="3" fill="#ef4444" opacity="0.25"/><line x1="284" y1="128" x2="496" y2="146" stroke="#ef4444" stroke-width="1" opacity="0.5"/>
+  <text x="390" y="141" text-anchor="middle" font-size="9" fill="#f87171">msg 5 (newest) -- removed</text>
+</svg>

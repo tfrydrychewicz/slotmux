@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 220" fill="none">
+  <style>text { font-family: system-ui, -apple-system, sans-serif; }</style>
+  <text x="280" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#e2e2e2">Budget resolution (100,000 token pool)</text>
+
+  <rect x="30" y="35" width="500" height="30" rx="4" fill="#334155" stroke="#475569" stroke-width="1"/>
+  <text x="280" y="55" text-anchor="middle" font-size="9" fill="#94a3b8">Total budget: maxTokens - reserveForResponse = 100,000</text>
+
+  <text x="280" y="82" text-anchor="middle" font-size="16" fill="#64748b">&#x25BC;</text>
+
+  <rect x="30" y="95" width="50" height="40" rx="4" fill="#4a6cf7" opacity="0.7" stroke="#4a6cf7" stroke-width="1"/>
+  <text x="55" y="112" text-anchor="middle" font-size="8" font-weight="600" fill="#fff">FIXED</text>
+  <text x="55" y="124" text-anchor="middle" font-size="7" fill="#a5b4fc">2,000</text>
+
+  <rect x="84" y="95" width="147" height="40" rx="4" fill="#f59e0b" opacity="0.5" stroke="#f59e0b" stroke-width="1"/>
+  <text x="157" y="112" text-anchor="middle" font-size="8" font-weight="600" fill="#fff">PERCENT (30%)</text>
+  <text x="157" y="124" text-anchor="middle" font-size="7" fill="#fbbf24">29,400</text>
+
+  <rect x="235" y="95" width="147" height="40" rx="4" fill="#22c55e" opacity="0.4" stroke="#22c55e" stroke-width="1"/>
+  <text x="308" y="112" text-anchor="middle" font-size="8" font-weight="600" fill="#fff">FLEX</text>
+  <text x="308" y="124" text-anchor="middle" font-size="7" fill="#86efac">34,300</text>
+
+  <rect x="386" y="95" width="144" height="40" rx="4" fill="#a855f7" opacity="0.4" stroke="#a855f7" stroke-width="1"/>
+  <text x="458" y="112" text-anchor="middle" font-size="8" font-weight="600" fill="#fff">BOUNDED FLEX</text>
+  <text x="458" y="124" text-anchor="middle" font-size="7" fill="#c084fc">34,300</text>
+
+  <text x="55" y="152" text-anchor="middle" font-size="8" fill="#a5b4fc">Exact tokens</text>
+  <text x="55" y="163" text-anchor="middle" font-size="8" fill="#64748b">allocated first</text>
+
+  <text x="157" y="152" text-anchor="middle" font-size="8" fill="#fbbf24">% of remaining</text>
+  <text x="157" y="163" text-anchor="middle" font-size="8" fill="#64748b">after fixed</text>
+
+  <text x="308" y="152" text-anchor="middle" font-size="8" fill="#86efac">Equal share</text>
+  <text x="308" y="163" text-anchor="middle" font-size="8" fill="#64748b">of the rest</text>
+
+  <text x="458" y="152" text-anchor="middle" font-size="8" fill="#c084fc">Flex with</text>
+  <text x="458" y="163" text-anchor="middle" font-size="8" fill="#64748b">min/max caps</text>
+
+  <line x1="398" y1="178" x2="518" y2="178" stroke="#c084fc" stroke-width="1" stroke-dasharray="3 2"/>
+  <line x1="398" y1="174" x2="398" y2="182" stroke="#c084fc" stroke-width="1"/>
+  <line x1="518" y1="174" x2="518" y2="182" stroke="#c084fc" stroke-width="1"/>
+  <text x="430" y="190" font-size="7" fill="#a3a3a3">min: 1,000</text>
+  <text x="482" y="190" font-size="7" fill="#a3a3a3">max: 40,000</text>
+
+  <text x="280" y="212" text-anchor="middle" font-size="8" fill="#64748b">Resolution order: fixed &#x2192; percent &#x2192; flex &#x2192; bounded flex (by priority)</text>
+</svg>

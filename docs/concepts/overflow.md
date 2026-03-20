@@ -41,6 +41,10 @@ Removes items from the **end** (newest first / LIFO) until the content fits. Pin
 overflow: 'truncate-latest'
 ```
 
+<p align="center">
+  <img src="/overflow-truncate.svg" alt="truncate vs truncate-latest strategies" style="max-width: 520px; width: 100%;" />
+</p>
+
 ### `sliding-window`
 
 Keeps all pinned items plus the last `windowSize` non-pinned items. If the result still exceeds the budget, falls back to FIFO truncation on the kept items.
@@ -51,6 +55,10 @@ overflowConfig: {
   windowSize: 20,   // default: 10
 }
 ```
+
+<p align="center">
+  <img src="/overflow-sliding-window.svg" alt="sliding-window overflow strategy" style="max-width: 400px; width: 100%;" />
+</p>
 
 ### `summarize`
 
@@ -67,6 +75,10 @@ overflowConfig: {
   preserveLastN: 5,
 }
 ```
+
+<p align="center">
+  <img src="/overflow-summarize.svg" alt="summarize overflow strategy" style="max-width: 440px; width: 100%;" />
+</p>
 
 ::: warning
 The `summarize` strategy requires a `progressiveSummarize` implementation to be injected (via engine options or the `@slotmux/compression` package). Without it, the build will throw an `InvalidConfigError`.
@@ -87,6 +99,10 @@ overflowConfig: {
 
 Items below the similarity threshold are dropped first. Among remaining items, the least similar are evicted until the slot fits within budget.
 
+<p align="center">
+  <img src="/overflow-semantic.svg" alt="semantic overflow strategy" style="max-width: 440px; width: 100%;" />
+</p>
+
 ### `compress`
 
 Applies lossless text compression (stop-word removal, whitespace normalization) via `@slotmux/compression`'s `LosslessCompressor`. The meaning is preserved while reducing token count.
@@ -97,6 +113,10 @@ overflowConfig: {
   losslessLocale: 'en',
 }
 ```
+
+<p align="center">
+  <img src="/overflow-compress.svg" alt="compress overflow strategy" style="max-width: 440px; width: 100%;" />
+</p>
 
 ### `error`
 
@@ -113,6 +133,10 @@ Tries strategies in sequence: **summarize → compress → truncate**. If summar
 ```typescript
 overflow: 'fallback-chain'
 ```
+
+<p align="center">
+  <img src="/overflow-fallback-chain.svg" alt="fallback-chain overflow strategy" style="max-width: 520px; width: 100%;" />
+</p>
 
 ## Custom strategies
 
