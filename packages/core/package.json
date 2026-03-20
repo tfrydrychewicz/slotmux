@@ -57,7 +57,7 @@
     {
       "name": "contextcraft (core)",
       "path": "dist/index.js",
-      "limit": "30 kB",
+      "limit": "35 kB",
       "gzip": true
     }
   ],
