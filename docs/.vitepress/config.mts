@@ -50,6 +50,14 @@ export default defineConfig({
         ],
       },
       {
+        text: 'Framework Integration',
+        items: [
+          { text: 'React', link: '/guides/react' },
+          { text: 'Vue', link: '/guides/vue' },
+          { text: 'Angular', link: '/guides/angular' },
+        ],
+      },
+      {
         text: 'Reference',
         items: [
           { text: 'Overview', link: '/reference/' },

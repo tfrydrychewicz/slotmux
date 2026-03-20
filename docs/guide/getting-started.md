@@ -27,4 +27,12 @@ The snippet below is typechecked in CI (`pnpm test:docs`). Source: [`docs/snippe
 | `slotmux`    | Core context manager, slots, token budget |
 | `@slotmux/*` | Compression, providers, React, debug UI   |
 
+## Framework integration
+
+For real-time UI that tracks context utilization, use `slotmux/reactive` with your framework:
+
+- **[React](/guides/react)** — `@slotmux/react` hooks (`useReactiveContextMeta`, `useReactiveContextUtilization`, `useReactiveContextBuildError`).
+- **[Vue](/guides/vue)** — `reactiveContext` refs work natively with `computed` / `watch` (no extra package needed).
+- **[Angular](/guides/angular)** — bridge `reactiveContext` into an injectable service with Angular Signals or `async` pipe.
+
 See the [design document](https://github.com/tfrydrychewicz/slotmux) in the repository for architecture notes (not shipped in this site).

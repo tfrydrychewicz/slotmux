@@ -175,6 +175,7 @@ Or define your own slot layout from scratch — see the [concepts documentation]
 | **Full docs** | [tfrydrychewicz.github.io/slotmux](https://tfrydrychewicz.github.io/slotmux/) |
 | **Tutorial** | [Build a terminal chatbot](https://tfrydrychewicz.github.io/slotmux/guide/build-a-chatbot) — working chat app in 5 minutes |
 | **Concepts** | [Slots](https://tfrydrychewicz.github.io/slotmux/concepts/slots) · [Budgets](https://tfrydrychewicz.github.io/slotmux/concepts/budgets) · [Overflow](https://tfrydrychewicz.github.io/slotmux/concepts/overflow) · [Compression](https://tfrydrychewicz.github.io/slotmux/concepts/compression) · [Snapshots](https://tfrydrychewicz.github.io/slotmux/concepts/snapshots) |
+| **Frameworks** | [React](https://tfrydrychewicz.github.io/slotmux/guides/react) · [Vue](https://tfrydrychewicz.github.io/slotmux/guides/vue) · [Angular](https://tfrydrychewicz.github.io/slotmux/guides/angular) |
 | **API reference** | [Generated TypeDoc](https://tfrydrychewicz.github.io/slotmux/reference/api/README) |
 
 ## Contributing

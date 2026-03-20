@@ -16,6 +16,12 @@ Use the guide for tutorials and getting started. For deep dives into the core ab
 - [Custom plugin](/guides/custom-plugin) — build a plugin with hooks for the build pipeline.
 - [Migration from LangChain](/guides/migration-from-langchain) — mapping LangChain memory patterns to slotmux.
 
+## Framework Integration
+
+- [React](/guides/react) — `@slotmux/react` hooks (`useReactiveContextMeta`, etc.) with `useSyncExternalStore`.
+- [Vue](/guides/vue) — `reactiveContext` with `computed` / `watch`, composable patterns, provide/inject.
+- [Angular](/guides/angular) — injectable service with Angular Signals, `toSignal`, or `async` pipe.
+
 ## Concepts
 
 - [Slots](/concepts/slots) — named context partitions with budgets, priorities, and roles.
