@@ -139,6 +139,8 @@ export {
   resolveLosslessLanguagePack,
   unregisterLosslessLanguagePack,
 } from './compression/lossless-bridge.js';
+export { createProgressiveSummarizeOverflow } from './compression/progressive-overflow-bridge.js';
+export type { ProgressiveSummarizeOverflowDeps } from './compression/progressive-overflow-bridge.js';
 export type {
   LosslessCompressibleItem,
   LosslessCompressorOptions,

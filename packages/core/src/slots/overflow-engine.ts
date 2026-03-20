@@ -4,9 +4,12 @@
  * @packageDocumentation
  */
 
+import type { ProgressiveSummarizeTextFn } from '@contextcraft/compression';
+
 import { losslessCompressAsOverflow } from '../compression/lossless-bridge.js';
+import { createProgressiveSummarizeOverflow } from '../compression/progressive-overflow-bridge.js';
 import { InvalidConfigError } from '../errors.js';
-import { toTokenCount } from '../types/branded.js';
+import { toTokenCount, type TokenCount } from '../types/branded.js';
 import type {
   OverflowContext,
   OverflowStrategyFn,
@@ -65,6 +68,13 @@ export type OverflowEngineOptions = {
    * used when {@link SlotConfig.overflow} is a string that is not a built-in name.
    */
   namedStrategies?: Record<string, OverflowStrategyFn>;
+
+  /**
+   * Enables built-in `summarize` via progressive layers (§8.1). Without this, `summarize` throws until configured.
+   */
+  progressiveSummarize?: {
+    readonly summarizeText: ProgressiveSummarizeTextFn;
+  };
 };
 
 export type OverflowResolveRunOptions = {
@@ -155,14 +165,26 @@ export class OverflowEngine {
     this.onEvent = options.onEvent;
     this.strategyLogger = options.strategyLogger;
 
+    const builtinSummarize =
+      options.progressiveSummarize !== undefined
+        ? createProgressiveSummarizeOverflow(
+            options.countTokens,
+            options.progressiveSummarize,
+          )
+        : (
+            _items: readonly ContentItem[],
+            _budget: TokenCount,
+            _ctx: OverflowContext,
+          ) => {
+            strategyNotImplemented('summarize');
+          };
+
     const coreBuiltins: Record<CoreNamedOverflowStrategy, OverflowStrategyFn> = {
       truncate: truncateStrategy,
       'truncate-latest': truncateLatestStrategy,
       'sliding-window': slidingWindowStrategy,
       error: errorStrategy,
-      summarize: (_items, _budget, _ctx) => {
-        strategyNotImplemented('summarize');
-      },
+      summarize: builtinSummarize,
       semantic: (_items, _budget, _ctx) => {
         strategyNotImplemented('semantic');
       },

@@ -26,3 +26,15 @@ export type {
   LosslessMultimodalImageUrl,
   LosslessMultimodalText,
 } from './lossless-compressor.js';
+
+export { DEFAULT_PROGRESSIVE_PROMPTS } from './progressive-prompts.js';
+export { partitionProgressiveZones } from './progressive-zones.js';
+export type { ProgressiveZones } from './progressive-zones.js';
+export { runProgressiveSummarize } from './progressive-summarizer.js';
+export type { RunProgressiveSummarizeOptions } from './progressive-summarizer.js';
+export type {
+  ProgressiveItem,
+  ProgressiveLayer,
+  ProgressivePrompts,
+  ProgressiveSummarizeTextFn,
+} from './progressive-types.js';

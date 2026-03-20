@@ -278,7 +278,7 @@ describe('OverflowEngine (§7.2 — Phase 4.1)', () => {
     expect(countByCharLen(out[0]!.content)).toBeLessThanOrEqual(20);
   });
 
-  it('throws InvalidConfigError for summarize until Phase 4.2', async () => {
+  it('throws InvalidConfigError for summarize when progressiveSummarize is not configured', async () => {
     const item = createContentItem({
       slot: 's',
       role: 'user',
@@ -294,6 +294,130 @@ describe('OverflowEngine (§7.2 — Phase 4.1)', () => {
           50,
           50,
           { priority: 50, budget: { flex: true }, overflow: 'summarize' },
+          [item],
+        ),
+      ]),
+    ).rejects.toThrow(InvalidConfigError);
+  });
+
+  it('applies progressive summarize when progressiveSummarize is set', async () => {
+    const mk = (content: string, t: number, at: number) =>
+      createContentItem({
+        slot: 's',
+        role: 'user',
+        content,
+        tokens: toTokenCount(t),
+        createdAt: at,
+      });
+
+    const items = [
+      mk('old-a', 30, 1000),
+      mk('old-b', 30, 2000),
+      mk('mid-a', 30, 3000),
+      mk('mid-b', 30, 4000),
+      mk('recent-a', 30, 5000),
+      mk('recent-b', 30, 6000),
+    ];
+
+    const layers: number[] = [];
+    const engine = new OverflowEngine({
+      countTokens: countSum,
+      progressiveSummarize: {
+        summarizeText: async ({ layer }) => {
+          layers.push(layer);
+          if (layer === 2) return 'L2';
+          if (layer === 1) return 'L1';
+          return 'L3';
+        },
+      },
+    });
+
+    const out = await engine.resolve([
+      slot(
+        's',
+        50,
+        50,
+        {
+          priority: 50,
+          budget: { flex: true },
+          overflow: 'summarize',
+          overflowConfig: { preserveLastN: 2, summarizer: 'builtin:progressive' },
+        },
+        items,
+      ),
+    ]);
+
+    expect(countSum(out[0]!.content)).toBeLessThanOrEqual(50);
+    expect(layers).toContain(2);
+    expect(layers).toContain(1);
+    expect(layers).toContain(3);
+    expect(out[0]!.content.some((i) => i.summarizes !== undefined && i.summarizes.length > 0)).toBe(
+      true,
+    );
+  });
+
+  it('delegates to overflowConfig.summarizer function when set', async () => {
+    const item = createContentItem({
+      slot: 's',
+      role: 'user',
+      content: 'x',
+      tokens: toTokenCount(100),
+    });
+    const custom = vi.fn(async (items: typeof item[]) => [
+      { ...items[0]!, content: 'short', tokens: toTokenCount(20) },
+    ]);
+
+    const engine = new OverflowEngine({
+      countTokens: countSum,
+      progressiveSummarize: {
+        summarizeText: async () => 'should-not-run',
+      },
+    });
+
+    await engine.resolve([
+      slot(
+        's',
+        50,
+        50,
+        {
+          priority: 50,
+          budget: { flex: true },
+          overflow: 'summarize',
+          overflowConfig: { summarizer: custom },
+        },
+        [item],
+      ),
+    ]);
+
+    expect(custom).toHaveBeenCalled();
+  });
+
+  it('throws for builtin:map-reduce when progressiveSummarize is set', async () => {
+    const item = createContentItem({
+      slot: 's',
+      role: 'user',
+      content: 'x',
+      tokens: toTokenCount(100),
+    });
+    const engine = new OverflowEngine({
+      countTokens: countSum,
+      progressiveSummarize: {
+        summarizeText: async () => 'x',
+      },
+    });
+
+    await expect(
+      engine.resolve([
+        slot(
+          's',
+          50,
+          50,
+          {
+            priority: 50,
+            budget: { flex: true },
+            overflow: 'summarize',
+            overflowConfig: { summarizer: 'builtin:map-reduce' },
+          },
           [item],
         ),
       ]),

@@ -28,5 +28,8 @@
     "test": "vitest run",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "nanoid": "^5.0.9"
   }
 }

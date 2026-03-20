@@ -53,15 +53,9 @@ importers:
 
   packages/compression:
     dependencies:
-      '@anthropic-ai/tokenizer':
-        specifier: '*'
-        version: 0.0.4
-      gpt-tokenizer:
-        specifier: '*'
-        version: 3.4.0
-      tiktoken:
-        specifier: '*'
-        version: 1.0.22
+      nanoid:
+        specifier: ^5.0.9
+        version: 5.1.7
 
   packages/core:
     dependencies:
