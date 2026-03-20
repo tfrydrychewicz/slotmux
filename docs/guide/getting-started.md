@@ -1,6 +1,6 @@
 # Getting started
 
-For a **step-by-step chatbot walkthrough** (model, system prompt, turns, API shape, metadata), see **[Build a chatbot (~5 min)](/guide/build-a-chatbot)**.
+For a **fully working terminal chatbot** with context metadata, token budgets, and OpenAI integration, see **[Terminal chatbot tutorial](/guide/build-a-chatbot)**.
 
 ## Install
 

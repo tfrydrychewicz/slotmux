@@ -1,121 +1,240 @@
-# Build a chatbot with context management (~5 minutes)
+# Build a terminal chatbot with context management
 
-This walkthrough shows how to **install** contextcraft, **assemble** a multi-turn chat with a system prompt, **build** an immutable snapshot, **shape messages** for the OpenAI Chat Completions API, and **read** snapshot metadata. The runnable core is typechecked in CI; the HTTP call is copy-paste only (needs an API key).
+This tutorial builds a **fully working interactive terminal chatbot** that talks to the OpenAI API. Along the way it demonstrates the key features of contextcraft: slot-based context assembly, token budgeting, overflow awareness, provider formatting, and snapshot metadata.
 
-## What you’ll have at the end
+**Time:** ~5 minutes to read, ~2 minutes to run.
 
-- A `Context` pipeline run via the fluent **`contextBuilder()`** API (chat preset).
-- **`snapshot.messages`** as internal compiled messages, plus **`formatOpenAIMessages()`** for OpenAI.
-- **`snapshot.meta`** for token totals, utilization, and per-slot stats.
+**You will end up with:**
 
-## 1. Install and import
+- An interactive REPL chat in your terminal.
+- A `Context` with a **system** slot (pinned instructions) and a **history** slot (user/assistant turns, auto-managed budget).
+- Every turn: `build()` → **token count** → **overflow check** → **`formatOpenAIMessages()`** → OpenAI API call.
+- A metadata bar printed after every response showing utilization, token counts, and per-slot stats.
+
+## Prerequisites
+
+- **Node.js ≥ 20.19**
+- An **OpenAI API key** (set as `OPENAI_API_KEY` env var)
+
+## 1. Bootstrap the project
 
 ```bash
-pnpm add contextcraft @contextcraft/providers
+mkdir cc-chatbot && cd cc-chatbot
+npm init -y
 ```
 
-Add a tokenizer peer for real token counts (OpenAI-style models often use **`o200k_base`**):
+Install contextcraft and a tokenizer:
 
 ```bash
-pnpm add gpt-tokenizer
+npm install contextcraft @contextcraft/providers gpt-tokenizer
 ```
 
-Imports used below:
+Enable ESM (contextcraft is ESM-only):
 
-```typescript
-import { contextBuilder } from 'contextcraft';
+```bash
+node -e "const p=require('./package.json'); p.type='module'; require('fs').writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+```
+
+## 2. The full chatbot — `chat.mjs`
+
+Create a file called **`chat.mjs`** and paste the code below. Every section is annotated so you can follow what contextcraft is doing.
+
+```javascript
+import * as readline from 'node:readline';
+import { createContext, Context } from 'contextcraft';
 import { formatOpenAIMessages } from '@contextcraft/providers';
-```
 
-## 2. Create context with a model
+// ── 1. Create a validated context config ─────────────────────────────
+//
+// `createContext` resolves the model registry (maxTokens, tokenizer,
+// provider), merges the "chat" preset slots, and validates everything.
+// The "chat" preset gives you two slots:
+//   • system  — priority 100, fixed 2 000 tokens, overflow: error
+//   • history — priority 50,  flex budget,        overflow: summarize
 
-Pick a **model id** (used for registry defaults such as tokenizer and provider hints). Use the **`chat`** preset for a typical system + history layout without hand-writing slot configs:
-
-```typescript
-const chain = contextBuilder().model('gpt-4o-mini').preset('chat').reserve(4096);
-```
-
-**`reserve(4096)`** holds part of the window for the model’s reply so the budget math matches how you call the API.
-
-## 3. Add a system prompt
-
-```typescript
-const withSystem = chain.system('You are a concise helper bot. Reply in one short paragraph.');
-```
-
-## 4. Add conversation messages
-
-Chain **`.user()`** / **`.assistant()`** (and **`.push(slot, …)`** when you use custom slots). Each call records another turn in the configured slots.
-
-```typescript
-const withHistory = withSystem
-  .user('What is contextcraft in one sentence?')
-  .assistant(
-    'A TypeScript library that manages LLM context windows with slots, token budgets, and overflow strategies.',
-  )
-  .user('How do I install it?');
-```
-
-## 5. Build and send to an LLM API
-
-**`await withHistory.build()`** runs the full pipeline (budget → token count → overflow → compile) and returns **`{ snapshot, context }`**.
-
-The snippet below matches the tutorial source file (no HTTP in CI):
-
-<<< @/snippets/chatbot-tutorial.example.ts
-
-To call **OpenAI Chat Completions**, convert compiled messages and POST them:
-
-```typescript
-const { snapshot } = await withHistory.build();
-const messages = formatOpenAIMessages(snapshot.messages);
-
-const response = await fetch('https://api.openai.com/v1/chat/completions', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${process.env['OPENAI_API_KEY']}`,
-  },
-  body: JSON.stringify({
-    model: 'gpt-4o-mini',
-    messages,
-  }),
+const { config } = createContext({
+  model: 'gpt-4o-mini',
+  preset: 'chat',
+  reserveForResponse: 4096,
+  strictTokenizerPeers: false, // skip peer-check for quick demo
 });
 
-const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-const reply = data.choices?.[0]?.message?.content;
-```
+// ── 2. Build a live Context from the config ──────────────────────────
+//
+// Context is a mutable container: you push messages, then call build()
+// to get an immutable snapshot with compiled messages + metadata.
 
-Other providers: use **`@contextcraft/providers`** (`formatAnthropicMessages`, `formatGeminiMessages`, etc.) or map **`snapshot.messages`** yourself.
+const ctx = Context.fromParsedConfig(config);
 
-## 6. Inspect snapshot metadata
+ctx.system(
+  'You are a helpful assistant. Answer concisely. ' +
+  'If the user says "!stats", respond with context window statistics instead.'
+);
 
-After **`build()`**, use **`snapshot.meta`** for observability and UI:
+// ── 3. Helper: call OpenAI Chat Completions ──────────────────────────
 
-| Field             | Meaning                                         |
-| ----------------- | ----------------------------------------------- |
-| **`totalTokens`** | Tokens used in the compiled snapshot            |
-| **`totalBudget`** | Allocated window budget (after reserve)         |
-| **`utilization`** | `totalTokens / totalBudget` (0–1)               |
-| **`slots`**       | Per-slot usage, item counts, overflow flags     |
-| **`warnings`**    | Near-limit or policy warnings from the pipeline |
-| **`buildTimeMs`** | Time spent in the last build                    |
-
-Example:
-
-```typescript
-const { snapshot } = await withHistory.build();
-const { totalTokens, utilization, slots, warnings } = snapshot.meta;
-
-console.log('tokens', totalTokens, 'utilization', utilization);
-console.log('slots', Object.keys(slots));
-if (warnings.length > 0) {
-  console.warn('context warnings', warnings);
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+if (!OPENAI_API_KEY) {
+  console.error('Set OPENAI_API_KEY before running this script.');
+  process.exit(1);
 }
+
+async function callOpenAI(messages) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({ model: 'gpt-4o-mini', messages }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`OpenAI ${res.status}: ${body}`);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content ?? '(no response)';
+}
+
+// ── 4. Helper: print context metadata ────────────────────────────────
+
+function printMeta(meta) {
+  const pct = (meta.utilization * 100).toFixed(1);
+  const slots = Object.entries(meta.slots)
+    .map(([name, s]) => `${name}: ${s.usedTokens}/${s.budgetTokens} tok, ${s.itemCount} items`)
+    .join(' | ');
+
+  console.log(
+    `\n  ╭─ Context ──────────────────────────────────────`
+  );
+  console.log(
+    `  │ tokens: ${meta.totalTokens} / ${meta.totalBudget}  ` +
+    `utilization: ${pct}%  build: ${meta.buildTimeMs}ms`
+  );
+  console.log(`  │ ${slots}`);
+  if (meta.warnings.length > 0) {
+    console.log(`  │ ⚠ warnings: ${meta.warnings.map(w => w.message).join('; ')}`);
+  }
+  console.log(
+    `  ╰────────────────────────────────────────────────\n`
+  );
+}
+
+// ── 5. REPL loop ─────────────────────────────────────────────────────
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+console.log('contextcraft chatbot — type a message, "!stats" for context info, or "exit" to quit.\n');
+
+function prompt() {
+  rl.question('You > ', async (input) => {
+    const text = input.trim();
+    if (!text || text === 'exit') {
+      rl.close();
+      return;
+    }
+
+    // Push user message into the history slot
+    ctx.user(text);
+
+    // Build: budget allocation → token counting → overflow → compile
+    const { snapshot } = await ctx.build();
+
+    // Handle !stats: show metadata and skip the API call
+    if (text === '!stats') {
+      console.log('\nAssistant > Here are your current context stats:');
+      printMeta(snapshot.meta);
+      prompt();
+      return;
+    }
+
+    // Format compiled messages for the OpenAI Chat Completions API
+    const openaiMessages = formatOpenAIMessages(snapshot.messages);
+
+    try {
+      const reply = await callOpenAI(openaiMessages);
+      console.log(`\nAssistant > ${reply}`);
+
+      // Push assistant reply back into context for next turn
+      ctx.assistant(reply);
+
+      // Print the context metadata bar
+      printMeta(snapshot.meta);
+    } catch (err) {
+      console.error(`\nError: ${err.message}\n`);
+    }
+
+    prompt();
+  });
+}
+
+prompt();
 ```
+
+## 3. Run it
+
+```bash
+OPENAI_API_KEY=sk-... node chat.mjs
+```
+
+You'll see something like:
+
+```
+contextcraft chatbot — type a message, "!stats" for context info, or "exit" to quit.
+
+You > What can you help me with?
+
+Assistant > I can help with coding questions, writing, math, brainstorming, and more.
+
+  ╭─ Context ──────────────────────────────────────
+  │ tokens: 67 / 124904  utilization: 0.1%  build: 2ms
+  │ system: 25/2000 tok, 1 items | history: 42/122904 tok, 2 items
+  ╰────────────────────────────────────────────────
+
+You > !stats
+
+Assistant > Here are your current context stats:
+
+  ╭─ Context ──────────────────────────────────────
+  │ tokens: 72 / 124904  utilization: 0.1%  build: 1ms
+  │ system: 25/2000 tok, 1 items | history: 47/122904 tok, 3 items
+  ╰────────────────────────────────────────────────
+
+You > exit
+```
+
+## 4. What happened under the hood
+
+Each time you type a message, contextcraft does all of this before the API call:
+
+1. **`ctx.user(text)`** — Appends a `ContentItem` to the **history** slot.
+2. **`ctx.build()`** — Runs the full compile pipeline:
+   - **Budget allocation** — The **system** slot gets its fixed 2 000 tokens; the **history** slot fills the remaining flex budget.
+   - **Token counting** — Each message is counted via the model's tokenizer encoding (or a character-based estimate when no peer tokenizer is installed).
+   - **Overflow check** — If history grows past its budget, the configured overflow strategy (summarize / truncate) kicks in automatically.
+   - **Compile** — Produces an immutable `ContextSnapshot` containing `messages` (contextcraft's internal format) and `meta` (token counts, utilization, per-slot stats, warnings, build time).
+3. **`formatOpenAIMessages(snapshot.messages)`** — Converts contextcraft's compiled messages into OpenAI's `{ role, content }` shape with multimodal and tool-call support.
+4. **`ctx.assistant(reply)`** — Stores the model's reply so it's in scope for the next build.
+
+## 5. Key features demonstrated
+
+| Feature | Where |
+| --- | --- |
+| **Model registry** | `createContext({ model: 'gpt-4o-mini' })` resolves maxTokens, tokenizer, provider from the built-in registry. |
+| **Preset slots** | `preset: 'chat'` creates `system` (fixed budget) + `history` (flex budget) automatically. |
+| **Mutable Context** | `ctx.user()` / `ctx.assistant()` append to the right slots; the context grows turn by turn. |
+| **Immutable snapshot** | `ctx.build()` produces a frozen `ContextSnapshot` — safe to cache, serialize, or diff. |
+| **Token budgeting** | `reserveForResponse: 4096` leaves room for the model reply; the rest is split across slots. |
+| **Overflow** | The history slot uses `overflow: 'summarize'` — as the conversation grows past the budget, older messages would be compressed. |
+| **Provider formatting** | `formatOpenAIMessages()` handles text, multimodal, and tool messages for OpenAI's API shape. |
+| **Metadata** | `snapshot.meta` — `totalTokens`, `utilization`, per-slot breakdown, `warnings`, `buildTimeMs`. |
 
 ## Next steps
 
-- **[Getting started](./getting-started)** — minimal install + tiny `createContext` snippet.
-- **[API reference](/reference/api/README)** — full exports (generated).
-- Deeper **chatbot / RAG / agents** guides are planned under Phase 15.5 (`docs/guides/…`).
+- **[Getting started](./getting-started)** — minimal install, zero-API snippet.
+- **[API reference](/reference/api/README)** — full exported symbols.
+- Swap `preset: 'chat'` for `preset: 'rag'` or `preset: 'agent'` to explore RAG and tool-calling layouts.
+- Add `@contextcraft/debug` and `attachInspector(ctx)` for a browser-based inspector UI.

@@ -23,7 +23,7 @@ export default defineConfig({
           { text: 'Overview', link: '/guide/' },
           { text: 'Getting started', link: '/guide/getting-started' },
           {
-            text: 'Build a chatbot (~5 min)',
+            text: 'Terminal chatbot tutorial',
             link: '/guide/build-a-chatbot',
           },
         ],

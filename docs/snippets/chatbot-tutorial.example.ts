@@ -1,32 +1,40 @@
 /**
- * Tutorial: build a chatbot-shaped context, format for OpenAI Chat Completions, read metadata.
- * Typechecked via `pnpm test:docs` (after `pnpm build`).
+ * Typechecked mirror of the terminal chatbot tutorial (no network I/O).
+ * Validates that createContext → Context.fromParsedConfig → build → formatOpenAIMessages
+ * compiles against the published types. Run via `pnpm test:docs` (after `pnpm build`).
  */
-import { contextBuilder } from 'contextcraft';
 import { formatOpenAIMessages } from '@contextcraft/providers';
+import { createContext, Context } from 'contextcraft';
 
-/** Build snapshot + OpenAI-shaped messages (no network I/O). */
-export async function tutorialBuildChatbotContext(): Promise<void> {
-  const { snapshot } = await contextBuilder()
-    .model('gpt-4o-mini')
-    .preset('chat')
-    .reserve(4096)
-    .system('You are a concise helper bot. Reply in one short paragraph.')
-    .user('What is contextcraft in one sentence?')
-    .assistant(
-      'A TypeScript library that manages LLM context windows with slots, token budgets, and overflow strategies.',
-    )
-    .user('How do I install it?')
-    .build();
+export async function tutorialChatbotTypecheck(): Promise<void> {
+  const { config } = createContext({
+    model: 'gpt-4o-mini',
+    preset: 'chat',
+    reserveForResponse: 4096,
+    strictTokenizerPeers: false,
+  });
+
+  const ctx = Context.fromParsedConfig(config);
+
+  ctx.system('You are a helpful assistant. Answer concisely.');
+  ctx.user('What is contextcraft?');
+
+  const { snapshot } = await ctx.build();
 
   const openaiMessages = formatOpenAIMessages(snapshot.messages);
   void openaiMessages;
 
-  const { meta } = snapshot;
-  void meta.utilization;
-  void meta.totalTokens;
-  void meta.slots;
-  void meta.warnings;
+  ctx.assistant('A TypeScript library for LLM context management.');
+  ctx.user('How do I install it?');
+
+  const { snapshot: snap2 } = await ctx.build();
+
+  void snap2.meta.totalTokens;
+  void snap2.meta.totalBudget;
+  void snap2.meta.utilization;
+  void snap2.meta.slots;
+  void snap2.meta.warnings;
+  void snap2.meta.buildTimeMs;
 }
 
-void tutorialBuildChatbotContext;
+void tutorialChatbotTypecheck;
