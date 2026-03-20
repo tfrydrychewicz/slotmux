@@ -11,7 +11,21 @@
 
 ## GitHub Pages
 
-The [Docs workflow](../.github/workflows/docs.yml) sets `VITEPRESS_BASE` to `/<repository-name>/` for project pages. Enable **Pages** → **GitHub Actions** in the repository settings.
+The [Docs workflow](../.github/workflows/docs.yml) sets `VITEPRESS_BASE` to `/<repository-name>/` for project pages.
+
+### One-time setup (required)
+
+If **Deploy to GitHub Pages** fails with `HttpError: Not Found` / “Ensure GitHub Pages has been enabled”:
+
+1. Repo **Settings** → **Pages**
+2. **Build and deployment** → **Source**: choose **GitHub Actions** (not “Deploy from a branch”)
+3. Save, then re-run the **Docs** workflow (or push to `main`)
+
+Private repos need a plan that includes GitHub Pages for that visibility.
+
+### URL
+
+`https://<owner>.github.io/<repo>/` (e.g. `https://tfrydrychewicz.github.io/contextcraft/`)
 
 ## Generated API
 

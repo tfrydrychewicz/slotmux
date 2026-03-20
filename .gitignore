@@ -51,3 +51,6 @@ contextcraft-implementation-plan.md
 
 # TypeDoc → VitePress (regenerate with pnpm docs:api or pnpm docs:build)
 docs/reference/api/
+
+# VitePress dependency pre-bundle cache (local dev)
+docs/.vitepress/cache/
