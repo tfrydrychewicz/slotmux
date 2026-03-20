@@ -164,27 +164,35 @@ function migrateSnapshot_0_9_to_1_0(data: unknown): unknown {
     throw new SnapshotCorruptedError('migrate 0.9→1.0: expected object', {});
   }
   const d = data as Record<string, unknown>;
-  if (typeof d.id !== 'string' || typeof d.model !== 'string' || !Array.isArray(d.messages)) {
+  if (
+    typeof d['id'] !== 'string' ||
+    typeof d['model'] !== 'string' ||
+    !Array.isArray(d['messages'])
+  ) {
     throw new SnapshotCorruptedError('migrate 0.9→1.0: invalid shape', {
       context: { keys: Object.keys(d) },
     });
   }
-  const metaIn = d.meta;
+  const metaIn = d['meta'];
   if (metaIn === null || typeof metaIn !== 'object') {
     throw new SnapshotCorruptedError('migrate 0.9→1.0: invalid meta', {});
   }
   const m = metaIn as Record<string, unknown>;
 
-  const slotStats = m.slotStats;
+  const slotStats = m['slotStats'];
   const slots: Record<string, SlotMeta> = {};
   if (slotStats !== null && typeof slotStats === 'object') {
     for (const [name, raw] of Object.entries(slotStats)) {
       if (raw === null || typeof raw !== 'object') continue;
       const s = raw as Record<string, unknown>;
       const budget =
-        typeof s.budgetTokens === 'number' ? s.budgetTokens : Number(s.budgetTokens ?? s.budget ?? 0);
+        typeof s['budgetTokens'] === 'number'
+          ? s['budgetTokens']
+          : Number(s['budgetTokens'] ?? s['budget'] ?? 0);
       const used =
-        typeof s.usedTokens === 'number' ? s.usedTokens : Number(s.usedTokens ?? s.used ?? 0);
+        typeof s['usedTokens'] === 'number'
+          ? s['usedTokens']
+          : Number(s['usedTokens'] ?? s['used'] ?? 0);
       const budgetTokens = toTokenCount(Number.isFinite(budget) ? budget : 0);
       const usedTokens = toTokenCount(Number.isFinite(used) ? used : 0);
       const utilization =
@@ -193,39 +201,40 @@ function migrateSnapshot_0_9_to_1_0(data: unknown): unknown {
         name,
         budgetTokens,
         usedTokens,
-        itemCount: typeof s.itemCount === 'number' ? s.itemCount : 0,
-        evictedCount: typeof s.evictedCount === 'number' ? s.evictedCount : 0,
-        overflowTriggered: Boolean(s.overflowTriggered),
-        utilization: typeof s.utilization === 'number' ? s.utilization : utilization,
+        itemCount: typeof s['itemCount'] === 'number' ? s['itemCount'] : 0,
+        evictedCount: typeof s['evictedCount'] === 'number' ? s['evictedCount'] : 0,
+        overflowTriggered: Boolean(s['overflowTriggered']),
+        utilization: typeof s['utilization'] === 'number' ? s['utilization'] : utilization,
       };
     }
   }
 
   const totalTokens = toTokenCount(
-    typeof m.totalTokens === 'number' ? m.totalTokens : Number(m.totalTokens ?? 0),
+    typeof m['totalTokens'] === 'number' ? m['totalTokens'] : Number(m['totalTokens'] ?? 0),
   );
   const totalBudget = toTokenCount(
-    typeof m.totalBudget === 'number' ? m.totalBudget : Number(m.totalBudget ?? 0),
+    typeof m['totalBudget'] === 'number' ? m['totalBudget'] : Number(m['totalBudget'] ?? 0),
   );
   const utilization =
-    typeof m.utilization === 'number'
-      ? m.utilization
+    typeof m['utilization'] === 'number'
+      ? m['utilization']
       : totalBudget > 0
         ? Math.min(1, Math.max(0, totalTokens / totalBudget))
         : 0;
   const waste = toTokenCount(
-    typeof m.waste === 'number' ? m.waste : Number(m.waste ?? 0),
+    typeof m['waste'] === 'number' ? m['waste'] : Number(m['waste'] ?? 0),
   );
 
-  const compressions = Array.isArray(m.compressions) ? m.compressions : [];
-  const evictions = Array.isArray(m.evictions) ? m.evictions : [];
-  const warnings = Array.isArray(m.warnings) ? m.warnings : [];
-  const buildTimeMs = typeof m.buildTimeMs === 'number' ? m.buildTimeMs : 0;
-  const builtAt = typeof m.builtAt === 'number' ? m.builtAt : 0;
+  const compressions = Array.isArray(m['compressions']) ? m['compressions'] : [];
+  const evictions = Array.isArray(m['evictions']) ? m['evictions'] : [];
+  const warnings = Array.isArray(m['warnings']) ? m['warnings'] : [];
+  const buildTimeMs = typeof m['buildTimeMs'] === 'number' ? m['buildTimeMs'] : 0;
+  const builtAt = typeof m['builtAt'] === 'number' ? m['builtAt'] : 0;
 
+  const mSlots = m['slots'];
   const metaSlots =
-    m.slots !== null && typeof m.slots === 'object' && Object.keys(m.slots).length > 0
-      ? (m.slots as Record<string, SlotMeta>)
+    mSlots !== null && typeof mSlots === 'object' && Object.keys(mSlots).length > 0
+      ? (mSlots as Record<string, SlotMeta>)
       : slots;
 
   const meta: SnapshotMeta = {
@@ -241,12 +250,14 @@ function migrateSnapshot_0_9_to_1_0(data: unknown): unknown {
     builtAt,
   };
 
-  const messages = d.messages.map((x) => cloneCompiledMessage(x as CompiledMessage));
+  const messages = (d['messages'] as unknown[]).map((x) =>
+    cloneCompiledMessage(x as CompiledMessage),
+  );
 
   return {
     version: '1.0',
-    id: d.id,
-    model: d.model,
+    id: d['id'],
+    model: d['model'],
     slots: { ...metaSlots },
     messages,
     meta: { ...meta, slots: { ...metaSlots } },

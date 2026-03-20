@@ -1,0 +1,22 @@
+---
+description: Bracket notation for Record/index-signature values (TS4111, tsup DTS, CI)
+alwaysApply: true
+---
+
+# TypeScript: index signatures and `noPropertyAccessFromIndexSignature`
+
+The repo enables `noPropertyAccessFromIndexSignature` in `tsconfig.base.json`. **Dot access on values typed as `Record<string, unknown>` (or any type with only a string index signature) is a compile error (TS4111)** and will fail **`pnpm build` / tsup `.d.ts` emit** on CI (often only surfaces in the DTS step, not in Vitest).
+
+## Do
+
+- After `const o = x as Record<string, unknown>`, use **`o['key']`**, not `o.key`.
+- For nested JSON-like blobs, keep using brackets at each `Record<string, unknown>` level.
+- Prefer **narrowing to a concrete interface** (with named properties) if you can validate shape, then dot access is allowed on that interface.
+
+## Don’t
+
+- Don’t use `obj.prop` on `Record<string, unknown>` or on `unknown` narrowed only to index-signature types.
+
+## Before finishing a change
+
+- Run **`pnpm build`** (or at least `pnpm exec tsc -b` / package build) when touching code that parses wire formats, migrations, or `JSON.parse` results — ESLint alone may not catch TS4111.
