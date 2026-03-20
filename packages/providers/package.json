@@ -43,7 +43,7 @@
     "contextcraft": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "^25.5.0",
     "gpt-tokenizer": "^3.4.0",
     "tiktoken": "^1.0.22",
     "typescript": "^5.7.2"
