@@ -115,6 +115,12 @@ export class Context {
 
   private checkpointSeq = 0;
 
+  /**
+   * Optional subscribers (e.g. `@contextcraft/debug` inspector) receive the same redacted
+   * {@link ContextEvent} stream as `onEvent` (§13.2 — Phase 10.3).
+   */
+  private readonly inspectorEventListeners = new Set<(event: ContextEvent) => void>();
+
   constructor(init: ContextInit) {
     const keys = Object.keys(init.slots);
     if (keys.length === 0) {
@@ -210,12 +216,45 @@ export class Context {
   }
 
   private deliverContextEvent(event: ContextEvent): void {
-    if (this.onEvent === undefined) {
-      return;
-    }
     const e =
       this.contextEventRedactor !== undefined ? this.contextEventRedactor(event) : event;
-    this.onEvent(e);
+    this.dispatchInspectorEvent(e);
+    if (this.onEvent !== undefined) {
+      this.onEvent(e);
+    }
+  }
+
+  /**
+   * Subscribe to the same observability events as {@link ContextInit.onEvent} (redacted when configured).
+   * Used by the debug inspector; returns an unsubscribe function.
+   */
+  subscribeInspectorEvents(handler: (event: ContextEvent) => void): () => void {
+    this.inspectorEventListeners.add(handler);
+    return () => {
+      this.inspectorEventListeners.delete(handler);
+    };
+  }
+
+  /**
+   * @internal Invoked by {@link ContextOrchestrator} for pipeline events (build, overflow, etc.).
+   */
+  dispatchInspectorEvent(event: ContextEvent): void {
+    for (const listener of this.inspectorEventListeners) {
+      try {
+        listener(event);
+      } catch {
+        /* isolate subscriber errors */
+      }
+    }
+  }
+
+  /** Slot layout from {@link ParsedContextConfig} when this context was created with {@link Context.fromParsedConfig}. */
+  getSlotsConfig(): Readonly<Record<string, SlotConfig>> | undefined {
+    const slots = this.parsedConfig?.slots;
+    if (slots === undefined) {
+      return undefined;
+    }
+    return slots as Readonly<Record<string, SlotConfig>>;
   }
 
   private emitContentAdded(slot: string, item: ContentItem): void {

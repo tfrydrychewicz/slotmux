@@ -166,4 +166,28 @@ describe('Context (Phase 5.1 — §6.1, §6.3)', () => {
       Context.fromParsedConfig({ model: 'x', slots: {} } as ParsedContextConfig),
     ).toThrow(InvalidConfigError);
   });
+
+  it('subscribeInspectorEvents receives push events; unsubscribe stops delivery', () => {
+    const seen: ContextEvent[] = [];
+    const ctx = new Context({ slots: { ...CHAT_DEFAULTS } });
+    const off = ctx.subscribeInspectorEvents((e) => {
+      seen.push(e);
+    });
+    ctx.user('u');
+    off();
+    ctx.assistant('a');
+    expect(seen).toHaveLength(1);
+    expect(seen[0]?.type).toBe('content:added');
+  });
+
+  it('getSlotsConfig is undefined without fromParsedConfig', () => {
+    const ctx = new Context({ slots: { ...CHAT_DEFAULTS } });
+    expect(ctx.getSlotsConfig()).toBeUndefined();
+  });
+
+  it('getSlotsConfig returns layout from fromParsedConfig', () => {
+    const { config } = createContext({ model: 'gpt-4o-mini', preset: 'chat' });
+    const ctx = Context.fromParsedConfig(config);
+    expect(ctx.getSlotsConfig()?.['system']).toBeDefined();
+  });
 });

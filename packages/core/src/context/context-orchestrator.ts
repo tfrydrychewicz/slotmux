@@ -362,11 +362,10 @@ export class ContextOrchestrator {
 
     const eventRedactor = createContextEventRedactor(config);
     const emitToConsumer = (ev: ContextEvent): void => {
+      const payload = eventRedactor !== undefined ? eventRedactor(ev) : ev;
+      context.dispatchInspectorEvent(payload);
       const fn = config.onEvent as ((e: ContextEvent) => void) | undefined;
-      if (fn === undefined) {
-        return;
-      }
-      fn(eventRedactor !== undefined ? eventRedactor(ev) : ev);
+      fn?.(payload);
     };
 
     const baseSlots = config.slots as Record<string, SlotConfig>;

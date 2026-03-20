@@ -19,7 +19,9 @@
   },
   "typesVersions": {
     ">=4.0": {
-      "*": ["./dist/index.d.ts"]
+      "*": [
+        "./dist/index.d.ts"
+      ]
     }
   },
   "scripts": {
@@ -29,6 +31,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "contextcraft": "workspace:*"
+    "contextcraft": "workspace:*",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
   }
 }
