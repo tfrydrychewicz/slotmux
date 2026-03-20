@@ -1,9 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { VERSION } from './index';
+import { toolsPlugin, VERSION } from './index.js';
 
 describe('@contextcraft/plugin-tools', () => {
   it('exports version', () => {
     expect(VERSION).toBe('0.0.1');
+  });
+
+  it('toolsPlugin has name and hooks', () => {
+    const p = toolsPlugin();
+    expect(p.name).toContain('plugin-tools');
+    expect(p.prepareSlots).toBeDefined();
+    expect(p.beforeOverflow).toBeDefined();
   });
 });
