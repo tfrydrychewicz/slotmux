@@ -33,6 +33,12 @@ export type {
   GeminiPart,
 } from './google-adapter.js';
 export {
+  createMistralAdapter,
+  formatMistralMessages,
+  MistralAdapter,
+} from './mistral-adapter.js';
+export type { MistralChatMessage } from './mistral-adapter.js';
+export {
   createOpenAIAdapter,
   formatOpenAIMessages,
   OpenAIAdapter,
