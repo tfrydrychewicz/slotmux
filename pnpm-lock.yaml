@@ -59,6 +59,9 @@ importers:
 
   docs:
     devDependencies:
+      '@contextcraft/providers':
+        specifier: workspace:*
+        version: link:../packages/providers
       contextcraft:
         specifier: workspace:*
         version: link:../packages/core

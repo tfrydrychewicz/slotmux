@@ -7,7 +7,11 @@
 | `pnpm docs:dev`     | Local dev server                                                             |
 | `pnpm docs:build`   | TypeDoc → `reference/api/`, then VitePress build (not part of `turbo build`) |
 | `pnpm docs:preview` | Preview production build                                                     |
-| `pnpm test:docs`    | `tsc --noEmit` on `docs/snippets`                                            |
+| `pnpm test:docs`    | `tsc --noEmit` on `docs/snippets` (after `pnpm build` for package types)     |
+
+## Guides (Tier 2)
+
+- **[Build a chatbot (~5 min)](./guide/build-a-chatbot.md)** — install, `contextBuilder`, OpenAI payload, `snapshot.meta`.
 
 ## GitHub Pages
 

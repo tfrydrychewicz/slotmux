@@ -132,12 +132,12 @@ High-level positioning vs common approaches (see **Appendix B** in the design do
 
 ## Documentation & links
 
-| Resource         | Link                                                                                    |
-| ---------------- | --------------------------------------------------------------------------------------- |
-| **Docs site**    | [tfrydrychewicz.github.io/contextcraft](https://tfrydrychewicz.github.io/contextcraft/) |
-| **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md)                                                      |
-| **Changelog**    | [CHANGELOG.md](CHANGELOG.md)                                                            |
-| **License**      | [MIT](LICENSE)                                                                          |
+| Resource         | Link                                                                                                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Docs site**    | [tfrydrychewicz.github.io/contextcraft](https://tfrydrychewicz.github.io/contextcraft/) · [5‑min chatbot](https://tfrydrychewicz.github.io/contextcraft/guide/build-a-chatbot.html) |
+| **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md)                                                                                                                                                  |
+| **Changelog**    | [CHANGELOG.md](CHANGELOG.md)                                                                                                                                                        |
+| **License**      | [MIT](LICENSE)                                                                                                                                                                      |
 
 ---
 

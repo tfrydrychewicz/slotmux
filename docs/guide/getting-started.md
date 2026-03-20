@@ -1,5 +1,7 @@
 # Getting started
 
+For a **step-by-step chatbot walkthrough** (model, system prompt, turns, API shape, metadata), see **[Build a chatbot (~5 min)](/guide/build-a-chatbot)**.
+
 ## Install
 
 ```bash

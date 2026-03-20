@@ -7,7 +7,10 @@ hero:
   tagline: Budgets, slots, token counting, and safe assembly — with a small runtime footprint.
   actions:
     - theme: brand
-      text: Get started
+      text: 5-minute chatbot
+      link: /guide/build-a-chatbot
+    - theme: alt
+      text: Getting started
       link: /guide/getting-started
     - theme: alt
       text: API reference
