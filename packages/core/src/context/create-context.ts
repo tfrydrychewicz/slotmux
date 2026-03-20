@@ -110,6 +110,7 @@ function mergeInferredConfig(
 /**
  * Creates a validated {@link ContextConfig} with preset-based or custom slots,
  * {@link MODEL_REGISTRY} inference, and optional tokenizer peer checks.
+ * Runs {@link ContextPlugin.prepareSlots} on each plugin (in order) before validation.
  *
  * @throws {@link InvalidConfigError} When Zod validation fails (including cross-slot rules).
  * @throws {@link TokenizerNotFoundError} When `strictTokenizerPeers` is true and no peer resolves for a known tokenizer id.
@@ -130,7 +131,15 @@ export function createContext(options: CreateContextOptions): CreateContextResul
   if (slotsInput !== undefined) {
     resolveOpts.slots = slotsInput;
   }
-  const slots = resolveContextSlots(resolveOpts);
+  let slots = resolveContextSlots(resolveOpts);
+
+  const pluginsForPrepare = (rest.plugins ?? []) as ContextPlugin[];
+  for (const p of pluginsForPrepare) {
+    if (p.prepareSlots === undefined) {
+      continue;
+    }
+    slots = p.prepareSlots(slots);
+  }
 
   const modelId = rest.model;
   const match = resolveModel(modelId);

@@ -8,7 +8,7 @@ import type { Logger } from '../logging/logger.js';
 import type { ContextSnapshot } from '../snapshot/context-snapshot.js';
 
 import type { CompressionStrategy } from './compression.js';
-import type { SlotConfig, OverflowStrategyFn } from './config.js';
+import type { OverflowStrategyFn, SlotConfig } from './config.js';
 import type { ContentItem, CompiledMessage } from './content.js';
 import type { ContextEvent } from './events.js';
 import type { TokenCountCache } from './token-count-cache.js';
@@ -78,6 +78,12 @@ export interface ContextPlugin {
 
   /** Called once when the plugin is registered */
   install?(ctx: PluginContext): void | Promise<void>;
+
+  /**
+   * Run during {@link createContext} after preset / slot resolution, before validation.
+   * Use to inject default slots when absent (e.g. RAG `rag` slot).
+   */
+  prepareSlots?(slots: Record<string, SlotConfig>): Record<string, SlotConfig>;
 
   /** Called before budget resolution */
   beforeBudgetResolve?(

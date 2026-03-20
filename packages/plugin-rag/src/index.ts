@@ -1,7 +1,18 @@
 /**
- * @contextcraft/plugin-rag — RAG integration
+ * @contextcraft/plugin-rag — RAG integration (Phase 11.1).
  *
  * @packageDocumentation
  */
 
-export const VERSION = '0.0.1';
+export {
+  dedupeNearDuplicateChunks,
+  jaccardSimilarity,
+  ragItemPlainText,
+} from './dedupe.js';
+export {
+  RAG_METADATA_CHUNK_ID,
+  RAG_METADATA_SCORE,
+  ragPlugin,
+} from './rag-plugin.js';
+export type { RagCitation, RagPlugin, RagPluginOptions } from './rag-plugin.js';
+export { VERSION } from './version.js';

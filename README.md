@@ -61,7 +61,7 @@ const { messages, meta } = ctx.build();
 | `@contextcraft/providers` | LLM provider adapters |
 | `@contextcraft/compression` | Compression strategies |
 | `@contextcraft/debug` | Debug inspector (optional) |
-| `@contextcraft/plugin-rag` | RAG integration |
+| `@contextcraft/plugin-rag` | RAG slot defaults, dedupe, maxChunks, optional rerank & citations (`ragPlugin`) |
 | `@contextcraft/plugin-memory` | Long-term memory |
 | `@contextcraft/plugin-tools` | Tool/function calls |
 | `@contextcraft/plugin-otel` | OpenTelemetry spans & metrics (optional) |

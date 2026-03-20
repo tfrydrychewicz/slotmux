@@ -7,7 +7,9 @@ import {
   MODEL_REGISTRY,
   registerModel,
   resolveModel,
+  SlotOverflow,
 } from '../../src/index.js';
+import type { ContextPlugin } from '../../src/types/plugin.js';
 
 describe('createContext Phase 5.3 (registry, peers, plugins)', () => {
   afterEach(() => {
@@ -60,6 +62,30 @@ describe('createContext Phase 5.3 (registry, peers, plugins)', () => {
     });
     expect(modelMatch?.provider).toBe('custom');
     expect(config.tokenizer?.name).toBe('cl100k_base');
+  });
+
+  it('applies prepareSlots on plugins before validation', () => {
+    const plugin: ContextPlugin = {
+      name: 'slot-inject',
+      version: '1.0.0',
+      prepareSlots: (slots) => ({
+        ...slots,
+        customInjected: {
+          priority: 1,
+          budget: { flex: true },
+          overflow: SlotOverflow.TRUNCATE,
+        },
+      }),
+    };
+    const { config } = createContext({
+      model: 'gpt-4o',
+      preset: 'chat',
+      plugins: [plugin],
+    });
+    expect(config.slots?.['customInjected']).toMatchObject({
+      priority: 1,
+      overflow: SlotOverflow.TRUNCATE,
+    });
   });
 
   it('returns plugins array from config', () => {
