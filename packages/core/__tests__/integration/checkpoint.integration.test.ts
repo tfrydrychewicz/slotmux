@@ -43,7 +43,7 @@ describe('checkpoint / restore (§12.2 — Phase 9.3)', () => {
     const second = ctx.checkpoint();
     expect(second.seq).toBe(first.seq + 1);
     expect(second.changedSincePrevious).toEqual([]);
-    expect(second.slots.history).toHaveLength(1);
+    expect(second.slots['history']).toHaveLength(1);
   });
 
   it('restore rejects unsupported checkpoint version', () => {

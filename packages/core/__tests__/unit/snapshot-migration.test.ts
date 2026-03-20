@@ -53,9 +53,9 @@ describe('Phase 9.2 — snapshot migration (§12.1)', () => {
     expect(snap.model).toBe('gpt-4');
     expect(snap.messages).toHaveLength(1);
     expect(snap.messages[0]!.content).toBe('legacy');
-    expect(snap.meta.slots.history?.name).toBe('history');
-    expect(snap.meta.slots.history?.budgetTokens).toBe(toTokenCount(200));
-    expect(snap.meta.slots.history?.usedTokens).toBe(toTokenCount(12));
+    expect(snap.meta.slots['history']?.name).toBe('history');
+    expect(snap.meta.slots['history']?.budgetTokens).toBe(toTokenCount(200));
+    expect(snap.meta.slots['history']?.usedTokens).toBe(toTokenCount(12));
     expect(snap.immutable).toBe(true);
   });
 
@@ -113,7 +113,7 @@ describe('Phase 9.2 — snapshot migration (§12.1)', () => {
           ...d,
           version: '0.9',
           meta: {
-            ...(d.meta as object),
+            ...(d['meta'] as object),
             slotStats: { a: { budgetTokens: 50, usedTokens: 10 } },
           },
         };
@@ -134,7 +134,7 @@ describe('Phase 9.2 — snapshot migration (§12.1)', () => {
 
     const snap = ContextSnapshot.migrate(legacy08);
     expect(snap.id).toBe('eight');
-    expect(snap.meta.slots.a?.usedTokens).toBe(toTokenCount(10));
+    expect(snap.meta.slots['a']?.usedTokens).toBe(toTokenCount(10));
   });
 
   it('last registerSnapshotMigration wins for the same from-version', () => {
@@ -152,9 +152,9 @@ describe('Phase 9.2 — snapshot migration (§12.1)', () => {
         const d = data as Record<string, unknown>;
         return {
           version: '1.0',
-          id: d.id,
-          model: d.model,
-          messages: d.messages,
+          id: d['id'],
+          model: d['model'],
+          messages: d['messages'],
           slots: {},
           meta: metaBase(),
         };

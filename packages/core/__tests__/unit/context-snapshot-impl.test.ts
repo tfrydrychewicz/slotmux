@@ -136,7 +136,7 @@ describe('Phase 9.1 — snapshot serialization (§12.1)', () => {
     expect(restored.id).toBe(snap.id);
     expect(restored.model).toBe(snap.model);
     expect(restored.messages).toEqual(snap.messages);
-    expect(restored.meta.slots.a?.name).toBe('a');
+    expect(restored.meta.slots['a']?.name).toBe('a');
   });
 
   it('deserialize throws when payload is tampered (messages) but checksum unchanged', () => {
@@ -178,7 +178,7 @@ describe('Phase 9.1 — snapshot serialization (§12.1)', () => {
       ...wire,
       slots: {
         ...wire.slots,
-        s: { ...wire.slots.s!, usedTokens: toTokenCount(99) },
+        s: { ...wire.slots['s']!, usedTokens: toTokenCount(99) },
       },
     };
     expect(() => ContextSnapshot.deserialize(tampered)).toThrow(SnapshotCorruptedError);

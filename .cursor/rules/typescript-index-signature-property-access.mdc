@@ -5,18 +5,20 @@ alwaysApply: true
 
 # TypeScript: index signatures and `noPropertyAccessFromIndexSignature`
 
-The repo enables `noPropertyAccessFromIndexSignature` in `tsconfig.base.json`. **Dot access on values typed as `Record<string, unknown>` (or any type with only a string index signature) is a compile error (TS4111)** and will fail **`pnpm build` / tsup `.d.ts` emit** on CI (often only surfaces in the DTS step, not in Vitest).
+The repo enables `noPropertyAccessFromIndexSignature` in `tsconfig.base.json`. **Dot access on types with a string index signature is TS4111**, including `Record<string, T>` / `Readonly<Record<string, T>>` (e.g. **`meta.slots.history`** → use **`meta.slots['history']`**).
+
+CI runs **`pnpm typecheck`** (`tsc --noEmit`, **including `__tests__`**) and **`pnpm build`** / tsup DTS. Vitest alone may not catch these.
 
 ## Do
 
+- Use **`obj['literalKey']`** on `Record<string, T>`-shaped values in **production and tests**.
 - After `const o = x as Record<string, unknown>`, use **`o['key']`**, not `o.key`.
-- For nested JSON-like blobs, keep using brackets at each `Record<string, unknown>` level.
-- Prefer **narrowing to a concrete interface** (with named properties) if you can validate shape, then dot access is allowed on that interface.
+- Prefer **narrowing to a concrete interface** (fixed property names) if you need safe dot access.
 
 ## Don’t
 
-- Don’t use `obj.prop` on `Record<string, unknown>` or on `unknown` narrowed only to index-signature types.
+- Don’t use `obj.prop` on index-signature types; tests are **not** exempt.
 
 ## Before finishing a change
 
-- Run **`pnpm build`** (or at least `pnpm exec tsc -b` / package build) when touching code that parses wire formats, migrations, or `JSON.parse` results — ESLint alone may not catch TS4111.
+- Run **`pnpm typecheck`** or **`pnpm exec tsc --noEmit -p packages/<pkg>`** for the package you edited — ESLint alone may not catch TS4111.

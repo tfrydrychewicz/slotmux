@@ -10,6 +10,7 @@ import {
   toContentId,
 } from '../../src/index.js';
 import type { SlotConfig } from '../../src/types/config.js';
+import type { ContentItem } from '../../src/types/content.js';
 
 const baseSlot = (): Record<string, SlotConfig> => ({
   history: { priority: 50, budget: { flex: true } },
@@ -281,11 +282,10 @@ describe('ContentStore', () => {
 
   it('replaceAllSlots throws when a registered slot is missing', () => {
     const store = new ContentStore(baseSlot());
-    expect(() =>
-      store.replaceAllSlots({
-        history: [],
-      } as Record<string, unknown[]>),
-    ).toThrow(InvalidConfigError);
+    const incomplete = { history: [] } as unknown as Readonly<
+      Record<string, readonly ContentItem[]>
+    >;
+    expect(() => store.replaceAllSlots(incomplete)).toThrow(InvalidConfigError);
   });
 
   it('replaceAllSlots throws when item.slot mismatches bucket', () => {
