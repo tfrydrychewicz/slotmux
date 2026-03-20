@@ -1,0 +1,17 @@
+{
+  "name": "@contextcraft/docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev .",
+    "site:build": "pnpm run docs:api && vitepress build .",
+    "preview": "vitepress preview .",
+    "docs:api": "typedoc --options ./typedoc.json"
+  },
+  "devDependencies": {
+    "contextcraft": "workspace:*",
+    "typedoc": "~0.27.9",
+    "typedoc-plugin-markdown": "~4.4.2",
+    "vitepress": "^1.6.3"
+  }
+}

@@ -23,7 +23,6 @@ import {
   type SlotMeta,
   type SnapshotMeta,
 } from '../../src/index.js';
-
 import { summarizeLatenciesMs } from '../benchmarks/latency-stats.js';
 
 afterEach(() => {

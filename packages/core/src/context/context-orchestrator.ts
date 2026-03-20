@@ -5,6 +5,13 @@
  */
 
 import type { ParsedContextConfig } from '../config/validator.js';
+import { compileContentItem } from '../content/compile-content-item.js';
+import {
+  fillMissingContentItemTokens,
+  sumCachedItemTokensWithLazyFill,
+  sumCachedOrEstimatedItemTokens,
+  tryResolveTokenizerForLazyFill,
+} from '../content/lazy-item-tokens.js';
 import { InvalidConfigError } from '../errors.js';
 import {
   createContextualLogger,
@@ -25,13 +32,6 @@ import {
   BudgetAllocator,
   orderedSlotEntriesForBudget,
 } from '../slots/budget-allocator.js';
-import {
-  fillMissingContentItemTokens,
-  sumCachedItemTokensWithLazyFill,
-  sumCachedOrEstimatedItemTokens,
-  tryResolveTokenizerForLazyFill,
-} from '../content/lazy-item-tokens.js';
-import { compileContentItem } from '../content/compile-content-item.js';
 import { OverflowEngine } from '../slots/overflow-engine.js';
 import { sumCachedItemTokens } from '../slots/strategies/truncate-strategy.js';
 import { ContextSnapshot } from '../snapshot/context-snapshot.js';

@@ -76,6 +76,8 @@ export default [
       'coverage/',
       '.turbo/',
       'packages/debug/inspector-static/**',
+      'docs/reference/api/**',
+      'docs/.vitepress/cache/**',
     ],
   },
 ];

@@ -4,12 +4,53 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
-  deploy-docs:
-    name: Deploy documentation
+  build:
+    name: Build documentation
     runs-on: ubuntu-latest
-    # Placeholder: enable when docs site exists (e.g. VitePress in docs/)
-    if: false
     steps:
       - uses: actions/checkout@v6
-      - run: echo "Docs deployment will be configured when docs site is added"
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build packages (snippet types use published .d.ts)
+        run: pnpm build
+
+      - name: Compile doc snippets
+        run: pnpm test:docs
+
+      - name: Build VitePress + API
+        env:
+          VITEPRESS_BASE: /${{ github.event.repository.name }}/
+        run: pnpm docs:build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -3,3 +3,5 @@ dist
 coverage
 .turbo
 pnpm-lock.yaml
+docs/reference/api
+docs/.vitepress/cache

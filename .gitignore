@@ -48,3 +48,6 @@ pnpm-debug.log*
 .cursor/
 contextcraft-design.md
 contextcraft-implementation-plan.md
+
+# TypeDoc → VitePress (regenerate with pnpm docs:api or pnpm docs:build)
+docs/reference/api/

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { createContentItem } from '../../src/content/content-store.js';
 import { compileContentItem } from '../../src/content/compile-content-item.js';
+import { createContentItem } from '../../src/content/content-store.js';
 
 describe('compileContentItem', () => {
   it('maps string content and tool metadata', () => {

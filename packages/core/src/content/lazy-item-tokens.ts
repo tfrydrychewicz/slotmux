@@ -10,10 +10,10 @@ import type { ProviderId } from '../types/config.js';
 import type { ContentItem } from '../types/content.js';
 import type { ProviderAdapter, Tokenizer } from '../types/provider.js';
 
-import { compileContentItem } from './compile-content-item.js';
 import {
   estimateTokensFromContentPayload,
 } from './char-token-estimate.js';
+import { compileContentItem } from './compile-content-item.js';
 /**
  * Resolves a {@link Tokenizer} for lazy fills when {@link Context.build} is given `providerAdapters`.
  */
