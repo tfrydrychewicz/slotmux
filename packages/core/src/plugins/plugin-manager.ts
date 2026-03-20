@@ -5,6 +5,7 @@
  */
 
 import { compressionContextFromOverflow } from '../compression/from-overflow-context.js';
+import type { Context } from '../context/context.js';
 import { InvalidConfigError } from '../errors.js';
 import type { Logger } from '../logging/logger.js';
 import { orderedSlotEntriesForBudget } from '../slots/budget-allocator.js';
@@ -272,14 +273,19 @@ export class PluginManager {
     }
   }
 
-  private async runBeforeOverflow(slot: string, items: ContentItem[]): Promise<ContentItem[]> {
+  private async runBeforeOverflow(
+    slot: string,
+    items: ContentItem[],
+    ctx: Context,
+  ): Promise<ContentItem[]> {
+    const env = { context: ctx };
     let cur = items;
     for (const p of this.plugins) {
       if (p.beforeOverflow === undefined) {
         continue;
       }
       try {
-        const out = await Promise.resolve(p.beforeOverflow(slot, cur));
+        const out = await Promise.resolve(p.beforeOverflow(slot, cur, env));
         cur = out;
       } catch {
         /* isolate */
@@ -380,6 +386,7 @@ export class PluginManager {
     hook: 'beforeOverflow',
     slot: string,
     items: ContentItem[],
+    context: Context,
   ): Promise<ContentItem[]>;
   async runHook(
     hook: 'afterOverflow',
@@ -408,7 +415,11 @@ export class PluginManager {
         await this.runAfterBudgetResolve(args[0] as readonly ResolvedSlot[]);
         return;
       case 'beforeOverflow':
-        return this.runBeforeOverflow(args[0] as string, args[1] as ContentItem[]);
+        return this.runBeforeOverflow(
+          args[0] as string,
+          args[1] as ContentItem[],
+          args[2] as Context,
+        );
       case 'afterOverflow':
         await this.runAfterOverflow(
           args[0] as ReadonlyMap<string, readonly ContentItem[]>,

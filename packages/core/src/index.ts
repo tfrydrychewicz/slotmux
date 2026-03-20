@@ -256,6 +256,8 @@ export type {
   ResolvedSlot,
   PluginLogger,
   PluginContext,
+  PluginOverflowContext,
+  PluginOverflowEnv,
   ContextPlugin,
 } from './types/plugin.js';
 

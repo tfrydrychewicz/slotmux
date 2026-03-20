@@ -62,7 +62,7 @@ const { messages, meta } = ctx.build();
 | `@contextcraft/compression` | Compression strategies |
 | `@contextcraft/debug` | Debug inspector (optional) |
 | `@contextcraft/plugin-rag` | RAG slot defaults, dedupe, maxChunks, optional rerank & citations (`ragPlugin`) |
-| `@contextcraft/plugin-memory` | Long-term memory |
+| `@contextcraft/plugin-memory` | `MemoryStore`, `SQLiteMemoryStore`, hybrid retrieval, `memoryPlugin` (Node; uses `better-sqlite3`) |
 | `@contextcraft/plugin-tools` | Tool/function calls |
 | `@contextcraft/plugin-otel` | OpenTelemetry spans & metrics (optional) |
 

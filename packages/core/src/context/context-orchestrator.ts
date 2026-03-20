@@ -113,13 +113,15 @@ async function applyBeforeOverflowForSlot(
   plugins: readonly ContextPlugin[],
   slot: string,
   items: ContentItem[],
+  context: Context,
 ): Promise<ContentItem[]> {
+  const env = { context };
   let cur = items;
   for (const p of plugins) {
     if (p.beforeOverflow === undefined) {
       continue;
     }
-    const out = p.beforeOverflow(slot, cur);
+    const out = p.beforeOverflow(slot, cur, env);
     cur = await Promise.resolve(out);
   }
   return cur;
@@ -471,11 +473,13 @@ export class ContextOrchestrator {
                 'beforeOverflow',
                 rs.name,
                 context.getItems(rs.name),
+                context,
               )
             : await applyBeforeOverflowForSlot(
                 plugins,
                 rs.name,
                 context.getItems(rs.name),
+                context,
               ),
       })),
     );

@@ -65,6 +65,21 @@ export interface PluginContext {
 }
 
 // ==========================================
+// Overflow hook environment (Phase 11.2)
+// ==========================================
+
+/**
+ * Minimal context slice for {@link ContextPlugin.beforeOverflow} — implemented by {@link Context}.
+ */
+export type PluginOverflowContext = {
+  getItems(slot: string): ContentItem[];
+};
+
+export type PluginOverflowEnv = {
+  readonly context: PluginOverflowContext;
+};
+
+// ==========================================
 // Context Plugin
 // ==========================================
 
@@ -93,10 +108,14 @@ export interface ContextPlugin {
   /** Called after budget resolution, before overflow */
   afterBudgetResolve?(slots: readonly ResolvedSlot[]): void | Promise<void>;
 
-  /** Called before overflow strategy executes for a slot */
+  /**
+   * Called before overflow strategy executes for a slot.
+   * When provided by the orchestrator, `env.context` is the live `Context` (satisfies {@link PluginOverflowContext}).
+   */
   beforeOverflow?(
     slot: string,
     items: ContentItem[],
+    env?: PluginOverflowEnv,
   ): ContentItem[] | Promise<ContentItem[]>;
 
   /** Called after overflow resolution */
