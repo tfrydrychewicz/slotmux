@@ -26,7 +26,7 @@ For accurate token counting, add a tokenizer for your model:
 pnpm add gpt-tokenizer          # OpenAI models (GPT-4o, o1, o3, GPT-5.4)
 ```
 
-> Without a tokenizer, slotmux falls back to character estimation (~4 chars per token). This is fine for prototyping. Install a real tokenizer before going to production.
+> Without a tokenizer, slotmux falls back to character estimation (~4 chars per token). This is fine for prototyping. Install a real tokenizer before going to production. See [Available tokenizers](/concepts/token-counting#available-tokenizers) for the full list of supported tokenizers and their peer dependencies.
 
 ## Your first context
 
