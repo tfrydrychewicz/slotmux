@@ -67,6 +67,19 @@ function resolveCountTokens(
   return sumCachedItemTokens;
 }
 
+/** §19.1 — refuse estimated token paths when billing policy is enabled. */
+function assertAuthoritativeTokenPolicy(config: ParsedContextConfig): void {
+  if (
+    config.requireAuthoritativeTokenCounts === true &&
+    config.tokenAccountant === undefined
+  ) {
+    throw new InvalidConfigError(
+      'requireAuthoritativeTokenCounts is true but tokenAccountant is missing — supply an authoritative tokenAccountant for billing-sensitive paths (§19.1)',
+      { context: { phase: '13.1' } },
+    );
+  }
+}
+
 async function applyBeforeBudgetResolvePlugins(
   slots: Record<string, SlotConfig>,
   plugins: readonly ContextPlugin[],
@@ -408,6 +421,7 @@ export class ContextOrchestrator {
     const pluginManager = input.pluginManager;
     const plugins = pluginManager?.getPlugins() ?? resolvePlugins(config);
     const countTokens = resolveCountTokens(config);
+    assertAuthoritativeTokenPolicy(config);
 
     const deliverPipelineEvent = (ev: ContextEvent): void => {
       const payload = eventRedactor !== undefined ? eventRedactor(ev) : ev;
@@ -649,6 +663,7 @@ export class ContextOrchestrator {
     const pluginManager = input.pluginManager;
     const plugins = pluginManager?.getPlugins() ?? resolvePlugins(config);
     const countTokens = resolveCountTokens(config);
+    assertAuthoritativeTokenPolicy(config);
 
     const deliverPipelineEvent = (ev: ContextEvent): void => {
       const payload = eventRedactor !== undefined ? eventRedactor(ev) : ev;

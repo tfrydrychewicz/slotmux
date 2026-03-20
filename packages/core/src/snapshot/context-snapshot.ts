@@ -192,6 +192,9 @@ export class ContextSnapshot {
   /**
    * Restores a snapshot from {@link SerializedSnapshot}, verifying SHA-256 checksum.
    *
+   * Recomputes the digest over the canonical payload (`version`, `id`, `model`, `slots`, `messages`,
+   * `meta` — `checksum` excluded) and rejects tampering (§12.1, §19.1 — serialized snapshot integrity).
+   *
    * @throws {@link SnapshotCorruptedError} When shape is invalid or checksum mismatches.
    */
   static deserialize(

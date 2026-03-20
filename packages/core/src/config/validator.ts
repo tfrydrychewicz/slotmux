@@ -184,6 +184,7 @@ export const contextConfigSchema = z
           .strict(),
       ])
       .optional(),
+    requireAuthoritativeTokenCounts: z.boolean().optional(),
   })
   .strict()
   .superRefine((data, ctx) => {

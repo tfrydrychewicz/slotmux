@@ -10,8 +10,10 @@ import {
   CHAT_DEFAULTS,
   Context,
   contextBuilder,
+  InvalidConfigError,
   toTokenCount,
   validateContextConfig,
+  type ContentItem,
   type ContextPushItemInput,
   type ModelId,
   type ProviderAdapter,
@@ -250,5 +252,39 @@ describe('Pipeline integration (Phase 5.7 — §17.3)', () => {
 
     expect(messagesFingerprint(first.snapshot)).toEqual(messagesFingerprint(second.snapshot));
     expect(first.snapshot.meta.totalTokens).toBe(second.snapshot.meta.totalTokens);
+  });
+
+  it('requireAuthoritativeTokenCounts throws without tokenAccountant (§19.1)', async () => {
+    const parsed = validateContextConfig({
+      model: 'gpt-4o-mini',
+      maxTokens: 600,
+      reserveForResponse: 0,
+      requireAuthoritativeTokenCounts: true,
+      slots: CHAT_TRUNCATE_HISTORY,
+    });
+    const ctx = Context.fromParsedConfig(parsed);
+    ctx.system('x');
+    await expect(ctx.build()).rejects.toThrow(InvalidConfigError);
+  });
+
+  it('requireAuthoritativeTokenCounts allows build when tokenAccountant is set', async () => {
+    const parsed = validateContextConfig({
+      model: 'gpt-4o-mini',
+      maxTokens: 600,
+      reserveForResponse: 0,
+      requireAuthoritativeTokenCounts: true,
+      slots: CHAT_TRUNCATE_HISTORY,
+      tokenAccountant: {
+        countItems: (items: readonly ContentItem[]) =>
+          items.reduce(
+            (n: number, i: ContentItem) =>
+              n + (typeof i.content === 'string' ? i.content.length : 0),
+            0,
+          ),
+      },
+    });
+    const ctx = Context.fromParsedConfig(parsed);
+    ctx.system('hi');
+    await expect(ctx.build()).resolves.toBeDefined();
   });
 });

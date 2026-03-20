@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   ContentStore,
@@ -218,6 +218,38 @@ describe('ContentStore', () => {
 
     expect(store.getItems('history').map((i) => i.content)).toEqual(['keep']);
     expect(store.getItems('system')).toHaveLength(0);
+  });
+
+  it('invokes onApproachingMaxItems once at 80% threshold', () => {
+    const onApproachingMaxItems = vi.fn();
+    const store = new ContentStore(
+      { hist: { priority: 10, budget: { fixed: 10 }, maxItems: 10 } },
+      { onApproachingMaxItems },
+    );
+    for (let i = 0; i < 8; i++) {
+      store.addItem(
+        'hist',
+        createContentItem({ slot: 'hist', role: 'user', content: String(i) }),
+      );
+    }
+    expect(onApproachingMaxItems).toHaveBeenCalledTimes(1);
+    expect(onApproachingMaxItems).toHaveBeenCalledWith(
+      expect.objectContaining({ slot: 'hist', itemCount: 8, maxItems: 10 }),
+    );
+  });
+
+  it('replaceAllSlots throws MaxItemsExceededError when snapshot exceeds effective maxItems', () => {
+    const store = new ContentStore({
+      tiny: { priority: 10, budget: { fixed: 100 }, maxItems: 2 },
+    });
+    const a = createContentItem({ slot: 'tiny', role: 'user', content: 'a' });
+    const b = createContentItem({ slot: 'tiny', role: 'user', content: 'b' });
+    const c = createContentItem({ slot: 'tiny', role: 'user', content: 'c' });
+    expect(() =>
+      store.replaceAllSlots({
+        tiny: [a, b, c],
+      }),
+    ).toThrow(MaxItemsExceededError);
   });
 
   it('enforces maxItems from SlotConfig', () => {

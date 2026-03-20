@@ -214,7 +214,10 @@ export interface SlotConfig {
   /** Custom ordering weight when position is 'interleave' */
   order?: number;
 
-  /** Maximum number of content items (independent of token budget) */
+  /**
+   * Maximum number of content items (independent of token budget).
+   * When omitted, the runtime default is 10_000 (see `DEFAULT_SLOT_MAX_ITEMS`, §19.1 — Phase 13.1).
+   */
   maxItems?: number;
 
   /** Content in this slot is exempt from all overflow (use with extreme caution) */
@@ -284,6 +287,12 @@ export interface ContextConfig {
    * per-item estimates ({@link ContentItem.tokens} / char heuristics).
    */
   tokenAccountant?: TokenAccountant;
+
+  /**
+   * When `true`, `Context.build` / `buildStream` require {@link tokenAccountant} so token totals never
+   * fall back to cache/char estimates — use for billing-sensitive paths (§19.1 — Phase 13.1).
+   */
+  requireAuthoritativeTokenCounts?: boolean;
 
   /**
    * Structured logger for the build pipeline and overflow strategies (§13.3 — Phase 10.1).

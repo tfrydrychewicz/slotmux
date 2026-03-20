@@ -54,7 +54,10 @@ export {
   ContentStore,
   createContentItem,
 } from './content/content-store.js';
-export type { CreateContentItemParams } from './content/content-store.js';
+export type {
+  ContentStoreOptions,
+  CreateContentItemParams,
+} from './content/content-store.js';
 
 // Slot manager (§20 — Phase 3.2)
 export { SlotManager } from './slots/slot-manager.js';
@@ -264,6 +267,11 @@ export type {
 // Plugin manager (§11.1 — Phase 7.2)
 export { PluginManager } from './plugins/plugin-manager.js';
 export type { PluginManagerHook, PluginManagerOptions } from './plugins/plugin-manager.js';
+export {
+  DEFAULT_SANITIZE_INJECTION_PATTERNS,
+  sanitizePlugin,
+} from './plugins/sanitize-plugin.js';
+export type { SanitizePluginOptions } from './plugins/sanitize-plugin.js';
 
 // Provider types (§10.1)
 export type {
@@ -350,6 +358,15 @@ export type {
   ProviderTokenOverhead,
   TokenOverheadProviderId,
 } from './config/token-overhead.js';
+
+// Security defaults (§19.1 — Phase 13.1)
+export {
+  DEFAULT_SLOT_MAX_ITEMS,
+  SLOT_ITEMS_WARN_THRESHOLD_RATIO,
+  effectiveSlotMaxItems,
+  slotItemsNearLimitThreshold,
+} from './config/security-defaults.js';
+
 export {
   assertTokenizerPeersAvailable,
   TOKENIZER_PEER_PACKAGES,

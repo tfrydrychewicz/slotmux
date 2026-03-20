@@ -134,7 +134,22 @@ export class Context {
     }
     const slots = init.slots as Record<string, SlotConfig>;
     this.slotConfigs = slots;
-    this.store = new ContentStore({ ...slots });
+    this.store = new ContentStore(
+      { ...slots },
+      {
+        onApproachingMaxItems: ({ slot, itemCount, maxItems }) => {
+          this.deliverContextEvent({
+            type: 'warning',
+            warning: {
+              code: 'SLOT_ITEMS_NEAR_LIMIT',
+              message: `Slot "${slot}" has ${itemCount} items (≥80% of effective maxItems=${maxItems})`,
+              slot,
+              severity: 'warn',
+            },
+          });
+        },
+      },
+    );
     this.onEvent = init.onEvent;
     this.contextEventRedactor =
       init.parsedConfig !== undefined ? createContextEventRedactor(init.parsedConfig) : undefined;

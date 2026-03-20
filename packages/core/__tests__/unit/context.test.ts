@@ -5,6 +5,7 @@ import {
   Context,
   createContext,
   InvalidConfigError,
+  validateContextConfig,
   type ContextEvent,
   type ParsedContextConfig,
 } from '../../src/index.js';
@@ -189,5 +190,27 @@ describe('Context (Phase 5.1 — §6.1, §6.3)', () => {
     const { config } = createContext({ model: 'gpt-4o-mini', preset: 'chat' });
     const ctx = Context.fromParsedConfig(config);
     expect(ctx.getSlotsConfig()?.['system']).toBeDefined();
+  });
+
+  it('emits SLOT_ITEMS_NEAR_LIMIT when history reaches 80% of maxItems (§19.1)', () => {
+    const events: ContextEvent[] = [];
+    const parsed = validateContextConfig({
+      model: 'gpt-4o-mini',
+      maxTokens: 4000,
+      reserveForResponse: 0,
+      slots: {
+        system: { priority: 100, budget: { fixed: 100 } },
+        history: { priority: 50, budget: { flex: true }, maxItems: 10 },
+      },
+      onEvent: (e: ContextEvent) => events.push(e),
+    });
+    const ctx = Context.fromParsedConfig(parsed);
+    for (let i = 0; i < 8; i++) {
+      ctx.user(String(i));
+    }
+    const near = events.filter(
+      (e) => e.type === 'warning' && e.warning.code === 'SLOT_ITEMS_NEAR_LIMIT',
+    );
+    expect(near).toHaveLength(1);
   });
 });

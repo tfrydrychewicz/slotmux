@@ -5,6 +5,10 @@
  */
 
 import {
+  effectiveSlotMaxItems,
+  slotItemsNearLimitThreshold,
+} from '../config/security-defaults.js';
+import {
   InvalidConfigError,
   ItemNotFoundError,
   MaxItemsExceededError,
@@ -97,6 +101,19 @@ function shallowCopyItem(item: ContentItem): ContentItem {
   return { ...item };
 }
 
+/** Optional hooks for {@link ContentStore} (§19.1 — Phase 13.1). */
+export type ContentStoreOptions = {
+  /**
+   * Invoked once when a slot’s item count first reaches the 80% threshold of the effective max
+   * (see {@link effectiveSlotMaxItems}).
+   */
+  readonly onApproachingMaxItems?: (info: {
+    readonly slot: string;
+    readonly itemCount: number;
+    readonly maxItems: number;
+  }) => void;
+};
+
 /**
  * Per-slot ordered lists of content items, validated against {@link SlotConfig}.
  */
@@ -105,11 +122,15 @@ export class ContentStore {
 
   private readonly lists = new Map<string, ContentItem[]>();
 
+  readonly #options: ContentStoreOptions | undefined;
+
   /**
    * @param slotConfigs — allowed slot names and limits (e.g. from {@link ContextConfig.slots}).
+   * @param options — optional callbacks (e.g. approaching max-items warning).
    */
-  constructor(slotConfigs: Record<string, SlotConfig>) {
+  constructor(slotConfigs: Record<string, SlotConfig>, options?: ContentStoreOptions) {
     this.slotConfigs = { ...slotConfigs };
+    this.#options = options;
     for (const name of Object.keys(this.slotConfigs)) {
       this.lists.set(name, []);
     }
@@ -150,8 +171,9 @@ export class ContentStore {
     }
 
     const list = this.listFor(slot);
-    const max = this.slotConfigs[slot]!.maxItems;
-    if (max !== undefined && list.length >= max) {
+    const cfg = this.slotConfigs[slot]!;
+    const max = effectiveSlotMaxItems(cfg);
+    if (list.length >= max) {
       throw new MaxItemsExceededError(
         `Slot "${slot}" is at maxItems (${max})`,
         { slot, maxItems: max, currentCount: list.length },
@@ -159,6 +181,18 @@ export class ContentStore {
     }
 
     list.push(shallowCopyItem(item));
+
+    const threshold = slotItemsNearLimitThreshold(max);
+    if (
+      this.#options?.onApproachingMaxItems !== undefined &&
+      list.length === threshold
+    ) {
+      this.#options.onApproachingMaxItems({
+        slot,
+        itemCount: list.length,
+        maxItems: max,
+      });
+    }
   }
 
   /**
@@ -261,6 +295,13 @@ export class ContentStore {
         });
       }
       const list = this.listFor(slot);
+      const max = effectiveSlotMaxItems(this.slotConfigs[slot]!);
+      if (raw.length > max) {
+        throw new MaxItemsExceededError(
+          `replaceAllSlots: slot "${slot}" has ${raw.length} items, exceeds maxItems (${max})`,
+          { slot, maxItems: max, currentCount: raw.length },
+        );
+      }
       list.length = 0;
       for (const item of raw) {
         if (item.slot !== slot) {
