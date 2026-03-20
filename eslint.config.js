@@ -20,7 +20,7 @@ export default [
     },
   },
   {
-    files: ['packages/debug/e2e/fixtures/**/*.mjs'],
+    files: ['packages/debug/e2e/fixtures/**/*.mjs', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: globals.node,
     },
