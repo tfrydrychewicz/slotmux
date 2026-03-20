@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { partitionProgressiveZones } from '../../src/progressive-zones.js';
 import type { ProgressiveItem } from '../../src/progressive-types.js';
+import { partitionProgressiveZones } from '../../src/progressive-zones.js';
 
 function item(id: string, at: number, pinned?: boolean): ProgressiveItem {
   return {

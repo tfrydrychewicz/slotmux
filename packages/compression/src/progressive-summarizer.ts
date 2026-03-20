@@ -8,12 +8,12 @@ import { nanoid } from 'nanoid';
 
 import { getPlainTextForLossless } from './lossless-compressor.js';
 import { DEFAULT_PROGRESSIVE_PROMPTS } from './progressive-prompts.js';
-import { partitionProgressiveZones } from './progressive-zones.js';
 import type {
   ProgressiveItem,
   ProgressivePrompts,
   ProgressiveSummarizeTextFn,
 } from './progressive-types.js';
+import { partitionProgressiveZones } from './progressive-zones.js';
 
 export type RunProgressiveSummarizeOptions = {
   readonly preserveLastN?: number;

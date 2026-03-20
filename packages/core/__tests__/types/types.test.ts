@@ -6,9 +6,9 @@
 import { expectTypeOf } from 'expect-type';
 import { describe, expect, it } from 'vitest';
 
+import { SlotOverflow } from '../../src/slots/slot-overflow.js';
 import type { ContextSnapshot } from '../../src/snapshot/context-snapshot.js';
 import type { TokenCount, ContentId, SlotPriority } from '../../src/types/branded.js';
-import { SlotOverflow } from '../../src/slots/slot-overflow.js';
 import type {
   OverflowStrategyFn,
   SlotBudget,

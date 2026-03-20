@@ -12,8 +12,8 @@ import type {
   MapReducePrompts,
   MapReduceSummarizeDeps,
 } from './map-reduce-types.js';
-import { partitionProgressiveZones } from './progressive-zones.js';
 import type { ProgressiveItem } from './progressive-types.js';
+import { partitionProgressiveZones } from './progressive-zones.js';
 
 export type RunMapReduceSummarizeOptions = {
   readonly preserveLastN?: number;
@@ -158,7 +158,7 @@ async function reduceOneLayer(
 
   const flush = async () => {
     if (batch.length === 0) return;
-    let payload = join;
+    const payload = join;
     if (countTextTokens(payload) > maxReduce) {
       const subs = splitTextToTokenBudget(payload, countTextTokens, maxReduce);
       const partials = await Promise.all(
@@ -296,7 +296,7 @@ export async function runMapReduceSummarize(
     );
   }
 
-  let head: ProgressiveItem | undefined =
+  const head: ProgressiveItem | undefined =
     mapOutputs.length > 0
       ? makeSummary(finalText, bulkIds, options.slot, createId, nextSummaryTime())
       : undefined;

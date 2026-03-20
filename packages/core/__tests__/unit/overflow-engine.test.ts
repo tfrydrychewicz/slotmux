@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { semanticCompressAsOverflow } from '../../src/compression/semantic-overflow-bridge.js';
 import {
   OverflowEngine,
   createContentItem,
@@ -8,7 +9,6 @@ import {
   InvalidConfigError,
   type OverflowEngineInputSlot,
 } from '../../src/index.js';
-import { semanticCompressAsOverflow } from '../../src/compression/semantic-overflow-bridge.js';
 import type { SlotConfig } from '../../src/types/config.js';
 import type { ContentItem } from '../../src/types/content.js';
 import type { ContextEvent } from '../../src/types/events.js';
