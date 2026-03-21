@@ -199,7 +199,15 @@ const stream = ctx.buildStream({
 });
 ```
 
-All options from `build()` work with `buildStream()` — `providerAdapters`, `previousSnapshot`, `structuralSharing`, `pluginManager`, and `operationId`.
+All options from `build()` work with `buildStream()` — `providerAdapters`, `previousSnapshot`, `structuralSharing`, `pluginManager`, `operationId`, and [`forceCompress`](/concepts/overflow#forced-compression):
+
+```typescript
+const stream = ctx.buildStream({
+  overrides: {
+    forceCompress: true, // compress all eligible slots, even within budget
+  },
+});
+```
 
 ## Next
 

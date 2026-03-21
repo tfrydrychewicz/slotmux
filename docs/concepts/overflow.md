@@ -166,6 +166,47 @@ overflow: async (context) => {
 
 The function receives the slot's current items, budget, and a token-counting function, and must return items that fit.
 
+## Forced compression
+
+Normally, overflow strategies only run when a slot exceeds its token budget. Sometimes you want to proactively compress the context — for example, to free up headroom before a long conversation fills the window, or to let users manually trigger compression.
+
+Pass `forceCompress: true` in the build overrides:
+
+```typescript
+const { snapshot } = await ctx.build({
+  overrides: { forceCompress: true },
+});
+```
+
+When `forceCompress` is active:
+
+- **Every** non-protected slot's overflow strategy runs, even if content is within budget.
+- For slots that are within budget, the engine sets a **synthetic reduced budget** (50% of current token usage) so the strategy has a real target to compress toward.
+- Protected slots are still skipped — `forceCompress` does not override the `protected` flag.
+- The flag is per-build — it does not change the stored config. The next `build()` without the flag behaves normally.
+
+This works with both `build()` and `buildStream()`:
+
+```typescript
+const stream = ctx.buildStream({
+  overrides: { forceCompress: true },
+});
+```
+
+::: tip Use case: user-triggered compression
+In a chatbot, you can expose a command (like `!compress`) that lets users shrink the context on demand:
+
+```typescript
+if (userInput === '!compress') {
+  const before = await ctx.build();
+  const after = await ctx.build({ overrides: { forceCompress: true } });
+  console.log(`Compressed: ${before.snapshot.meta.totalTokens} → ${after.snapshot.meta.totalTokens} tokens`);
+}
+```
+
+See the [terminal chatbot tutorial](/guide/build-a-chatbot) for a working example.
+:::
+
 ## Protected slots
 
 Mark a slot as `protected: true` to exempt it from all overflow. If a protected slot exceeds its budget, a `SLOT_PROTECTED_OVER_BUDGET` warning is emitted instead of evicting content. Use sparingly — a protected slot that consistently overflows will squeeze the remaining slots.

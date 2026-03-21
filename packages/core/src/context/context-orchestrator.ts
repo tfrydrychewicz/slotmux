@@ -239,6 +239,11 @@ export type ContextOrchestratorBuildInput = {
    * Defaults to a UUID from {@link newBuildOperationId} when omitted.
    */
   readonly operationId?: string;
+  /**
+   * When `true`, overflow strategies run on all eligible slots even when their
+   * content is within budget (§5.6 forceCompress).
+   */
+  readonly forceCompress?: boolean;
 };
 
 export type ContextOrchestratorBuildResult = {
@@ -381,6 +386,7 @@ export class ContextOrchestrator {
       previousSnapshot,
       structuralSharing,
       operationId: operationIdInput,
+      forceCompress,
     } = input;
     const providerAdapters = mergeSlotmuxProviderAdapter(config, inputAdapters);
     const operationId = operationIdInput ?? newBuildOperationId();
@@ -539,6 +545,7 @@ export class ContextOrchestrator {
     pipelineLog.debug('build: overflow resolution');
     const afterOverflow = await engine.resolve(overflowInputs, {
       totalBudget,
+      ...(forceCompress === true ? { forceCompress: true } : {}),
     });
     pipelineLog.debug('build: overflow complete');
 
@@ -637,6 +644,7 @@ export class ContextOrchestrator {
       previousSnapshot,
       structuralSharing,
       operationId: operationIdInput,
+      forceCompress: forceCompressStream,
     } = input;
     const providerAdapters = mergeSlotmuxProviderAdapter(config, inputStreamAdapters);
     const operationId = operationIdInput ?? newBuildOperationId();
@@ -834,6 +842,7 @@ export class ContextOrchestrator {
       pipelineLog.debug(`buildStream: overflow resolution (pass ${String(k)})`);
       const afterOverflowRaw = await engine.resolve(overflowInputs, {
         totalBudget,
+        ...(forceCompressStream === true ? { forceCompress: true } : {}),
       });
       const corrected = applyFrozenSlotContent(afterOverflowRaw, frozen);
 

@@ -27,6 +27,12 @@ export type ContextBuildOverrides = {
    * (e.g. `{ history: { budget: { fixed: 500 } } }`).
    */
   readonly slots?: Record<string, Partial<SlotConfig>>;
+  /**
+   * When `true`, overflow strategies run on all eligible slots even when their
+   * content is within budget. Sets a synthetic reduced budget (50% of current
+   * usage) so the strategy has a meaningful target to compress toward.
+   */
+  readonly forceCompress?: boolean;
 };
 
 /**

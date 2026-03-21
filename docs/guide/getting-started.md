@@ -149,6 +149,16 @@ snapshot.meta.slots        // per-slot: budgetTokens, usedTokens, evictedCount, 
 
 Use this metadata to drive UI indicators, alerting, and debugging.
 
+You can also force compression on demand — even when content is within budget — by passing `forceCompress`:
+
+```typescript
+const { snapshot } = await ctx.build({
+  overrides: { forceCompress: true },
+});
+```
+
+This triggers overflow strategies on all eligible slots with a synthetic 50% budget, proactively shrinking the context. See [Overflow — Forced compression](/concepts/overflow#forced-compression) for details.
+
 ## Packages
 
 | Package | What it does |

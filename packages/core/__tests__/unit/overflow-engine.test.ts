@@ -867,4 +867,111 @@ describe('OverflowEngine (§7.2)', () => {
       50,
     );
   });
+
+  describe('forceCompress', () => {
+    it('runs overflow strategy on within-budget slots when forceCompress is true', async () => {
+      const strategyCalled = vi.fn();
+      const items = [
+        createContentItem({ slot: 'a', role: 'user', content: 'x', tokens: toTokenCount(10) }),
+        createContentItem({ slot: 'a', role: 'user', content: 'y', tokens: toTokenCount(10) }),
+      ];
+
+      const engine = new OverflowEngine({
+        countTokens: countSum,
+        strategies: {
+          truncate: async (content, _budget, _ctx) => {
+            strategyCalled();
+            return content.slice(-1);
+          },
+        },
+      });
+
+      const cfg: SlotConfig = { priority: 50, budget: { flex: true }, overflow: 'truncate' };
+      const out = await engine.resolve(
+        [slot('a', 50, 100, cfg, items)],
+        { forceCompress: true },
+      );
+
+      expect(strategyCalled).toHaveBeenCalled();
+      expect(out[0]!.content).toHaveLength(1);
+    });
+
+    it('does NOT run overflow when forceCompress is false/omitted and within budget', async () => {
+      const strategyCalled = vi.fn();
+      const items = [
+        createContentItem({ slot: 'a', role: 'user', content: 'x', tokens: toTokenCount(10) }),
+      ];
+
+      const engine = new OverflowEngine({
+        countTokens: countSum,
+        strategies: {
+          truncate: async (content) => {
+            strategyCalled();
+            return content.slice(-1);
+          },
+        },
+      });
+
+      const cfg: SlotConfig = { priority: 50, budget: { flex: true }, overflow: 'truncate' };
+      await engine.resolve([slot('a', 50, 100, cfg, items)]);
+
+      expect(strategyCalled).not.toHaveBeenCalled();
+    });
+
+    it('passes a synthetic reduced budget (50% of used) when forceCompress and within budget', async () => {
+      let receivedBudget = 0;
+      const items = [
+        createContentItem({ slot: 'a', role: 'user', content: 'x', tokens: toTokenCount(30) }),
+        createContentItem({ slot: 'a', role: 'user', content: 'y', tokens: toTokenCount(30) }),
+      ];
+
+      const engine = new OverflowEngine({
+        countTokens: countSum,
+        strategies: {
+          truncate: async (content, budget) => {
+            receivedBudget = budget;
+            return content.slice(-1);
+          },
+        },
+      });
+
+      const cfg: SlotConfig = { priority: 50, budget: { flex: true }, overflow: 'truncate' };
+      await engine.resolve(
+        [slot('a', 50, 200, cfg, items)],
+        { forceCompress: true },
+      );
+
+      expect(receivedBudget).toBe(Math.floor(60 * 0.5));
+    });
+
+    it('skips protected slots even with forceCompress', async () => {
+      const strategyCalled = vi.fn();
+      const items = [
+        createContentItem({ slot: 'a', role: 'user', content: 'x', tokens: toTokenCount(10) }),
+      ];
+
+      const engine = new OverflowEngine({
+        countTokens: countSum,
+        strategies: {
+          truncate: async (content) => {
+            strategyCalled();
+            return content;
+          },
+        },
+      });
+
+      const cfg: SlotConfig = {
+        priority: 50,
+        budget: { flex: true },
+        overflow: 'truncate',
+        protected: true,
+      };
+      await engine.resolve(
+        [slot('a', 50, 100, cfg, items)],
+        { forceCompress: true },
+      );
+
+      expect(strategyCalled).not.toHaveBeenCalled();
+    });
+  });
 });

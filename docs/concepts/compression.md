@@ -184,6 +184,24 @@ The `fallback-chain` overflow strategy composes these approaches automatically: 
 overflow: 'fallback-chain'
 ```
 
+## On-demand compression
+
+All compression strategies above normally trigger only when content exceeds its token budget. You can force them to run at any time — even when content is within budget — by passing `forceCompress: true` to `build()`:
+
+```typescript
+const { snapshot } = await ctx.build({
+  overrides: { forceCompress: true },
+});
+```
+
+The engine sets a synthetic reduced budget (50% of current usage) so the strategy has a meaningful compression target. This is useful for:
+
+- **Proactive space management** — compress before the context window fills up.
+- **User-triggered compression** — let users manually reclaim space in long-running conversations.
+- **Testing compression strategies** — verify that your strategies work without needing to fill the context to capacity.
+
+See [Overflow — Forced compression](/concepts/overflow#forced-compression) for the full behavior and examples.
+
 ## Next
 
 - [Overflow](./overflow) — the full overflow pipeline and all strategies.

@@ -98,6 +98,15 @@ export type OverflowResolveRunOptions = {
    * are removed from the lowest-priority non-protected slot, then the pass repeats.
    */
   totalBudget?: number;
+
+  /**
+   * When `true`, overflow strategies run on all eligible slots even when their
+   * content is within budget. Useful for on-demand context compression.
+   *
+   * For slots that are within budget, the engine sets a synthetic reduced budget
+   * (50% of current usage) so the strategy has a meaningful target to compress toward.
+   */
+  forceCompress?: boolean;
 };
 
 type NamedOverflowStrategy =
@@ -355,10 +364,13 @@ export class OverflowEngine {
     });
   }
 
-  private async processSlot(slot: WorkingSlot): Promise<void> {
+  private async processSlot(
+    slot: WorkingSlot,
+    forceCompress?: boolean,
+  ): Promise<void> {
     const ctx = this.buildOverflowContext(slot);
     const used = this.countTokens(slot.content);
-    if (used <= slot.budgetTokens) return;
+    if (used <= slot.budgetTokens && !forceCompress) return;
 
     if (slot.config.protected) {
       ctx.logger?.warn(
@@ -384,7 +396,10 @@ export class OverflowEngine {
       throw err;
     }
 
-    const budget = toTokenCount(slot.budgetTokens);
+    const effectiveBudget =
+      forceCompress && used <= slot.budgetTokens
+        ? toTokenCount(Math.floor(used * 0.5))
+        : toTokenCount(slot.budgetTokens);
 
     const beforeTokens = used;
     const compressionLike = isCompressionLikeOverflowLabel(label);
@@ -394,7 +409,7 @@ export class OverflowEngine {
 
     let newContent: ContentItem[];
     try {
-      newContent = await fn(slot.content, budget, ctx);
+      newContent = await fn(slot.content, effectiveBudget, ctx);
     } catch (err) {
       ctx.logger?.error('Overflow strategy execution failed', err);
       throw err;
@@ -457,13 +472,14 @@ export class OverflowEngine {
   ): Promise<ResolvedSlot[]> {
     const working = cloneInputs(slots);
     const totalBudget = runOptions?.totalBudget;
+    const forceCompress = runOptions?.forceCompress;
     const maxRounds = Math.max(32, working.length * 4 + 8);
 
     for (let round = 0; round < maxRounds; round++) {
       working.sort(sortByPriorityAsc);
 
       for (const slot of working) {
-        await this.processSlot(slot);
+        await this.processSlot(slot, forceCompress);
       }
 
       if (totalBudget === undefined) {

@@ -110,4 +110,43 @@ describe('Context.build overrides (§6.4)', () => {
 
     expect(Number(snapshot.meta.totalBudget)).toBeLessThan(8000);
   });
+
+  it('forceCompress triggers overflow on within-budget slots', async () => {
+    const parsed = validateContextConfig({
+      model: 'gpt-4o-mini',
+      maxTokens: 100_000,
+      reserveForResponse: 500,
+      lazyContentItemTokens: true,
+      slots: {
+        system: {
+          priority: 100,
+          budget: { fixed: 2000 },
+          position: 'before',
+          overflow: 'error',
+          protected: true,
+        },
+        history: {
+          priority: 50,
+          budget: { flex: true },
+          position: 'after',
+          overflow: 'truncate',
+        },
+      },
+    });
+    const ctx = Context.fromParsedConfig(parsed);
+    ctx.system('You are a helpful assistant.');
+    const longMsg = 'This is a longer message to ensure meaningful character-based token estimates. '.repeat(10);
+    for (let i = 0; i < 20; i++) {
+      ctx.user(`${longMsg} Turn ${String(i)}`);
+      ctx.assistant(`${longMsg} Reply ${String(i)}`);
+    }
+
+    const normal = await ctx.build();
+    const normalCount = normal.snapshot.meta.slots['history']?.itemCount ?? 0;
+
+    const forced = await ctx.build({ overrides: { forceCompress: true } });
+    const forcedCount = forced.snapshot.meta.slots['history']?.itemCount ?? 0;
+
+    expect(forcedCount).toBeLessThan(normalCount);
+  });
 });

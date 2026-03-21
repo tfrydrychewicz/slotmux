@@ -248,6 +248,7 @@ export class Context {
         ? { pluginManager: params.pluginManager }
         : {}),
       ...(params?.operationId !== undefined ? { operationId: params.operationId } : {}),
+      ...(params?.overrides?.forceCompress === true ? { forceCompress: true } : {}),
     });
 
     if (params?.reuseUnchangedSnapshot === true && !hasStructuralOverrides && !reuseBlockedByParams) {
@@ -298,6 +299,7 @@ export class Context {
             ? { pluginManager: params.pluginManager }
             : {}),
           ...(params?.operationId !== undefined ? { operationId: params.operationId } : {}),
+          ...(params?.overrides?.forceCompress === true ? { forceCompress: true } : {}),
         },
         {
           onSlotReady: (slot, messages) => {

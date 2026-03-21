@@ -9,6 +9,7 @@ This tutorial builds a **fully working interactive terminal chatbot** that talks
 - An interactive REPL chat in your terminal.
 - A `Context` with a **system** slot (pinned instructions) and a **history** slot (user/assistant turns, auto-managed budget).
 - Every turn: `build()` → **token count** → **overflow check** → **`formatOpenAIMessages()`** → OpenAI API call.
+- A `!compress` command that forces context compression on demand — even when content is within budget.
 - A metadata bar printed after every response showing utilization, token counts, and per-slot stats.
 
 ## Prerequisites
@@ -87,7 +88,8 @@ const ctx = Context.fromParsedConfig(config);
 
 ctx.system(
   'You are a helpful assistant. Answer concisely. ' +
-  'If the user says "!stats", respond with context window statistics instead.'
+  'If the user says "!stats", respond with context window statistics instead. ' +
+  'If the user says "!compress", the system will compress the context window.'
 );
 
 // ── 4. Helper: call OpenAI Chat Completions ──────────────────────────
@@ -140,13 +142,27 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-console.log('slotmux chatbot — type a message, "!stats" for context info, or "exit" to quit.\n');
+console.log('slotmux chatbot — type a message, "!stats" for context info, "!compress" to force compression, or "exit" to quit.\n');
 
 function prompt() {
   rl.question('You > ', async (input) => {
     const text = input.trim();
     if (!text || text === 'exit') {
       rl.close();
+      return;
+    }
+
+    // Handle !compress: force-compress all eligible slots
+    if (text === '!compress') {
+      const before = await ctx.build();
+      const beforeTokens = before.snapshot.meta.totalTokens;
+
+      const after = await ctx.build({ overrides: { forceCompress: true } });
+      const afterTokens = after.snapshot.meta.totalTokens;
+
+      console.log(`\nAssistant > Context compressed: ${beforeTokens} → ${afterTokens} tokens`);
+      printMeta(after.snapshot.meta);
+      prompt();
       return;
     }
 
@@ -232,6 +248,8 @@ Each time you type a message, slotmux does all of this before the API call:
 3. **`formatOpenAIMessages(snapshot.messages)`** — Converts slotmux's compiled messages into OpenAI's `{ role, content }` shape with multimodal and tool-call support.
 4. **`ctx.assistant(reply)`** — Stores the model's reply so it's in scope for the next build.
 
+When the user types `!compress`, the chatbot calls `ctx.build({ overrides: { forceCompress: true } })`. This forces overflow strategies to run on all eligible slots even when content is within budget, using a synthetic reduced budget (50% of current usage) so the strategy has a real compression target. This is useful for proactively shrinking context to free up space before a long conversation fills it.
+
 ## 5. Key features demonstrated
 
 | Feature | Where |
@@ -245,6 +263,7 @@ Each time you type a message, slotmux does all of this before the API call:
 | **Overflow** | The history slot uses `overflow: 'summarize'` — as the conversation grows past the budget, older messages are compressed automatically via the configured `slotmuxProvider`. |
 | **Provider factory** | `slotmuxProvider: openai({ apiKey })` auto-wires summarization — no manual `progressiveSummarize` setup needed. |
 | **Provider formatting** | `formatOpenAIMessages()` handles text, multimodal, and tool messages for OpenAI's API shape. |
+| **Forced compression** | `ctx.build({ overrides: { forceCompress: true } })` — compresses all eligible slots on demand, even when within budget. |
 | **Metadata** | `snapshot.meta` — `totalTokens`, `utilization`, per-slot breakdown, `warnings`, `buildTimeMs`. |
 
 ## Next steps
