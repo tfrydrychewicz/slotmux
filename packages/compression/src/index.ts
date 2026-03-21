@@ -29,6 +29,12 @@ export type {
 
 export { runWithConcurrency } from './concurrency.js';
 
+export { createDefaultExtractFacts, FactStore, parseFactLines } from './fact-extraction.js';
+export type { ExtractFactsFn, ExtractFactsParams, FactEntry, ParseFactResult } from './fact-extraction.js';
+
+export { computeItemImportance } from './importance-scorer.js';
+export type { ImportanceScorerFn } from './importance-scorer.js';
+
 export { DEFAULT_PROGRESSIVE_PROMPTS } from './progressive-prompts.js';
 export { computeDynamicPreserveLastN, partitionProgressiveZones } from './progressive-zones.js';
 export type { ProgressiveZones } from './progressive-zones.js';

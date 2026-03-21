@@ -22,9 +22,39 @@ When a zone is large, it's split into **segments** of ~2-8K tokens each, and eac
 
 All independent segment summarizations run **in parallel** by default, significantly reducing wall-clock latency when the overflow engine needs multiple LLM calls. Set `maxParallelSummarizations` on `overflowConfig` to cap concurrency (e.g. to respect provider rate limits). When omitted, all chunks execute simultaneously.
 
-Each summary call includes a **target token count** in the system prompt and as a `targetTokens` parameter, so the LLM knows how much detail to produce. Provider factories forward this as the appropriate output-length parameter for the LLM API (e.g. `max_completion_tokens` for newer OpenAI models, `max_tokens` for Anthropic).
+Each summary call includes a **target token count** in the system prompt and as a `targetTokens` parameter, so the LLM knows how much detail to produce. The `targetTokens` value guides the prompt instruction only — providers do not pass it as a hard API output limit.
 
-If the result still doesn't fit after Layer 1 and Layer 2 summaries, the Layer 2 summaries are further compressed into a single Layer 3 "essence" summary.
+If the result still doesn't fit after Layer 1 and Layer 2 summaries, the Layer 2 summaries are further compressed into a single Layer 3 "essence" summary. When facts have been extracted from earlier rounds, they are injected into the L3 prompt as hard constraints so the model preserves them even under aggressive compression.
+
+### Fact-aware compression
+
+Narrative summaries are inherently lossy for specific details — names, numbers, dates, and preferences get dropped when the model compresses aggressively. Fact-aware compression addresses this with a **dual-store architecture**:
+
+1. **Extraction-first prompts** — The LLM outputs structured `FACT: subject | predicate | value` lines before writing narrative. Facts are produced first and survive even when the model runs out of space for the narrative tail.
+2. **Fact store** — Extracted facts accumulate in an in-memory store across compression rounds. Duplicates are resolved by keeping the highest-confidence entry.
+3. **Fact block** — A synthetic `Known facts:` item is rendered at the start of the summarized context so the downstream LLM can reference specific details.
+4. **Fact pinning** — When L3 re-compression runs, existing facts are injected into the prompt as "must preserve" constraints.
+
+Control the fact block size with `factBudgetTokens` in `overflowConfig` (default: 20% of `summaryBudgetTokens`, capped at 512 tokens).
+
+### Importance-weighted zone partitioning
+
+By default, non-recent items are split into OLD and MIDDLE zones chronologically — the oldest half goes to OLD (most aggressive compression). When importance scoring is enabled (the default), items are instead sorted by importance before splitting:
+
+- **Low-importance items** (generic filler, small talk) go to the OLD zone and get compressed first.
+- **High-importance items** (containing proper nouns, decisions, preferences, numbers, dates) stay in the MIDDLE zone and survive longer.
+
+The default scorer uses entity density (capitalized multi-word sequences per character), decision language, preference language, and specific fact indicators (numbers, dates, quoted strings). You can provide a custom scorer or disable importance scoring entirely:
+
+```typescript
+overflowConfig: {
+  // Custom domain-specific scorer
+  importanceScorer: (item) => /ProductX/i.test(item.content) ? 10 : 0,
+
+  // Or disable importance scoring (pure chronological)
+  // importanceScorer: null,
+}
+```
 
 ### Usage as overflow strategy
 

@@ -119,6 +119,10 @@ export function createProgressiveSummarizeOverflow(
       return enrichSummaryTokens(raw, countTextTokens);
     }
 
+    const factBudget = oc?.factBudgetTokens;
+    const importanceScorer = oc?.importanceScorer;
+    const extractFacts = oc?.extractFacts;
+
     const raw = await runProgressiveSummarize(progressiveItems, budgetNum, {
       preserveLastN,
       summarizeText: deps.summarizeText,
@@ -128,6 +132,9 @@ export function createProgressiveSummarizeOverflow(
       slot,
       createId,
       ...(maxConc !== undefined ? { maxConcurrency: maxConc } : {}),
+      ...(factBudget !== undefined ? { factBudgetTokens: factBudget } : {}),
+      ...(importanceScorer !== undefined ? { importanceScorer } : {}),
+      ...(extractFacts !== undefined ? { extractFacts } : {}),
     });
 
     return enrichSummaryTokens(raw, countTextTokens);

@@ -215,6 +215,59 @@ const response = await fetch('https://api.openai.com/v1/chat/completions', {
 });
 ```
 
+## Custom fact extraction
+
+The progressive summarizer automatically extracts structured facts from LLM output using `FACT:` lines in the summarization prompt. For domain-specific use cases, you can inject a dedicated extraction function that runs as a **separate pass** before summarization:
+
+```typescript
+import { createContext, Context } from 'slotmux';
+import { openai } from '@slotmux/providers';
+
+const { config } = createContext({
+  model: 'gpt-5.4-mini',
+  preset: 'chat',
+  slotmuxProvider: openai({ apiKey: process.env.OPENAI_API_KEY! }),
+  slots: {
+    history: {
+      priority: 50,
+      budget: { flex: true },
+      overflow: 'summarize',
+      overflowConfig: {
+        extractFacts: async ({ text }) => {
+          // Domain-specific: extract order IDs and product mentions
+          const facts = [];
+          for (const m of text.matchAll(/order\s*#(\w+)/gi)) {
+            facts.push({
+              subject: 'user',
+              predicate: 'placed_order',
+              value: m[1]!,
+              sourceItemId: 'custom',
+              confidence: 1.0,
+              createdAt: Date.now(),
+            });
+          }
+          return facts;
+        },
+      },
+      defaultRole: 'user',
+      position: 'after',
+    },
+  },
+});
+```
+
+The extracted facts merge with any `FACT:` lines from the summarization output. Both sources accumulate in the fact store and are rendered as a `Known facts:` block at the start of the summarized context.
+
+For an LLM-backed default that uses a structured extraction prompt:
+
+```typescript
+import { createDefaultExtractFacts } from '@slotmux/compression';
+
+overflowConfig: {
+  extractFacts: createDefaultExtractFacts(mySummarizeTextFn),
+}
+```
+
 ## Production checklist
 
 - **Set `reserveForResponse`** — always leave room for the model's reply.

@@ -1,5 +1,5 @@
 /**
- * Progressive summarization (§8.1).
+ * Progressive summarization (§8.1, §8.4).
  *
  * @packageDocumentation
  */
@@ -7,6 +7,8 @@
 import { nanoid } from 'nanoid';
 
 import { runWithConcurrency } from './concurrency.js';
+import { FactStore, parseFactLines, type ExtractFactsFn } from './fact-extraction.js';
+import { computeItemImportance, type ImportanceScorerFn } from './importance-scorer.js';
 import { getPlainTextForLossless } from './lossless-compressor.js';
 import { DEFAULT_PROGRESSIVE_PROMPTS } from './progressive-prompts.js';
 import {
@@ -39,6 +41,38 @@ export type RunProgressiveSummarizeOptions = {
    * Default: `Infinity` (all chunks run in parallel).
    */
   readonly maxConcurrency?: number;
+  /**
+   * Maximum token budget for the rendered fact block (§8.4).
+   *
+   * Extracted facts are rendered as a synthetic content item at the start of
+   * the summarized output. This controls how many tokens that block may consume.
+   * Default: 20% of `summaryBudgetTokens`, capped at 512 tokens.
+   */
+  readonly factBudgetTokens?: number;
+  /**
+   * Custom importance scorer for zone partitioning (§8.4.4).
+   *
+   * When provided, non-recent items are sorted by importance before being split
+   * into old/middle zones. Lowest-scored items go to the OLD zone (most aggressive
+   * compression). When omitted, the default {@link computeItemImportance} is used,
+   * which scores by entity density, decisions, preferences, and specific facts.
+   *
+   * Set to `null` to disable importance-weighted partitioning entirely
+   * (pure chronological split).
+   */
+  readonly importanceScorer?: ImportanceScorerFn | null;
+  /**
+   * Dedicated fact extraction function (§8.4 P2).
+   *
+   * When provided, a separate extraction pass runs on each chunk's text
+   * **before** summarization. Extracted facts are merged into the
+   * {@link FactStore} and survive alongside inline `FACT:` lines from the
+   * summarization output itself.
+   *
+   * Use {@link createDefaultExtractFacts} for an LLM-backed default, or
+   * provide a custom function (e.g. regex-based domain extraction).
+   */
+  readonly extractFacts?: ExtractFactsFn;
 };
 
 function plain(item: ProgressiveItem): string {
@@ -129,7 +163,11 @@ function chunkZoneByTokenBudget(
  * each segment is summarized independently, producing multiple summary items
  * that collectively fill the summary budget.
  *
- * Order: `[...Layer2Summaries?, ...Layer1Summaries?, ...RECENT]` with summary `createdAt` just before the oldest RECENT message.
+ * Facts are extracted from LLM output (§8.4) and rendered as a compact
+ * synthetic item at the start of the output so specific details survive
+ * compression rounds.
+ *
+ * Order: `[factBlock?, ...Layer2Summaries?, ...Layer1Summaries?, ...RECENT]` with summary `createdAt` just before the oldest RECENT message.
  */
 export async function runProgressiveSummarize(
   items: readonly ProgressiveItem[],
@@ -151,9 +189,16 @@ export async function runProgressiveSummarize(
     return sorted;
   }
 
-  const { old, middle, recent } = partitionProgressiveZones(sorted, preserveLastN);
+  const scorer = options.importanceScorer === null
+    ? undefined
+    : options.importanceScorer ?? computeItemImportance;
+  const { old, middle, recent } = partitionProgressiveZones(sorted, preserveLastN, scorer);
   const summaryCap =
     options.summaryBudgetTokens ?? Math.max(64, Math.floor(budgetTokens * 0.15));
+
+  const defaultFactBudget = Math.min(512, Math.floor(summaryCap * 0.2));
+  const factBudgetTokens = options.factBudgetTokens ?? defaultFactBudget;
+  const factBudgetChars = factBudgetTokens * 4;
 
   const segmentSize = Math.min(8192, Math.max(2048, Math.floor(budgetTokens * 0.15)));
 
@@ -170,6 +215,9 @@ export async function runProgressiveSummarize(
   const perOldCap = Math.max(MIN_PER_CHUNK_TOKENS, Math.floor(l2Cap / Math.max(1, oldChunks.length)));
   const perMidCap = Math.max(MIN_PER_CHUNK_TOKENS, Math.floor(l1Cap / Math.max(1, midChunks.length)));
 
+  const factStore = new FactStore();
+  const { extractFacts } = options;
+
   const summarizeChunk = async (
     chunk: readonly ProgressiveItem[],
     layer: 1 | 2,
@@ -180,6 +228,20 @@ export async function runProgressiveSummarize(
     const payload = chunk.map(plain).filter((t) => t.length > 0).join('\n\n');
     if (payload.length === 0) return null;
 
+    const chunkSourceId = chunk.map((x) => x.id).join('+');
+
+    if (extractFacts !== undefined) {
+      try {
+        const extracted = await extractFacts({
+          text: payload,
+          existingFacts: factStore.all(),
+        });
+        factStore.addAll(extracted);
+      } catch {
+        /* extraction failure is non-fatal */
+      }
+    }
+
     let text: string;
     try {
       const raw = await summarizeText({
@@ -188,7 +250,10 @@ export async function runProgressiveSummarize(
         userPayload: payload,
         targetTokens: perChunkCap,
       });
-      text = extractSummarizeText(raw);
+      const fullText = extractSummarizeText(raw);
+      const parsed = parseFactLines(fullText, chunkSourceId, nowFn());
+      factStore.addAll(parsed.facts);
+      text = parsed.narrative;
     } catch {
       text = '';
     }
@@ -212,22 +277,52 @@ export async function runProgressiveSummarize(
   const l1Summaries = allResults.slice(oldChunks.length).filter((x): x is ProgressiveItem => x !== null);
 
   let recentWork = [...recent];
-  const chain = (): ProgressiveItem[] => [...l2Summaries, ...l1Summaries, ...recentWork];
+
+  const makeFactItem = (): ProgressiveItem | null => {
+    const rendered = factStore.render(factBudgetChars);
+    if (rendered.length === 0) return null;
+    return {
+      id: createId(),
+      role: 'assistant',
+      content: rendered,
+      slot: options.slot,
+      createdAt: summaryTimeForTick(-1),
+      pinned: true,
+    };
+  };
+
+  const chain = (): ProgressiveItem[] => {
+    const factItem = makeFactItem();
+    return [...(factItem ? [factItem] : []), ...l2Summaries, ...l1Summaries, ...recentWork];
+  };
   let out = chain();
 
   if (sumTok(out) > budgetTokens && l2Summaries.length > 0) {
     const l2Payload = l2Summaries.map(plain).filter((t) => t.length > 0).join('\n\n');
     if (l2Payload.length > 0) {
       const l3Cap = Math.max(MIN_PER_CHUNK_TOKENS, Math.floor(summaryCap * 0.15));
+
+      let l3Prompt = promptPack.layer3;
+      const pinnedFactBlock = factStore.renderAsFactLines(factBudgetChars);
+      if (pinnedFactBlock.length > 0) {
+        l3Prompt +=
+          '\n\nThe following facts MUST be preserved verbatim in your output:\n' +
+          pinnedFactBlock +
+          '\nCompress the narrative, but do NOT drop any of the above facts.';
+      }
+
       let text: string;
       try {
         const raw = await summarizeText({
           layer: 3,
-          systemPrompt: withTargetLength(promptPack.layer3, l3Cap),
+          systemPrompt: withTargetLength(l3Prompt, l3Cap),
           userPayload: l2Payload,
           targetTokens: l3Cap,
         });
-        text = extractSummarizeText(raw);
+        const fullText = extractSummarizeText(raw);
+        const parsed = parseFactLines(fullText, 'l3-consolidation', nowFn());
+        factStore.addAll(parsed.facts);
+        text = parsed.narrative;
       } catch {
         text = '';
       }

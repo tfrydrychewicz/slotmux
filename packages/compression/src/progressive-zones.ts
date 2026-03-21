@@ -1,9 +1,10 @@
 /**
- * RECENT / MIDDLE / OLD partitioning for progressive summarization (§8.1).
+ * RECENT / MIDDLE / OLD partitioning for progressive summarization (§8.1, §8.4.4).
  *
  * @packageDocumentation
  */
 
+import type { ImportanceScorerFn } from './importance-scorer.js';
 import type { ProgressiveItem } from './progressive-types.js';
 
 export type ProgressiveZones = {
@@ -53,11 +54,22 @@ export function computeDynamicPreserveLastN(
 /**
  * Sorts by `createdAt` ascending, then partitions:
  * - **recent**: every `pinned` item, plus the last `preserveLastN` non-pinned items (by position in sorted order).
- * - **old** / **middle**: remaining non-pinned items split 50/50 (older half = OLD).
+ * - **old** / **middle**: remaining non-pinned items split 50/50.
+ *
+ * When an `importanceScorer` is provided (§8.4.4), the non-recent items are
+ * sorted by `(importance ASC, createdAt ASC)` before splitting — lowest-importance,
+ * oldest items go to the OLD zone (compressed most aggressively), while
+ * highest-importance items stay in the MIDDLE zone.
+ *
+ * @param items - All items to partition
+ * @param preserveLastN - Number of recent non-pinned items to keep verbatim
+ * @param importanceScorer - Optional scoring function; when omitted, the split
+ *   is purely chronological (same behavior as before §8.4.4)
  */
 export function partitionProgressiveZones(
   items: readonly ProgressiveItem[],
   preserveLastN: number,
+  importanceScorer?: ImportanceScorerFn,
 ): ProgressiveZones {
   const sorted = [...items].sort((a, b) => a.createdAt - b.createdAt);
   const n = sorted.length;
@@ -87,6 +99,15 @@ export function partitionProgressiveZones(
     if (!recentIndexSet.has(i)) {
       restIndices.push(i);
     }
+  }
+
+  if (importanceScorer !== undefined) {
+    restIndices.sort((idxA, idxB) => {
+      const scoreA = importanceScorer(sorted[idxA]!);
+      const scoreB = importanceScorer(sorted[idxB]!);
+      if (scoreA !== scoreB) return scoreA - scoreB;
+      return sorted[idxA]!.createdAt - sorted[idxB]!.createdAt;
+    });
   }
 
   const mid = Math.floor(restIndices.length / 2);

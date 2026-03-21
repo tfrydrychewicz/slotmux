@@ -259,6 +259,84 @@ export interface OverflowConfig {
    * ```
    */
   maxParallelSummarizations?: number;
+
+  /**
+   * Maximum token budget for the fact block rendered during summarization (§8.4).
+   *
+   * The summarizer extracts structured facts (`FACT: subject | predicate | value`)
+   * from LLM output and renders them as a compact block at the start of the
+   * summarized context. This setting controls how many tokens that block may
+   * consume. Default: 20% of `summaryBudgetTokens`, capped at 512 tokens.
+   *
+   * @example
+   * ```typescript
+   * overflowConfig: {
+   *   factBudgetTokens: 256,  // up to 256 tokens for extracted facts
+   * }
+   * ```
+   */
+  factBudgetTokens?: number;
+
+  /**
+   * Custom importance scorer for zone partitioning (§8.4.4).
+   *
+   * When the `summarize` strategy partitions items into zones, it uses importance
+   * scoring to decide which items go to the OLD zone (compressed most aggressively)
+   * vs MIDDLE zone. Higher-scored items survive longer in the context window.
+   *
+   * - Omit to use the default scorer (entity density, decisions, preferences).
+   * - Set to `null` to disable importance-weighted partitioning (pure chronological).
+   * - Set to a function to provide domain-specific scoring.
+   *
+   * @example
+   * ```typescript
+   * overflowConfig: {
+   *   importanceScorer: (item) => {
+   *     // Custom: score higher if content mentions a product name
+   *     return /ProductX|ProductY/i.test(item.content) ? 10 : 0;
+   *   },
+   * }
+   * ```
+   */
+  importanceScorer?: ((item: { readonly content: string | unknown }) => number) | null;
+
+  /**
+   * Dedicated fact extraction function (§8.4 P2).
+   *
+   * When set, a separate extraction pass runs on each chunk's text before
+   * summarization. Extracted facts are merged into the fact store and survive
+   * alongside inline `FACT:` lines from the summarization output.
+   *
+   * Use `createDefaultExtractFacts(summarizeText)` from `@slotmux/compression`
+   * for an LLM-backed default, or provide a custom function for domain-specific
+   * extraction (e.g. regex-based order ID parsing).
+   *
+   * @example
+   * ```typescript
+   * import { createDefaultExtractFacts } from '@slotmux/compression';
+   *
+   * overflowConfig: {
+   *   extractFacts: createDefaultExtractFacts(mySummarizeTextFn),
+   * }
+   * ```
+   */
+  extractFacts?: (params: {
+    readonly text: string;
+    readonly existingFacts: ReadonlyArray<{
+      readonly subject: string;
+      readonly predicate: string;
+      readonly value: string;
+    }>;
+  }) => Promise<
+    ReadonlyArray<{
+      readonly subject: string;
+      readonly predicate: string;
+      readonly value: string;
+      readonly sourceItemId: string;
+      readonly confidence: number;
+      readonly createdAt: number;
+    }>
+  >;
 }
 
 // ==========================================
