@@ -115,6 +115,42 @@ try {
 
 **Recovery:** The fallback chain catches this automatically and proceeds to the next strategy. If you're using `'summarize'` directly (not `'fallback-chain'`), catch it and fall back manually.
 
+### Provider rate limit errors
+
+All provider factories (`openai()`, `anthropic()`, `google()`, `mistral()`, `ollama()`) use an **adaptive rate limiter** to handle HTTP 429 (rate limit) responses. The limiter coordinates across concurrent summarization calls using AIMD (Additive Increase / Multiplicative Decrease) congestion control:
+
+- **On 429** — halves effective concurrency and pauses all pending calls for the `Retry-After` duration, preventing thundering-herd retries.
+- **On success** — slowly increases concurrency by 1, recovering throughput after the rate limit clears.
+
+Retry wait time is resolved from the `Retry-After` response header, body text hints like `"try again in 1.5s"`, or a 1-second default. Up to 5 retry attempts are made per call by default.
+
+- **`ProviderRateLimitError`** — Thrown when all retry attempts are exhausted. The adaptive limiter already reduces parallelism automatically; if you still see this, increase `maxRetries` in the provider options.
+- **`OpenAIApiError`** — Non-retryable OpenAI API errors (401 unauthorized, 400 bad request, 500 server error). These propagate immediately without retry.
+
+Both error types are exported from `@slotmux/providers`. When using `overflow: 'summarize'` directly, catch them in your `build()` call:
+
+```typescript
+import { ProviderRateLimitError, OpenAIApiError } from '@slotmux/providers';
+
+try {
+  await ctx.build();
+} catch (err) {
+  if (err instanceof ProviderRateLimitError) {
+    // All retries exhausted — the limiter already reduced concurrency
+  }
+  if (err instanceof OpenAIApiError) {
+    // API key invalid, model not found, etc. (OpenAI-specific)
+  }
+}
+```
+
+You can configure the retry count per provider:
+
+```typescript
+openai({ apiKey: '...', maxRetries: 10 })   // 10 retries with adaptive backoff
+anthropic({ apiKey: '...', maxRetries: 0 }) // no retries, fail immediately on 429
+```
+
 ### SnapshotCorruptedError
 
 **When:** `ContextSnapshot.deserialize()` detects a checksum mismatch.

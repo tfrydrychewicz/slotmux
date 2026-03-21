@@ -20,7 +20,9 @@ Content is divided into **zones** based on age and importance:
 
 When a zone is large, it's split into **segments** of ~2-8K tokens each, and each segment is summarized independently. This produces multiple summary items rather than one monolithic summary, preserving more information across the full conversation history.
 
-Each summary call includes a **target token count** in the system prompt and as a `targetTokens` parameter, so the LLM knows how much detail to produce. Provider factories forward this as `max_tokens` to the API.
+All independent segment summarizations run **in parallel** by default, significantly reducing wall-clock latency when the overflow engine needs multiple LLM calls. Set `maxParallelSummarizations` on `overflowConfig` to cap concurrency (e.g. to respect provider rate limits). When omitted, all chunks execute simultaneously.
+
+Each summary call includes a **target token count** in the system prompt and as a `targetTokens` parameter, so the LLM knows how much detail to produce. Provider factories forward this as the appropriate output-length parameter for the LLM API (e.g. `max_completion_tokens` for newer OpenAI models, `max_tokens` for Anthropic).
 
 If the result still doesn't fit after Layer 1 and Layer 2 summaries, the Layer 2 summaries are further compressed into a single Layer 3 "essence" summary.
 
@@ -64,7 +66,7 @@ An alternative to progressive summarization that works better for large batches 
 1. **Map** — Split content into chunks that fit a token budget, then summarize each chunk independently.
 2. **Reduce** — Merge the chunk summaries into a final summary.
 
-This approach parallelizes well and handles content that doesn't have a natural temporal ordering.
+The map phase runs all chunk summarizations in parallel by default, bounded by `maxParallelSummarizations` when set. This approach handles content that doesn't have a natural temporal ordering.
 
 ### Usage
 

@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 
 import { Context, validateContextConfig } from 'slotmux';
-import { openai } from '@slotmux/providers';
+import { openai, ProviderRateLimitError, OpenAIApiError, type SummarizeTextResult } from '@slotmux/providers';
 
 import type { DatasetEntry } from './types.js';
 
@@ -44,8 +44,9 @@ const strategy = args[1] ?? 'truncate';
 const budget = Number(args[2] ?? '8192');
 
 const OPENAI_API_KEY = process.env['OPENAI_API_KEY'];
-const COMPRESSION_MODEL = process.env['LONGMEM_COMPRESSION_MODEL'] ?? 'gpt-4o-mini';
-const READER_MODEL = process.env['LONGMEM_READER_MODEL'] ?? 'gpt-4o-mini';
+const COMPRESSION_MODEL = process.env['LONGMEM_COMPRESSION_MODEL'] ?? 'gpt-5.4-mini';
+const READER_MODEL = process.env['LONGMEM_READER_MODEL'] ?? 'gpt-5.4-mini';
+const VERBOSE_SUMMARIZE = process.env['VERBOSE_SUMMARIZE'] === '1';
 
 const needsApiKey = strategy === 'summarize' || strategy === 'fallback-chain';
 if (needsApiKey && !OPENAI_API_KEY) {
@@ -95,14 +96,141 @@ const systemBudget = 200;
 const historyBudget = budget - systemBudget;
 const { overflow, overflowConfig } = buildSlotOverflow(strategy);
 
+type SummarizeCallLog = {
+  callId: number;
+  layer: number;
+  targetTokens: number | null;
+  inputChars: number;
+  outputChars: number;
+  elapsedMs: number;
+  empty: boolean;
+  httpStatus: number | null;
+  finishReason: string | null;
+  error: string | null;
+  promptPreview: string;
+  responsePreview: string;
+};
+
+let summarizeCallNum = 0;
+let pendingSummarizeLogs: SummarizeCallLog[] = [];
+
+function drainSummarizeLogs(): SummarizeCallLog[] {
+  const logs = pendingSummarizeLogs;
+  pendingSummarizeLogs = [];
+  return logs;
+}
+
+function buildLoggingProvider(baseUrl: string, model: string, apiKey: string): ReturnType<typeof openai> {
+  const provider = openai({ apiKey, compressionModel: model, baseUrl });
+
+  if (!VERBOSE_SUMMARIZE) return provider;
+
+  const originalSummarize = provider.summarizeText!;
+
+  return {
+    ...provider,
+    summarizeText: async (params) => {
+      const callId = ++summarizeCallNum;
+      const t0 = performance.now();
+
+      let rawResult: string | SummarizeTextResult;
+      try {
+        rawResult = await originalSummarize(params);
+      } catch (err) {
+        const elapsedMs = Math.round(performance.now() - t0);
+        let httpStatus: number | null = null;
+        let errorText: string;
+
+        if (err instanceof ProviderRateLimitError) {
+          httpStatus = err.httpStatus;
+          errorText = err.responseBody.slice(0, 1000);
+        } else if (err instanceof OpenAIApiError) {
+          httpStatus = err.httpStatus;
+          errorText = err.message;
+        } else {
+          errorText = `fetch error: ${err instanceof Error ? err.message : String(err)}`;
+        }
+
+        pendingSummarizeLogs.push({
+          callId,
+          layer: params.layer,
+          targetTokens: params.targetTokens ?? null,
+          inputChars: params.userPayload.length,
+          outputChars: 0,
+          elapsedMs,
+          empty: true,
+          httpStatus,
+          finishReason: null,
+          error: errorText,
+          promptPreview: params.systemPrompt.slice(0, 200),
+          responsePreview: '',
+        });
+
+        const statusTag = httpStatus !== null ? ` HTTP=${String(httpStatus)}` : '';
+        console.log(
+          `    [summarize #${String(callId).padStart(3)}] ` +
+          `layer=${String(params.layer)} ` +
+          `targetTokens=${String(params.targetTokens ?? 'none').padStart(5)} ` +
+          `input=${String(params.userPayload.length).padStart(6)} chars ` +
+          `FAILED ${String(elapsedMs).padStart(5)}ms${statusTag}`,
+        );
+        console.log(`      error: ${errorText.slice(0, 200)}`);
+        throw err;
+      }
+
+      const text = typeof rawResult === 'string' ? rawResult : rawResult.text;
+      const finishReason = typeof rawResult === 'string' ? null : rawResult.finishReason ?? null;
+      const httpStatus = typeof rawResult === 'string' ? null : rawResult.httpStatus ?? null;
+
+      const elapsedMs = Math.round(performance.now() - t0);
+      const empty = text.trim().length === 0;
+
+      pendingSummarizeLogs.push({
+        callId,
+        layer: params.layer,
+        targetTokens: params.targetTokens ?? null,
+        inputChars: params.userPayload.length,
+        outputChars: text.length,
+        elapsedMs,
+        empty,
+        httpStatus,
+        finishReason,
+        error: null,
+        promptPreview: params.systemPrompt.slice(0, 200),
+        responsePreview: text.slice(0, 500),
+      });
+
+      const frTag = finishReason !== null ? ` finish=${finishReason}` : '';
+      const statusTag = httpStatus !== null ? ` HTTP=${String(httpStatus)}` : '';
+      console.log(
+        `    [summarize #${String(callId).padStart(3)}] ` +
+        `layer=${String(params.layer)} ` +
+        `targetTokens=${String(params.targetTokens ?? 'none').padStart(5)} ` +
+        `input=${String(params.userPayload.length).padStart(6)} chars ` +
+        `output=${String(text.length).padStart(5)} chars ` +
+        `${String(elapsedMs).padStart(5)}ms${statusTag}${frTag}` +
+        `${empty ? '  ⚠️ EMPTY' : ''}`,
+      );
+      if (empty || text.length < 20) {
+        console.log(`      prompt: ${params.systemPrompt.slice(0, 120)}…`);
+        console.log(`      response: ${JSON.stringify(text)}`);
+      }
+      return rawResult;
+    },
+  };
+}
+
+const OPENAI_BASE_URL = 'https://api.openai.com/v1';
+const rawProvider = OPENAI_API_KEY
+  ? buildLoggingProvider(OPENAI_BASE_URL, COMPRESSION_MODEL, OPENAI_API_KEY)
+  : undefined;
+
 const parsed = validateContextConfig({
   model: READER_MODEL,
   maxTokens: budget,
   reserveForResponse: 0,
   lazyContentItemTokens: true,
-  ...(OPENAI_API_KEY
-    ? { slotmuxProvider: openai({ apiKey: OPENAI_API_KEY, compressionModel: COMPRESSION_MODEL }) }
-    : {}),
+  ...(rawProvider !== undefined ? { slotmuxProvider: rawProvider } : {}),
   slots: {
     system: {
       priority: 100,
@@ -180,6 +308,8 @@ async function recordStep(label: string, sessionIndex: number | null, turnsAdded
 
   const overflowOccurred = meta.evictions.length > 0 || meta.compressions.length > 0;
 
+  const summarizeCalls = drainSummarizeLogs();
+
   const line = {
     _type: 'step' as const,
     step: stepNum,
@@ -197,6 +327,7 @@ async function recordStep(label: string, sessionIndex: number | null, turnsAdded
     compressionCount: meta.compressions.length,
     evictionCount: meta.evictions.length,
     warnings: meta.warnings.map((w) => w.message),
+    ...(summarizeCalls.length > 0 ? { summarizeCalls } : {}),
     messages: snapshot.messages.map((m) => ({
       role: m.role,
       content: m.content,

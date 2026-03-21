@@ -68,7 +68,7 @@ Compresses older content using a summarization function. Supports three modes vi
 - `'builtin:map-reduce'` — Splits content into chunks, summarizes each, then merges.
 - A custom `SummarizerFn` — Your own async function.
 
-The summarizer produces output sized to fill the available budget. Large zones are split into multiple segments and summarized independently, so information is preserved across the full summary rather than compressed into one short paragraph.
+The summarizer produces output sized to fill the available budget. Large zones are split into multiple segments and summarized independently, so information is preserved across the full summary rather than compressed into one short paragraph. All independent chunk summarizations run in parallel by default, significantly reducing wall-clock latency when multiple LLM calls are needed.
 
 When `preserveLastN` is omitted, slotmux dynamically calculates how many recent items to keep verbatim — roughly 50% of the slot budget — so smaller budgets keep fewer items and larger budgets keep more.
 
@@ -79,6 +79,7 @@ overflowConfig: {
   preserveLastN: 10,            // or omit for dynamic sizing
   summaryBudget: { percent: 30 },
   proactiveThreshold: 0.85,     // start compressing at 85% utilization
+  maxParallelSummarizations: 4, // limit concurrent LLM calls (default: unlimited)
 }
 ```
 
@@ -99,6 +100,8 @@ createContext({
 });
 // summarization just works ✓
 ```
+
+All provider factories use an adaptive rate limiter (AIMD) that coordinates retry across concurrent summarization calls — when one call hits HTTP 429, the limiter halves effective concurrency and pauses the batch, preventing thundering-herd retries. The OpenAI provider also auto-detects whether the model requires `max_tokens` or `max_completion_tokens`. Configure `maxRetries` in provider options to control retry behavior. If a summarization call fails after retries, the error propagates — use the `fallback-chain` strategy for graceful degradation.
 
 Without a `slotmuxProvider`, you must inject a `progressiveSummarize` implementation manually via the overflow engine options.
 :::

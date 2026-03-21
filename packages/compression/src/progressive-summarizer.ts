@@ -6,12 +6,14 @@
 
 import { nanoid } from 'nanoid';
 
+import { runWithConcurrency } from './concurrency.js';
 import { getPlainTextForLossless } from './lossless-compressor.js';
 import { DEFAULT_PROGRESSIVE_PROMPTS } from './progressive-prompts.js';
-import type {
-  ProgressiveItem,
-  ProgressivePrompts,
-  ProgressiveSummarizeTextFn,
+import {
+  extractSummarizeText,
+  type ProgressiveItem,
+  type ProgressivePrompts,
+  type ProgressiveSummarizeTextFn,
 } from './progressive-types.js';
 import { partitionProgressiveZones } from './progressive-zones.js';
 
@@ -29,11 +31,25 @@ export type RunProgressiveSummarizeOptions = {
   readonly prompts?: Partial<ProgressivePrompts>;
   readonly createId?: () => string;
   readonly now?: () => number;
+  /**
+   * Maximum number of concurrent LLM summarization calls.
+   *
+   * Old-zone and middle-zone chunks are independent and can be summarized in
+   * parallel. Set this to limit API concurrency (e.g. to respect rate limits).
+   * Default: `Infinity` (all chunks run in parallel).
+   */
+  readonly maxConcurrency?: number;
 };
 
 function plain(item: ProgressiveItem): string {
   return getPlainTextForLossless(item);
 }
+
+/**
+ * Minimum per-chunk token budget. LLMs struggle to produce useful output
+ * below this threshold — responses are frequently empty or truncated.
+ */
+const MIN_PER_CHUNK_TOKENS = 200;
 
 function makeSummary(
   text: string,
@@ -51,6 +67,21 @@ function makeSummary(
     createdAt,
     summarizes: [...summarizes],
   };
+}
+
+/**
+ * Fallback when the LLM returns empty or errors out: extract the first
+ * `targetTokens` worth of text from the original payload, preserving
+ * at least some information rather than producing a useless "(empty summary)".
+ *
+ * Uses ~4 chars per token as a rough estimate (English text average).
+ */
+function truncateAsLastResort(payload: string, targetTokens: number): string {
+  const charBudget = targetTokens * 4;
+  if (payload.length <= charBudget) return payload;
+  const cutPos = payload.lastIndexOf(' ', charBudget);
+  const end = cutPos > charBudget * 0.5 ? cutPos : charBudget;
+  return payload.slice(0, end) + '…';
 }
 
 /**
@@ -128,52 +159,57 @@ export async function runProgressiveSummarize(
 
   const minRecentTime =
     recent.length > 0 ? Math.min(...recent.map((r) => r.createdAt)) : nowFn();
-  let tick = 0;
-  const nextSummaryTime = (): number => minRecentTime - 1000 - tick++ * 1000;
-
-  let l2Summaries: ProgressiveItem[] = [];
-  let l1Summaries: ProgressiveItem[] = [];
+  const summaryTimeForTick = (tick: number): number => minRecentTime - 1000 - tick * 1000;
 
   const l2Cap = Math.floor(summaryCap * 0.55);
   const l1Cap = Math.floor(summaryCap * 0.45);
+  const maxConc = options.maxConcurrency ?? Infinity;
 
-  if (old.length > 0) {
-    const oldChunks = chunkZoneByTokenBudget(old, segmentSize, sumTok);
-    const perChunkCap = Math.max(64, Math.floor(l2Cap / Math.max(1, oldChunks.length)));
+  const oldChunks = old.length > 0 ? chunkZoneByTokenBudget(old, segmentSize, sumTok) : [];
+  const midChunks = middle.length > 0 ? chunkZoneByTokenBudget(middle, segmentSize, sumTok) : [];
+  const perOldCap = Math.max(MIN_PER_CHUNK_TOKENS, Math.floor(l2Cap / Math.max(1, oldChunks.length)));
+  const perMidCap = Math.max(MIN_PER_CHUNK_TOKENS, Math.floor(l1Cap / Math.max(1, midChunks.length)));
 
-    for (const chunk of oldChunks) {
-      const payload = chunk.map(plain).filter((t) => t.length > 0).join('\n\n');
-      if (payload.length === 0) continue;
-      const text = await summarizeText({
-        layer: 2,
-        systemPrompt: withTargetLength(promptPack.layer2, perChunkCap),
+  const summarizeChunk = async (
+    chunk: readonly ProgressiveItem[],
+    layer: 1 | 2,
+    perChunkCap: number,
+    prompt: string,
+    tick: number,
+  ): Promise<ProgressiveItem | null> => {
+    const payload = chunk.map(plain).filter((t) => t.length > 0).join('\n\n');
+    if (payload.length === 0) return null;
+
+    let text: string;
+    try {
+      const raw = await summarizeText({
+        layer,
+        systemPrompt: withTargetLength(prompt, perChunkCap),
         userPayload: payload,
         targetTokens: perChunkCap,
       });
-      l2Summaries.push(
-        makeSummary(text, chunk.map((x) => x.id), options.slot, createId, nextSummaryTime()),
-      );
+      text = extractSummarizeText(raw);
+    } catch {
+      text = '';
     }
-  }
 
-  if (middle.length > 0) {
-    const midChunks = chunkZoneByTokenBudget(middle, segmentSize, sumTok);
-    const perChunkCap = Math.max(64, Math.floor(l1Cap / Math.max(1, midChunks.length)));
-
-    for (const chunk of midChunks) {
-      const payload = chunk.map(plain).filter((t) => t.length > 0).join('\n\n');
-      if (payload.length === 0) continue;
-      const text = await summarizeText({
-        layer: 1,
-        systemPrompt: withTargetLength(promptPack.layer1, perChunkCap),
-        userPayload: payload,
-        targetTokens: perChunkCap,
-      });
-      l1Summaries.push(
-        makeSummary(text, chunk.map((x) => x.id), options.slot, createId, nextSummaryTime()),
-      );
+    if (text.trim().length === 0) {
+      text = truncateAsLastResort(payload, perChunkCap);
     }
-  }
+
+    return makeSummary(text, chunk.map((x) => x.id), options.slot, createId, summaryTimeForTick(tick));
+  };
+
+  const allTasks: Array<() => Promise<ProgressiveItem | null>> = [
+    ...oldChunks.map((chunk, i) =>
+      () => summarizeChunk(chunk, 2, perOldCap, promptPack.layer2, i)),
+    ...midChunks.map((chunk, i) =>
+      () => summarizeChunk(chunk, 1, perMidCap, promptPack.layer1, oldChunks.length + i)),
+  ];
+
+  const allResults = await runWithConcurrency(allTasks, maxConc);
+  let l2Summaries = allResults.slice(0, oldChunks.length).filter((x): x is ProgressiveItem => x !== null);
+  const l1Summaries = allResults.slice(oldChunks.length).filter((x): x is ProgressiveItem => x !== null);
 
   let recentWork = [...recent];
   const chain = (): ProgressiveItem[] => [...l2Summaries, ...l1Summaries, ...recentWork];
@@ -182,15 +218,25 @@ export async function runProgressiveSummarize(
   if (sumTok(out) > budgetTokens && l2Summaries.length > 0) {
     const l2Payload = l2Summaries.map(plain).filter((t) => t.length > 0).join('\n\n');
     if (l2Payload.length > 0) {
-      const l3Cap = Math.max(64, Math.floor(summaryCap * 0.15));
-      const text = await summarizeText({
-        layer: 3,
-        systemPrompt: withTargetLength(promptPack.layer3, l3Cap),
-        userPayload: l2Payload,
-        targetTokens: l3Cap,
-      });
+      const l3Cap = Math.max(MIN_PER_CHUNK_TOKENS, Math.floor(summaryCap * 0.15));
+      let text: string;
+      try {
+        const raw = await summarizeText({
+          layer: 3,
+          systemPrompt: withTargetLength(promptPack.layer3, l3Cap),
+          userPayload: l2Payload,
+          targetTokens: l3Cap,
+        });
+        text = extractSummarizeText(raw);
+      } catch {
+        text = '';
+      }
+      if (text.trim().length === 0) {
+        text = truncateAsLastResort(l2Payload, l3Cap);
+      }
       const priorIds = l2Summaries.flatMap((s) => [...(s.summarizes ?? []), s.id]);
-      const l3 = makeSummary(text, priorIds, options.slot, createId, nextSummaryTime());
+      const l3Tick = oldChunks.length + midChunks.length;
+      const l3 = makeSummary(text, priorIds, options.slot, createId, summaryTimeForTick(l3Tick));
       l2Summaries = [l3];
       out = chain();
     }

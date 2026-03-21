@@ -25,11 +25,12 @@ describe('openai()', () => {
   });
 
   it('calls OpenAI chat completions for summarization', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        choices: [{ message: { content: 'Summary text' } }],
-      }),
-    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: 'Summary text' } }] }),
+        { status: 200 },
+      ),
+    );
 
     const provider = openai({ apiKey: 'test-key' });
     const result = await provider.summarizeText!({
@@ -38,7 +39,7 @@ describe('openai()', () => {
       userPayload: 'Long text here',
     });
 
-    expect(result).toBe('Summary text');
+    expect(result).toEqual({ text: 'Summary text', finishReason: null, httpStatus: 200 });
     expect(mockFetch).toHaveBeenCalledWith(
       'https://api.openai.com/v1/chat/completions',
       expect.objectContaining({
@@ -56,11 +57,12 @@ describe('openai()', () => {
   });
 
   it('uses custom compressionModel', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        choices: [{ message: { content: 'ok' } }],
-      }),
-    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: 'ok' } }] }),
+        { status: 200 },
+      ),
+    );
 
     const provider = openai({
       apiKey: 'test-key',
@@ -79,11 +81,12 @@ describe('openai()', () => {
   });
 
   it('uses custom baseUrl', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        choices: [{ message: { content: 'ok' } }],
-      }),
-    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: 'ok' } }] }),
+        { status: 200 },
+      ),
+    );
 
     const provider = openai({
       apiKey: 'key',
@@ -142,11 +145,12 @@ describe('anthropic()', () => {
   });
 
   it('calls Anthropic messages API for summarization', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        content: [{ type: 'text', text: 'Anthropic summary' }],
-      }),
-    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ content: [{ type: 'text', text: 'Anthropic summary' }] }),
+        { status: 200 },
+      ),
+    );
 
     const provider = anthropic({ apiKey: 'test-key' });
     const result = await provider.summarizeText!({
@@ -182,15 +186,14 @@ describe('google()', () => {
   });
 
   it('calls Gemini generateContent for summarization', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        candidates: [
-          {
-            content: { parts: [{ text: 'Gemini summary' }] },
-          },
-        ],
-      }),
-    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          candidates: [{ content: { parts: [{ text: 'Gemini summary' }] } }],
+        }),
+        { status: 200 },
+      ),
+    );
 
     const provider = google({ apiKey: 'test-key' });
     const result = await provider.summarizeText!({
@@ -217,11 +220,12 @@ describe('mistral()', () => {
   });
 
   it('calls Mistral chat completions for summarization', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        choices: [{ message: { content: 'Mistral summary' } }],
-      }),
-    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: 'Mistral summary' } }] }),
+        { status: 200 },
+      ),
+    );
 
     const provider = mistral({ apiKey: 'test-key' });
     const result = await provider.summarizeText!({
@@ -246,11 +250,12 @@ describe('ollama()', () => {
   });
 
   it('calls local Ollama API for summarization', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        message: { content: 'Ollama summary' },
-      }),
-    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ message: { content: 'Ollama summary' } }),
+        { status: 200 },
+      ),
+    );
 
     const provider = ollama({ compressionModel: 'llama3.2' });
     const result = await provider.summarizeText!({

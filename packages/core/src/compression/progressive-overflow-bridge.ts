@@ -97,6 +97,7 @@ export function createProgressiveSummarizeOverflow(
       countItemsTokens,
       oc?.preserveLastN,
     );
+    const maxConc = oc?.maxParallelSummarizations;
 
     if (oc?.summarizer === 'builtin:map-reduce') {
       if (deps.mapReduce === undefined) {
@@ -113,6 +114,7 @@ export function createProgressiveSummarizeOverflow(
         summaryBudgetTokens: summaryCap,
         slot,
         createId,
+        ...(maxConc !== undefined ? { maxConcurrency: maxConc } : {}),
       });
       return enrichSummaryTokens(raw, countTextTokens);
     }
@@ -125,6 +127,7 @@ export function createProgressiveSummarizeOverflow(
       summaryBudgetTokens: summaryCap,
       slot,
       createId,
+      ...(maxConc !== undefined ? { maxConcurrency: maxConc } : {}),
     });
 
     return enrichSummaryTokens(raw, countTextTokens);

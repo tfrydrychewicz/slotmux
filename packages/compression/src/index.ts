@@ -27,16 +27,20 @@ export type {
   LosslessMultimodalText,
 } from './lossless-compressor.js';
 
+export { runWithConcurrency } from './concurrency.js';
+
 export { DEFAULT_PROGRESSIVE_PROMPTS } from './progressive-prompts.js';
 export { computeDynamicPreserveLastN, partitionProgressiveZones } from './progressive-zones.js';
 export type { ProgressiveZones } from './progressive-zones.js';
 export { runProgressiveSummarize } from './progressive-summarizer.js';
 export type { RunProgressiveSummarizeOptions } from './progressive-summarizer.js';
+export { extractSummarizeText } from './progressive-types.js';
 export type {
   ProgressiveItem,
   ProgressiveLayer,
   ProgressivePrompts,
   ProgressiveSummarizeTextFn,
+  SummarizeTextResult,
 } from './progressive-types.js';
 
 export { DEFAULT_MAP_REDUCE_PROMPTS } from './map-reduce-prompts.js';

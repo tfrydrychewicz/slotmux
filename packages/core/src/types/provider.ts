@@ -101,7 +101,7 @@ export interface SlotmuxProvider {
     readonly layer: 1 | 2 | 3;
     readonly systemPrompt: string;
     readonly userPayload: string;
-  }) => Promise<string>;
+  }) => Promise<string | { readonly text: string; readonly finishReason?: string | null; readonly httpStatus?: number | null }>;
 
   /** Map-reduce summarization deps for bulk content compression. */
   readonly mapReduce?: {

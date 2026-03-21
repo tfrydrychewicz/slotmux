@@ -32,8 +32,8 @@ if (!OPENAI_API_KEY) {
   process.exit(1);
 }
 
-const READER_MODEL = process.env['LONGMEM_READER_MODEL'] ?? 'gpt-4o-mini';
-const COMPRESSION_MODEL = process.env['LONGMEM_COMPRESSION_MODEL'] ?? 'gpt-4o-mini';
+const READER_MODEL = process.env['LONGMEM_READER_MODEL'] ?? 'gpt-5.4-mini';
+const COMPRESSION_MODEL = process.env['LONGMEM_COMPRESSION_MODEL'] ?? 'gpt-5.4-mini';
 const BUDGETS = (process.env['LONGMEM_BUDGETS'] ?? '4096,8192,16384,32768')
   .split(',')
   .map((s) => Number(s.trim()));

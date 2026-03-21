@@ -102,6 +102,7 @@ export const overflowConfigSchema = z
     compressionLevel: z.number().min(0).max(1).optional(),
     proactiveThreshold: z.number().min(0).max(1).optional(),
     proactiveRatio: z.number().min(0).max(1).optional(),
+    maxParallelSummarizations: z.number().int().positive().optional(),
   })
   .passthrough();
 

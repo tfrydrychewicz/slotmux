@@ -6,6 +6,7 @@
 
 import { nanoid } from 'nanoid';
 
+import { runWithConcurrency } from './concurrency.js';
 import { getPlainTextForLossless } from './lossless-compressor.js';
 import { DEFAULT_MAP_REDUCE_PROMPTS } from './map-reduce-prompts.js';
 import type {
@@ -29,6 +30,11 @@ export type RunMapReduceSummarizeOptions = {
   readonly prompts?: Partial<MapReducePrompts>;
   readonly createId?: () => string;
   readonly now?: () => number;
+  /**
+   * Maximum number of concurrent map-phase LLM calls.
+   * Default: `Infinity` (all map chunks run in parallel).
+   */
+  readonly maxConcurrency?: number;
 };
 
 function plain(item: ProgressiveItem): string {
@@ -276,16 +282,15 @@ export async function runMapReduceSummarize(
     `\n\nTarget output length: approximately ${String(approxWords)} words (~${String(perChunkCap)} tokens). ` +
     'Use the available space to preserve as many specific facts, names, numbers, dates, and user preferences as possible.';
 
-  const mapOutputs: string[] = [];
-  for (const ch of chunks) {
-    const payload = ch.map(plain).filter((t) => t.length > 0).join('\n\n');
-    if (payload.length === 0) continue;
-    const text = await mapChunk({
-      systemPrompt: mapPromptWithTarget,
-      userPayload: payload,
-    });
-    mapOutputs.push(text);
-  }
+  const maxConc = options.maxConcurrency ?? Infinity;
+  const mapTasks = chunks
+    .map((ch) => {
+      const payload = ch.map(plain).filter((t) => t.length > 0).join('\n\n');
+      if (payload.length === 0) return null;
+      return () => mapChunk({ systemPrompt: mapPromptWithTarget, userPayload: payload });
+    })
+    .filter((t): t is () => Promise<string> => t !== null);
+  const mapOutputs = await runWithConcurrency(mapTasks, maxConc);
 
   let finalText: string;
   if (mapOutputs.length === 0) {

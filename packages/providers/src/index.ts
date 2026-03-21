@@ -11,10 +11,20 @@ export type {
   SlotmuxProvider,
   SlotmuxProviderOptions,
   SummarizeTextFn,
+  SummarizeTextResult,
 } from './provider-factory.js';
 export { wrapCustomSummarize } from './provider-factory.js';
 
+export { createAdaptiveRateLimiter } from './adaptive-rate-limiter.js';
+export type { AdaptiveRateLimiter, AdaptiveRateLimiterOptions } from './adaptive-rate-limiter.js';
+
+export { fetchWithRetry, ProviderRateLimitError, parseRetryAfterBody } from './fetch-with-retry.js';
+export { sanitizeLLMInput, withSanitizedInputs } from './sanitize-llm-input.js';
+export type { FetchWithRetryOptions } from './fetch-with-retry.js';
+
 export { openai } from './openai-provider.js';
+export { createOpenAIChatFetcher, OpenAIApiError } from './openai-fetch.js';
+export type { OpenAIChatResult, OpenAIChatFetcherOptions } from './openai-fetch.js';
 export { anthropic } from './anthropic-provider.js';
 export { google } from './google-provider.js';
 export { mistral } from './mistral-provider.js';

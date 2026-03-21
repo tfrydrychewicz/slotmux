@@ -10,19 +10,37 @@
 import type { ProviderAdapter } from 'slotmux';
 
 /**
+ * Optional metadata returned alongside summarized text.
+ *
+ * Structurally identical to `@slotmux/compression`'s `SummarizeTextResult` —
+ * both packages use structural typing for compatibility without circular imports.
+ */
+export type SummarizeTextResult = {
+  readonly text: string;
+  readonly finishReason?: string | null;
+  readonly httpStatus?: number | null;
+};
+
+/**
  * A function that calls an LLM to summarize text.
  * Receives the compression layer, a system prompt, and the user payload.
- * Returns the summarized text.
+ *
+ * May return a plain `string` or a {@link SummarizeTextResult} with
+ * optional diagnostic metadata (`finishReason`, `httpStatus`).
  *
  * @param params.targetTokens - Approximate token budget for the summary output.
- *   When present, implementations should set `max_tokens` on the LLM call.
+ *   Used by the progressive summarizer to append a target-length instruction to the
+ *   system prompt. Providers should **not** pass this as a hard API output limit
+ *   (`max_completion_tokens`, `max_tokens`, etc.) — doing so causes models to
+ *   return empty content when the budget is tight. Let the model self-regulate
+ *   output length via the prompt instruction.
  */
 export type SummarizeTextFn = (params: {
   readonly layer: 1 | 2 | 3;
   readonly systemPrompt: string;
   readonly userPayload: string;
   readonly targetTokens?: number;
-}) => Promise<string>;
+}) => Promise<string | SummarizeTextResult>;
 
 /**
  * Map-reduce summarization dependencies for bulk content compression.
@@ -88,6 +106,14 @@ export type SlotmuxProviderOptions = {
    * for semantic overflow instead of the provider's embedding API.
    */
   readonly embed?: (text: string) => Promise<number[]>;
+
+  /**
+   * Maximum retry attempts for HTTP 429 (rate limit) responses.
+   * Retries are coordinated across concurrent calls by an adaptive rate
+   * limiter that automatically reduces parallelism on 429s (AIMD).
+   * @defaultValue 5
+   */
+  readonly maxRetries?: number;
 };
 
 /**

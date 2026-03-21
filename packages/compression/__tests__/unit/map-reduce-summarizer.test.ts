@@ -117,6 +117,79 @@ describe('runMapReduceSummarize', () => {
     expect(out.some((i) => i.content === 'only')).toBe(true);
   });
 
+  it('runs map phase in parallel by default', async () => {
+    const items = [
+      mk('o1', 1, 'x'.repeat(100)),
+      mk('o2', 2, 'x'.repeat(100)),
+      mk('o3', 3, 'x'.repeat(100)),
+      mk('o4', 4, 'x'.repeat(100)),
+      mk('r1', 5, 'y'.repeat(50)),
+      mk('r2', 6, 'y'.repeat(50)),
+    ];
+    let concurrent = 0;
+    let maxConcurrent = 0;
+    const mapChunk = vi.fn(async () => {
+      concurrent++;
+      maxConcurrent = Math.max(maxConcurrent, concurrent);
+      await new Promise((r) => setTimeout(r, 10));
+      concurrent--;
+      return 'M';
+    });
+    const reduceMerge = vi.fn(async () => 'R');
+
+    await runMapReduceSummarize(items, 120, {
+      preserveLastN: 2,
+      mapReduce: { mapChunk, reduceMerge, mapChunkMaxInputTokens: 120 },
+      countItemsTokens: countChars,
+      countTextTokens: (t) => t.length,
+      slot: 's',
+      createId: (() => {
+        let n = 0;
+        return () => `id-${n++}`;
+      })(),
+    });
+
+    expect(mapChunk.mock.calls.length).toBeGreaterThan(1);
+    expect(maxConcurrent).toBeGreaterThan(1);
+  });
+
+  it('respects maxConcurrency in map phase', async () => {
+    const items = [
+      mk('o1', 1, 'x'.repeat(100)),
+      mk('o2', 2, 'x'.repeat(100)),
+      mk('o3', 3, 'x'.repeat(100)),
+      mk('o4', 4, 'x'.repeat(100)),
+      mk('r1', 5, 'y'.repeat(50)),
+      mk('r2', 6, 'y'.repeat(50)),
+    ];
+    let concurrent = 0;
+    let maxConcurrent = 0;
+    const mapChunk = vi.fn(async () => {
+      concurrent++;
+      maxConcurrent = Math.max(maxConcurrent, concurrent);
+      await new Promise((r) => setTimeout(r, 10));
+      concurrent--;
+      return 'M';
+    });
+    const reduceMerge = vi.fn(async () => 'R');
+
+    await runMapReduceSummarize(items, 120, {
+      preserveLastN: 2,
+      mapReduce: { mapChunk, reduceMerge, mapChunkMaxInputTokens: 120 },
+      countItemsTokens: countChars,
+      countTextTokens: (t) => t.length,
+      slot: 's',
+      maxConcurrency: 1,
+      createId: (() => {
+        let n = 0;
+        return () => `id-${n++}`;
+      })(),
+    });
+
+    expect(mapChunk.mock.calls.length).toBeGreaterThan(1);
+    expect(maxConcurrent).toBe(1);
+  });
+
   it('appends target token count to map system prompt', async () => {
     const items = [
       mk('o1', 1, 'x'.repeat(100)),

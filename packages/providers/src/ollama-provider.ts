@@ -4,6 +4,8 @@
  * @packageDocumentation
  */
 
+import { createAdaptiveRateLimiter } from './adaptive-rate-limiter.js';
+import { fetchWithRetry } from './fetch-with-retry.js';
 import { createOllamaAdapter } from './ollama-adapter.js';
 import {
   wrapCustomSummarize,
@@ -11,6 +13,7 @@ import {
   type SlotmuxProviderOptions,
   type SummarizeTextFn,
 } from './provider-factory.js';
+import { withSanitizedInputs } from './sanitize-llm-input.js';
 
 const DEFAULT_BASE_URL = 'http://localhost:11434';
 
@@ -41,32 +44,40 @@ export type OllamaProviderOptions = Omit<SlotmuxProviderOptions, 'apiKey'> & {
 export function ollama(opts: OllamaProviderOptions = {}): SlotmuxProvider {
   const baseUrl = opts.baseUrl ?? DEFAULT_BASE_URL;
   const model = opts.compressionModel ?? 'llama3.1';
+  const limiter = createAdaptiveRateLimiter({
+    ...(opts.maxRetries !== undefined ? { maxRetries: opts.maxRetries } : {}),
+  });
 
   const summarizeText: SummarizeTextFn = opts.summarize
     ? wrapCustomSummarize(opts.summarize)
-    : async ({ systemPrompt, userPayload, targetTokens }) => {
-        const res = await fetch(`${baseUrl}/api/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPayload },
-            ],
-            stream: false,
-            ...(targetTokens !== undefined ? { options: { num_predict: targetTokens } } : {}),
-          }),
+    : async ({ systemPrompt, userPayload }) =>
+        limiter.run(async () => {
+          const res = await fetchWithRetry(
+            `${baseUrl}/api/chat`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model,
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: userPayload },
+                ],
+                stream: false,
+                options: { num_predict: 4096 },
+              }),
+            },
+            { maxRetries: 0 },
+          );
+          const json = (await res.json()) as {
+            message?: { content?: string };
+          };
+          return json.message?.content ?? '';
         });
-        const json = (await res.json()) as {
-          message?: { content?: string };
-        };
-        return json.message?.content ?? '';
-      };
 
   return {
     adapter: createOllamaAdapter(),
-    summarizeText,
+    summarizeText: withSanitizedInputs(summarizeText),
     ...(opts.embed !== undefined ? { embed: opts.embed } : {}),
   };
 }

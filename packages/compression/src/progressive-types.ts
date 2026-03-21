@@ -21,7 +21,32 @@ export type ProgressiveItem = LosslessCompressibleItem & {
 };
 
 /**
+ * Optional metadata returned alongside summarized text.
+ *
+ * Provider implementations may return this instead of a plain `string`
+ * to surface diagnostic information (finish reason, HTTP status) to
+ * callers and logging wrappers. Consumers that only need the text
+ * should use {@link extractSummarizeText}.
+ */
+export type SummarizeTextResult = {
+  readonly text: string;
+  readonly finishReason?: string | null;
+  readonly httpStatus?: number | null;
+};
+
+/**
+ * Extracts the plain text from a summarize result, whether it is a
+ * raw `string` or a {@link SummarizeTextResult} object.
+ */
+export function extractSummarizeText(result: string | SummarizeTextResult): string {
+  return typeof result === 'string' ? result : result.text;
+}
+
+/**
  * Injectable LLM call (no network in package — app provides).
+ *
+ * Implementations may return a plain `string` or a {@link SummarizeTextResult}
+ * with optional diagnostic metadata (`finishReason`, `httpStatus`).
  *
  * @param params.layer - Compression layer (1 = key points, 2 = executive, 3 = essence).
  * @param params.systemPrompt - System prompt (may include a target-length instruction).
@@ -35,7 +60,7 @@ export type ProgressiveSummarizeTextFn = (params: {
   readonly systemPrompt: string;
   readonly userPayload: string;
   readonly targetTokens?: number;
-}) => Promise<string>;
+}) => Promise<string | SummarizeTextResult>;
 
 export type ProgressivePrompts = {
   readonly layer1: string;

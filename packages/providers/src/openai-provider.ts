@@ -1,16 +1,26 @@
 /**
  * OpenAI provider factory (§10.3).
  *
+ * Uses {@link createOpenAIChatFetcher} for resilient API calls and an
+ * adaptive rate limiter (AIMD) for coordinated 429 retry across concurrent
+ * calls. Output length is guided by the prompt instruction (not a hard
+ * `max_completion_tokens` cap), so the model always has room to produce a
+ * response.
+ *
  * @packageDocumentation
  */
 
+import { createAdaptiveRateLimiter } from './adaptive-rate-limiter.js';
 import { createOpenAIAdapter } from './openai-adapter.js';
+import { createOpenAIChatFetcher } from './openai-fetch.js';
 import {
   wrapCustomSummarize,
   type SlotmuxProvider,
   type SlotmuxProviderOptions,
   type SummarizeTextFn,
+  type SummarizeTextResult,
 } from './provider-factory.js';
+import { withSanitizedInputs } from './sanitize-llm-input.js';
 
 const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
 const DEFAULT_COMPRESSION_MODEL = 'gpt-5.4-mini';
@@ -39,32 +49,32 @@ export function openai(opts: SlotmuxProviderOptions): SlotmuxProvider {
 
   const summarizeText: SummarizeTextFn = opts.summarize
     ? wrapCustomSummarize(opts.summarize)
-    : async ({ systemPrompt, userPayload, targetTokens }) => {
-        const res = await fetch(`${baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${opts.apiKey}`,
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPayload },
-            ],
-            temperature: 0.3,
-            ...(targetTokens !== undefined ? { max_tokens: targetTokens } : {}),
-          }),
+    : (() => {
+        const chat = createOpenAIChatFetcher({
+          baseUrl,
+          apiKey: opts.apiKey,
+          model,
+          maxRetries: 0,
         });
-        const json = (await res.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-        return json.choices?.[0]?.message?.content ?? '';
-      };
+        const limiter = createAdaptiveRateLimiter({
+          ...(opts.maxRetries !== undefined ? { maxRetries: opts.maxRetries } : {}),
+        });
+
+        return async ({ systemPrompt, userPayload }): Promise<SummarizeTextResult> =>
+          limiter.run(async () => {
+            const { content, finishReason, httpStatus } = await chat({
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPayload },
+              ],
+            });
+            return { text: content, finishReason, httpStatus };
+          });
+      })();
 
   return {
     adapter: createOpenAIAdapter(),
-    summarizeText,
+    summarizeText: withSanitizedInputs(summarizeText),
     ...(opts.embed !== undefined ? { embed: opts.embed } : {}),
   };
 }

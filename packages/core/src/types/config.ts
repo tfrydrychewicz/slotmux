@@ -243,6 +243,22 @@ export interface OverflowConfig {
    * Default: `0.3` (compress oldest 30%).
    */
   proactiveRatio?: number;
+
+  /**
+   * Maximum number of concurrent LLM calls during summarization.
+   *
+   * When the summarize strategy chunks content into segments, each segment
+   * requires an independent LLM call. By default all chunks run in parallel
+   * (`Infinity`). Set a finite value to respect provider rate limits.
+   *
+   * @example
+   * ```typescript
+   * overflowConfig: {
+   *   maxParallelSummarizations: 4,  // at most 4 concurrent LLM calls
+   * }
+   * ```
+   */
+  maxParallelSummarizations?: number;
 }
 
 // ==========================================

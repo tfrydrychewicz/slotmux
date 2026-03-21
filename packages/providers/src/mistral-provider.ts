@@ -4,6 +4,8 @@
  * @packageDocumentation
  */
 
+import { createAdaptiveRateLimiter } from './adaptive-rate-limiter.js';
+import { fetchWithRetry } from './fetch-with-retry.js';
 import { createMistralAdapter } from './mistral-adapter.js';
 import {
   wrapCustomSummarize,
@@ -11,6 +13,7 @@ import {
   type SlotmuxProviderOptions,
   type SummarizeTextFn,
 } from './provider-factory.js';
+import { withSanitizedInputs } from './sanitize-llm-input.js';
 
 const DEFAULT_BASE_URL = 'https://api.mistral.ai/v1';
 const DEFAULT_COMPRESSION_MODEL = 'mistral-small-latest';
@@ -36,35 +39,42 @@ const DEFAULT_COMPRESSION_MODEL = 'mistral-small-latest';
 export function mistral(opts: SlotmuxProviderOptions): SlotmuxProvider {
   const baseUrl = opts.baseUrl ?? DEFAULT_BASE_URL;
   const model = opts.compressionModel ?? DEFAULT_COMPRESSION_MODEL;
+  const limiter = createAdaptiveRateLimiter({
+    ...(opts.maxRetries !== undefined ? { maxRetries: opts.maxRetries } : {}),
+  });
 
   const summarizeText: SummarizeTextFn = opts.summarize
     ? wrapCustomSummarize(opts.summarize)
-    : async ({ systemPrompt, userPayload, targetTokens }) => {
-        const res = await fetch(`${baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${opts.apiKey}`,
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPayload },
-            ],
-            temperature: 0.3,
-            ...(targetTokens !== undefined ? { max_tokens: targetTokens } : {}),
-          }),
+    : async ({ systemPrompt, userPayload }) =>
+        limiter.run(async () => {
+          const res = await fetchWithRetry(
+            `${baseUrl}/chat/completions`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${opts.apiKey}`,
+              },
+              body: JSON.stringify({
+                model,
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: userPayload },
+                ],
+                temperature: 0.3,
+              }),
+            },
+            { maxRetries: 0 },
+          );
+          const json = (await res.json()) as {
+            choices?: Array<{ message?: { content?: string } }>;
+          };
+          return json.choices?.[0]?.message?.content ?? '';
         });
-        const json = (await res.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-        return json.choices?.[0]?.message?.content ?? '';
-      };
 
   return {
     adapter: createMistralAdapter(),
-    summarizeText,
+    summarizeText: withSanitizedInputs(summarizeText),
     ...(opts.embed !== undefined ? { embed: opts.embed } : {}),
   };
 }

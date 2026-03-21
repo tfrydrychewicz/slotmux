@@ -4,13 +4,16 @@
  * @packageDocumentation
  */
 
+import { createAdaptiveRateLimiter } from './adaptive-rate-limiter.js';
 import { createAnthropicAdapter } from './anthropic-adapter.js';
+import { fetchWithRetry } from './fetch-with-retry.js';
 import {
   wrapCustomSummarize,
   type SlotmuxProvider,
   type SlotmuxProviderOptions,
   type SummarizeTextFn,
 } from './provider-factory.js';
+import { withSanitizedInputs } from './sanitize-llm-input.js';
 
 const DEFAULT_BASE_URL = 'https://api.anthropic.com/v1';
 const DEFAULT_COMPRESSION_MODEL = 'claude-3-5-haiku-20241022';
@@ -36,35 +39,43 @@ const DEFAULT_COMPRESSION_MODEL = 'claude-3-5-haiku-20241022';
 export function anthropic(opts: SlotmuxProviderOptions): SlotmuxProvider {
   const baseUrl = opts.baseUrl ?? DEFAULT_BASE_URL;
   const model = opts.compressionModel ?? DEFAULT_COMPRESSION_MODEL;
+  const limiter = createAdaptiveRateLimiter({
+    ...(opts.maxRetries !== undefined ? { maxRetries: opts.maxRetries } : {}),
+  });
 
   const summarizeText: SummarizeTextFn = opts.summarize
     ? wrapCustomSummarize(opts.summarize)
-    : async ({ systemPrompt, userPayload, targetTokens }) => {
-        const res = await fetch(`${baseUrl}/messages`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': opts.apiKey,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model,
-            system: systemPrompt,
-            messages: [{ role: 'user', content: userPayload }],
-            max_tokens: targetTokens ?? 4096,
-            temperature: 0.3,
-          }),
+    : async ({ systemPrompt, userPayload }) =>
+        limiter.run(async () => {
+          const res = await fetchWithRetry(
+            `${baseUrl}/messages`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': opts.apiKey,
+                'anthropic-version': '2023-06-01',
+              },
+              body: JSON.stringify({
+                model,
+                system: systemPrompt,
+                messages: [{ role: 'user', content: userPayload }],
+                max_tokens: 4096,
+                temperature: 0.3,
+              }),
+            },
+            { maxRetries: 0 },
+          );
+          const json = (await res.json()) as {
+            content?: Array<{ type: string; text?: string }>;
+          };
+          const textBlock = json.content?.find((b) => b.type === 'text');
+          return textBlock?.text ?? '';
         });
-        const json = (await res.json()) as {
-          content?: Array<{ type: string; text?: string }>;
-        };
-        const textBlock = json.content?.find((b) => b.type === 'text');
-        return textBlock?.text ?? '';
-      };
 
   return {
     adapter: createAnthropicAdapter(),
-    summarizeText,
+    summarizeText: withSanitizedInputs(summarizeText),
     ...(opts.embed !== undefined ? { embed: opts.embed } : {}),
   };
 }
