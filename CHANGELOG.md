@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This file is managed by [Changesets](https://github.com/changesets/changesets). Package-specific changelogs are generated when publishing.
 
+## 1.0.0-rc.4 — 2026-03-21
+
+### Added
+
+#### `@slotmux/compression`
+
+- **Fact-aware compression** — Summarization prompts now use an extraction-first format: the LLM outputs structured `FACT: subject | predicate | value` lines before writing narrative. Facts accumulate in a deduplicated `FactStore` across compression rounds, keyed by `subject|predicate` with highest-confidence wins. A synthetic `Known facts:` item is rendered at the start of the summarized context.
+- **Fact pinning in L3 re-compression** — When Layer 3 consolidation runs, existing facts are injected into the prompt as "must preserve" constraints so the model doesn't silently drop them.
+- **Dedicated fact extraction hook** — New `ExtractFactsFn` interface and `createDefaultExtractFacts` factory for running a separate LLM-backed fact extraction pass before summarization. Custom regex-based extractors are also supported.
+- **Importance-weighted zone partitioning** — Non-recent items are now scored by `computeItemImportance` (entity density, decision/preference language, specific fact indicators) before splitting into OLD and MIDDLE zones. High-value items survive longer. Provide a custom `ImportanceScorerFn` or set `importanceScorer: null` for pure chronological ordering.
+- **Incremental summarization** — Items with a `summarizes` field (from a previous compression pass) are carried forward without re-summarization. Only fresh content is sent to the LLM, making per-build cost proportional to new content, not total conversation length.
+- **Adaptive zone skip** — After old-zone processing, if the output plus middle-zone and recent items already fits within budget, middle-zone LLM calls are skipped entirely.
+
+#### `@slotmux/providers`
+
+- **Adaptive rate limiter (AIMD)** — All provider factories now coordinate retry across concurrent summarization calls using Additive Increase / Multiplicative Decrease congestion control. On HTTP 429, effective concurrency is halved and pending calls pause for the `Retry-After` duration. On success, concurrency slowly recovers. Retry wait resolves from `Retry-After` header, body text hints, or a 1-second default.
+- **Input sanitization** — `sanitizeLLMInput` and `withSanitizedInputs` strip control characters (C0/C1 except tab/newline/CR) and lone surrogates before sending text to providers.
+
+#### `slotmux` (core)
+
+- **`factBudgetTokens` config** — Controls the token budget for the rendered fact block (default: 20% of summary budget, max 512).
+- **`importanceScorer` config** — Accepts a custom scoring function, `null` (pure chronological), or omit for the default scorer.
+- **`extractFacts` config** — Accepts a custom or LLM-backed fact extraction function wired through `overflowConfig`.
+
+#### Documentation
+
+- Three new SVG diagrams: fact-aware compression architecture, incremental summarization comparison, and importance-weighted zone partitioning.
+- Expanded compression.md with scoring signal table, custom `extractFacts` example, and per-feature SVG references.
+- Updated overflow.md summarize section with bullet-point overview of all three advanced capabilities.
+- Restructured chatbot guide with fact-aware compression section covering configuration, custom extraction, and importance scoring.
+- Updated landing page to highlight fact-aware compression and incremental cost stability.
+
+### Fixed
+
+#### `@slotmux/compression`
+
+- **Budget-aware summarization prompts** — Each summarization call now receives a target token count so the LLM fills available space instead of producing a terse paragraph.
+- **Dynamic `preserveLastN`** — When omitted, the number of verbatim recent items scales with the slot budget automatically (~50%).
+- **Multi-segment summarization** — Large zones are split into segments and summarized independently, preserving more information across the full conversation history.
+
+#### `@slotmux/providers`
+
+- **Removed hard output token caps** — Providers no longer pass `max_completion_tokens` / `maxOutputTokens` to the LLM API. The prompt instruction (`Target output length: ~N words`) guides output length, preventing `finishReason: "length"` empty responses.
+
 ## 1.0.0-rc.3 — 2026-03-21
 
 ### Fixed
