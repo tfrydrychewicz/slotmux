@@ -144,12 +144,13 @@ Eight strategies built in: `truncate`, `truncate-latest`, `sliding-window`, `sum
 
 ```typescript
 import { createContext, Context } from 'slotmux';
-import { formatOpenAIMessages } from '@slotmux/providers';
+import { openai, formatOpenAIMessages } from '@slotmux/providers';
 
 const { config } = createContext({
   model: 'gpt-5.4',
   preset: 'chat',
   reserveForResponse: 4096,
+  slotmuxProvider: openai({ apiKey: process.env.OPENAI_API_KEY! }),
 });
 
 const ctx = Context.fromParsedConfig(config);
@@ -158,6 +159,7 @@ ctx.user('What is the capital of France?');
 
 const { snapshot } = await ctx.build();
 const messages = formatOpenAIMessages(snapshot.messages);
+// Overflow summarization is auto-wired through the provider.
 ```
 
 ### A real-world RAG agent

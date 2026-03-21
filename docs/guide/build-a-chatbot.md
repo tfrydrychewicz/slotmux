@@ -26,7 +26,13 @@ npm init -y
 Install slotmux and a tokenizer:
 
 ```bash
-npm install slotmux @slotmux/providers gpt-tokenizer
+npm install slotmux @slotmux/providers
+```
+
+For accurate token counting (recommended for production), add a tokenizer:
+
+```bash
+npm install gpt-tokenizer
 ```
 
 Enable ESM (slotmux is ESM-only):
@@ -42,24 +48,37 @@ Create a file called **`chat.mjs`** and paste the code below. Every section is a
 ```javascript
 import * as readline from 'node:readline';
 import { createContext, Context } from 'slotmux';
-import { formatOpenAIMessages } from '@slotmux/providers';
+import { openai, formatOpenAIMessages } from '@slotmux/providers';
 
-// ── 1. Create a validated context config ─────────────────────────────
+// ── 1. Check for API key early ───────────────────────────────────────
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+if (!OPENAI_API_KEY) {
+  console.error('Set OPENAI_API_KEY before running this script.');
+  process.exit(1);
+}
+
+// ── 2. Create a validated context config ─────────────────────────────
 //
 // `createContext` resolves the model registry (maxTokens, tokenizer,
 // provider), merges the "chat" preset slots, and validates everything.
 // The "chat" preset gives you two slots:
 //   • system  — priority 100, fixed 2 000 tokens, overflow: error
 //   • history — priority 50,  flex budget,        overflow: summarize
+//
+// `slotmuxProvider: openai(...)` auto-wires summarization so that when
+// the history slot overflows, slotmux calls the OpenAI API to compress
+// older messages automatically — no manual wiring needed.
 
 const { config } = createContext({
   model: 'gpt-5.4-mini',
   preset: 'chat',
   reserveForResponse: 4096,
   lazyContentItemTokens: true,
+  slotmuxProvider: openai({ apiKey: OPENAI_API_KEY }),
 });
 
-// ── 2. Build a live Context from the config ──────────────────────────
+// ── 3. Build a live Context from the config ──────────────────────────
 //
 // Context is a mutable container: you push messages, then call build()
 // to get an immutable snapshot with compiled messages + metadata.
@@ -71,13 +90,7 @@ ctx.system(
   'If the user says "!stats", respond with context window statistics instead.'
 );
 
-// ── 3. Helper: call OpenAI Chat Completions ──────────────────────────
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-if (!OPENAI_API_KEY) {
-  console.error('Set OPENAI_API_KEY before running this script.');
-  process.exit(1);
-}
+// ── 4. Helper: call OpenAI Chat Completions ──────────────────────────
 
 async function callOpenAI(messages) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -96,7 +109,7 @@ async function callOpenAI(messages) {
   return data.choices?.[0]?.message?.content ?? '(no response)';
 }
 
-// ── 4. Helper: print context metadata ────────────────────────────────
+// ── 5. Helper: print context metadata ────────────────────────────────
 
 function printMeta(meta) {
   const pct = (meta.utilization * 100).toFixed(1);
@@ -120,7 +133,7 @@ function printMeta(meta) {
   );
 }
 
-// ── 5. REPL loop ─────────────────────────────────────────────────────
+// ── 6. REPL loop ─────────────────────────────────────────────────────
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -214,7 +227,7 @@ Each time you type a message, slotmux does all of this before the API call:
 2. **`ctx.build()`** — Runs the full compile pipeline:
    - **Budget allocation** — The **system** slot gets its fixed 2 000 tokens; the **history** slot fills the remaining flex budget.
    - **Token counting** — `lazyContentItemTokens: true` means the pipeline lazily counts each message via the installed `gpt-tokenizer` on first build, then caches the result.
-   - **Overflow check** — If history grows past its budget, the configured overflow strategy (summarize / truncate) kicks in automatically.
+   - **Overflow check** — If history grows past its budget, the configured overflow strategy kicks in. Because we set `slotmuxProvider: openai(...)`, the `summarize` strategy automatically calls the OpenAI API (using a cheap model like `gpt-5.4-mini`) to compress older messages.
    - **Compile** — Produces an immutable `ContextSnapshot` containing `messages` (slotmux's internal format) and `meta` (token counts, utilization, per-slot stats, warnings, build time).
 3. **`formatOpenAIMessages(snapshot.messages)`** — Converts slotmux's compiled messages into OpenAI's `{ role, content }` shape with multimodal and tool-call support.
 4. **`ctx.assistant(reply)`** — Stores the model's reply so it's in scope for the next build.
@@ -229,7 +242,8 @@ Each time you type a message, slotmux does all of this before the API call:
 | **Immutable snapshot** | `ctx.build()` produces a frozen `ContextSnapshot` — safe to cache, serialize, or diff. |
 | **Lazy token counting** | `lazyContentItemTokens: true` auto-counts tokens via the model's tokenizer peer (`gpt-tokenizer`) on each build, caching results. |
 | **Token budgeting** | `reserveForResponse: 4096` leaves room for the model reply; the rest is split across slots. |
-| **Overflow** | The history slot uses `overflow: 'summarize'` — as the conversation grows past the budget, older messages would be compressed. |
+| **Overflow** | The history slot uses `overflow: 'summarize'` — as the conversation grows past the budget, older messages are compressed automatically via the configured `slotmuxProvider`. |
+| **Provider factory** | `slotmuxProvider: openai({ apiKey })` auto-wires summarization — no manual `progressiveSummarize` setup needed. |
 | **Provider formatting** | `formatOpenAIMessages()` handles text, multimodal, and tool messages for OpenAI's API shape. |
 | **Metadata** | `snapshot.meta` — `totalTokens`, `utilization`, per-slot breakdown, `warnings`, `buildTimeMs`. |
 

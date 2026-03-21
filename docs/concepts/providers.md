@@ -23,6 +23,82 @@ interface ProviderAdapter {
 | `getTokenizer` | Returns the correct tokenizer for token counting. |
 | `calculateOverhead` | Computes structural tokens the provider adds (role delimiters, conversation framing). |
 
+## Provider factories
+
+Provider **factories** extend adapters with the ability to **call** the LLM for auxiliary tasks — summarization for overflow, embeddings for semantic compression. This means strategies like `overflow: 'summarize'` work automatically without manual wiring.
+
+### Quick start
+
+```typescript
+import { openai } from '@slotmux/providers';
+import { createContext, Context } from 'slotmux';
+
+const { config } = createContext({
+  model: 'gpt-5.4',
+  preset: 'chat',
+  slotmuxProvider: openai({ apiKey: process.env.OPENAI_API_KEY! }),
+});
+
+const ctx = Context.fromParsedConfig(config);
+ctx.system('You are a helpful assistant.');
+ctx.user('Hello!');
+
+const { snapshot } = await ctx.build();
+// overflow: 'summarize' on the history slot just works — the provider
+// knows how to call the OpenAI API for summarization automatically.
+```
+
+### Progressive disclosure
+
+| Level | What you configure | What happens |
+| --- | --- | --- |
+| **0** (beginner) | `openai({ apiKey })` | Summarization uses `gpt-5.4-mini` via the OpenAI API. |
+| **1** (intermediate) | `openai({ apiKey, compressionModel: 'gpt-5.4-nano' })` | You control which model does compression. |
+| **2** (advanced) | `openai({ apiKey, summarize: myFn, embed: myEmbedFn })` | You provide custom summarization and/or embedding functions. |
+| **3** (expert) | Direct `progressiveSummarize` injection on the overflow engine | Full control, bypass the factory entirely. |
+
+### Available factories
+
+| Factory | Import | Default compression model |
+| --- | --- | --- |
+| `openai()` | `@slotmux/providers` | `gpt-5.4-mini` |
+| `anthropic()` | `@slotmux/providers` | `claude-3-5-haiku-20241022` |
+| `google()` | `@slotmux/providers` | `gemini-2.0-flash` |
+| `mistral()` | `@slotmux/providers` | `mistral-small-latest` |
+| `ollama()` | `@slotmux/providers` | Same as context model |
+
+Each factory accepts `SlotmuxProviderOptions`:
+
+```typescript
+type SlotmuxProviderOptions = {
+  apiKey: string;
+  compressionModel?: string;     // model for summarization calls
+  baseUrl?: string;              // API endpoint override (proxies, Azure, self-hosted)
+  summarize?: (system: string, user: string) => Promise<string>;  // custom summarizer
+  embed?: (text: string) => Promise<number[]>;                    // custom embeddings
+};
+```
+
+Ollama's `apiKey` is optional (local instances don't require one).
+
+### What the factory provides
+
+Each factory returns a `SlotmuxProvider` — an adapter bundled with LLM call capabilities:
+
+```typescript
+type SlotmuxProvider = {
+  adapter: ProviderAdapter;      // message formatting + tokenizer
+  summarizeText?: Function;      // auto-wired into overflow engine
+  mapReduce?: Object;            // bulk content compression
+  embed?: Function;              // semantic overflow
+};
+```
+
+When you pass `slotmuxProvider` to `createContext()`, the orchestrator automatically:
+
+1. Wires `summarizeText` into the overflow engine so `overflow: 'summarize'` works.
+2. Registers the adapter for `snapshot.format()` so you can format messages without separate setup.
+
 ## Supported providers
 
 | Provider | Adapter | Package | Format function |

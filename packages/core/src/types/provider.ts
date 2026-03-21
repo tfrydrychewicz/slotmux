@@ -77,6 +77,47 @@ export interface ModelCapabilities {
 // Provider Adapter
 // ==========================================
 
+// ==========================================
+// SlotmuxProvider (§10.3)
+// ==========================================
+
+/**
+ * Bundles a provider adapter with optional LLM call capabilities.
+ *
+ * When passed to `createContext({ slotmuxProvider })`, the orchestrator
+ * auto-wires summarization and embeddings into the overflow engine.
+ *
+ * Created via provider factories in `@slotmux/providers`:
+ * ```typescript
+ * import { openai } from '@slotmux/providers';
+ * slotmuxProvider: openai({ apiKey: process.env.OPENAI_API_KEY })
+ * ```
+ */
+export interface SlotmuxProvider {
+  readonly adapter: ProviderAdapter;
+
+  /** Auto-wired into the overflow engine for `summarize` strategy. */
+  readonly summarizeText?: (params: {
+    readonly layer: 1 | 2 | 3;
+    readonly systemPrompt: string;
+    readonly userPayload: string;
+  }) => Promise<string>;
+
+  /** Map-reduce summarization deps for bulk content compression. */
+  readonly mapReduce?: {
+    readonly mapChunk: (params: { readonly systemPrompt: string; readonly userPayload: string }) => Promise<string>;
+    readonly reduceMerge: (params: { readonly systemPrompt: string; readonly userPayload: string }) => Promise<string>;
+    readonly mapChunkMaxInputTokens?: number;
+  };
+
+  /** Embedding function for semantic overflow strategy. */
+  readonly embed?: (text: string) => Promise<number[]>;
+}
+
+// ==========================================
+// Provider Adapter
+// ==========================================
+
 /** Provider adapter — bridges core to LLM provider APIs */
 export interface ProviderAdapter {
   /** Provider identifier */

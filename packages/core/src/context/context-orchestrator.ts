@@ -40,7 +40,7 @@ import type { ProviderId, SlotConfig } from '../types/config.js';
 import type { CompiledMessage, ContentItem } from '../types/content.js';
 import type { ContextEvent } from '../types/events.js';
 import type { ContextPlugin, ResolvedSlot } from '../types/plugin.js';
-import type { ProviderAdapter } from '../types/provider.js';
+import type { ProviderAdapter, SlotmuxProvider } from '../types/provider.js';
 import type {
   ContextWarning,
   EvictionEvent,
@@ -50,6 +50,16 @@ import type {
 import type { TokenAccountant } from '../types/token-accountant.js';
 
 import type { Context } from './context.js';
+
+function mergeSlotmuxProviderAdapter(
+  config: ParsedContextConfig,
+  inputAdapters?: Partial<Record<ProviderId, ProviderAdapter>>,
+): Partial<Record<ProviderId, ProviderAdapter>> | undefined {
+  const sp = config.slotmuxProvider as SlotmuxProvider | undefined;
+  if (sp?.adapter === undefined) return inputAdapters;
+  const id = sp.adapter.id;
+  return { ...inputAdapters, [id]: sp.adapter };
+}
 
 function resolvePlugins(config: ParsedContextConfig): readonly ContextPlugin[] {
   const raw = config.plugins;
@@ -367,11 +377,12 @@ export class ContextOrchestrator {
     const {
       config,
       context,
-      providerAdapters,
+      providerAdapters: inputAdapters,
       previousSnapshot,
       structuralSharing,
       operationId: operationIdInput,
     } = input;
+    const providerAdapters = mergeSlotmuxProviderAdapter(config, inputAdapters);
     const operationId = operationIdInput ?? newBuildOperationId();
     const userLogger = config.logger;
     const hasUserLogger = userLogger !== undefined;
@@ -473,9 +484,18 @@ export class ContextOrchestrator {
     }
 
     const namedStrategies = pluginManager?.getNamedOverflowStrategiesForEngine();
+    const sp = config.slotmuxProvider;
     const engine = new OverflowEngine({
       countTokens,
       onEvent: (e) => forward(e),
+      ...(sp?.summarizeText !== undefined
+        ? {
+            progressiveSummarize: {
+              summarizeText: sp.summarizeText,
+              ...(sp.mapReduce !== undefined ? { mapReduce: sp.mapReduce } : {}),
+            },
+          }
+        : {}),
       ...(namedStrategies !== undefined && Object.keys(namedStrategies).length > 0
         ? { namedStrategies }
         : {}),
@@ -613,11 +633,12 @@ export class ContextOrchestrator {
     const {
       config,
       context,
-      providerAdapters,
+      providerAdapters: inputStreamAdapters,
       previousSnapshot,
       structuralSharing,
       operationId: operationIdInput,
     } = input;
+    const providerAdapters = mergeSlotmuxProviderAdapter(config, inputStreamAdapters);
     const operationId = operationIdInput ?? newBuildOperationId();
     const userLogger = config.logger;
     const hasUserLogger = userLogger !== undefined;
@@ -744,9 +765,18 @@ export class ContextOrchestrator {
         await runAfterBudgetResolve(plugins, budgetResolved);
       }
 
+      const spStream = config.slotmuxProvider;
       const engine = new OverflowEngine({
         countTokens,
         onEvent: (e) => forward(e),
+        ...(spStream?.summarizeText !== undefined
+          ? {
+              progressiveSummarize: {
+                summarizeText: spStream.summarizeText,
+                ...(spStream.mapReduce !== undefined ? { mapReduce: spStream.mapReduce } : {}),
+              },
+            }
+          : {}),
         ...(namedStrategies !== undefined && Object.keys(namedStrategies).length > 0
           ? { namedStrategies }
           : {}),

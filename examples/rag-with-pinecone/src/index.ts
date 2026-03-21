@@ -1,6 +1,6 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import { ragPlugin } from '@slotmux/plugin-rag';
-import { formatOpenAIMessages } from '@slotmux/providers';
+import { formatOpenAIMessages, openai } from '@slotmux/providers';
 import { createContext, Context } from 'slotmux';
 
 const OPENAI_KEY = process.env['OPENAI_API_KEY'];
@@ -58,6 +58,7 @@ const { config } = createContext({
   reserveForResponse: 4096,
   lazyContentItemTokens: true,
   plugins: [rag],
+  slotmuxProvider: openai({ apiKey: OPENAI_KEY }),
 });
 
 const ctx = Context.fromParsedConfig(config);

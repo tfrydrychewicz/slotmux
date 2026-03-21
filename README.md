@@ -39,13 +39,14 @@ Important content? **Pin it** — slotmux will never compress or drop it. Flexib
 
 ```typescript
 import { createContext, Context } from 'slotmux';
-import { formatOpenAIMessages } from '@slotmux/providers';
+import { openai, formatOpenAIMessages } from '@slotmux/providers';
 
 const { config } = createContext({
   model: 'gpt-5.4',
   preset: 'chat',
   reserveForResponse: 4096,
   lazyContentItemTokens: true,
+  slotmuxProvider: openai({ apiKey: process.env.OPENAI_API_KEY! }),
 });
 
 const ctx = Context.fromParsedConfig(config);
@@ -54,6 +55,7 @@ ctx.user('What is slotmux?');
 
 const { snapshot } = await ctx.build();
 const messages = formatOpenAIMessages(snapshot.messages);
+// Overflow summarization works automatically — no manual wiring needed.
 ```
 
 ## Per-slot overflow: the killer feature

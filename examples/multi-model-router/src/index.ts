@@ -1,6 +1,7 @@
 import {
   formatOpenAIMessages,
   formatAnthropicMessages,
+  openai,
 } from '@slotmux/providers';
 import { createContext, Context } from 'slotmux';
 
@@ -21,6 +22,7 @@ function buildContext() {
     preset: 'chat',
     reserveForResponse: 4096,
     charTokenEstimateForMissing: true,
+    ...(OPENAI_KEY ? { slotmuxProvider: openai({ apiKey: OPENAI_KEY }) } : {}),
   });
 
   const ctx = Context.fromParsedConfig(config);

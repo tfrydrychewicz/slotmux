@@ -1,4 +1,4 @@
-import { formatOpenAIMessages } from '@slotmux/providers';
+import { formatOpenAIMessages, openai } from '@slotmux/providers';
 import { createContext, Context } from 'slotmux';
 
 const OPENAI_KEY = process.env['OPENAI_API_KEY'];
@@ -99,6 +99,7 @@ const { config } = createContext({
   preset: 'agent',
   reserveForResponse: 4096,
   lazyContentItemTokens: true,
+  slotmuxProvider: openai({ apiKey: OPENAI_KEY }),
 });
 
 const ctx = Context.fromParsedConfig(config);

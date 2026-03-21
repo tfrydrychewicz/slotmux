@@ -1,10 +1,25 @@
 /**
- * @slotmux/providers — LLM provider adapters
+ * @slotmux/providers — LLM provider adapters and factories
  *
  * @packageDocumentation
  */
 
 export const VERSION = '1.0.0-rc.1';
+
+export type {
+  MapReduceDeps,
+  SlotmuxProvider,
+  SlotmuxProviderOptions,
+  SummarizeTextFn,
+} from './provider-factory.js';
+export { wrapCustomSummarize } from './provider-factory.js';
+
+export { openai } from './openai-provider.js';
+export { anthropic } from './anthropic-provider.js';
+export { google } from './google-provider.js';
+export { mistral } from './mistral-provider.js';
+export { ollama } from './ollama-provider.js';
+export type { OllamaProviderOptions } from './ollama-provider.js';
 
 export {
   createAnthropicAdapter,

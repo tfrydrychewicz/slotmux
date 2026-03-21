@@ -32,12 +32,14 @@ pnpm add gpt-tokenizer          # OpenAI models (GPT-4o, o1, o3, GPT-5.4)
 
 ```typescript
 import { createContext, Context } from 'slotmux';
+import { openai } from '@slotmux/providers';
 
-// 1. Configure — pick a model, choose a preset
+// 1. Configure — pick a model, choose a preset, connect your provider
 const { config } = createContext({
   model: 'gpt-5.4-mini',
   preset: 'chat',           // → system + history slots
   reserveForResponse: 4096, // leave room for the model's reply
+  slotmuxProvider: openai({ apiKey: process.env.OPENAI_API_KEY! }),
 });
 
 // 2. Create a context and add content
@@ -55,6 +57,17 @@ console.log(snapshot.messages);            // compiled messages
 ```
 
 That's it. Three steps: **configure**, **add content**, **build**. The snapshot contains everything you need to send to an LLM.
+
+With `slotmuxProvider` configured, the `chat` preset's `overflow: 'summarize'` strategy works automatically — slotmux calls your provider to compress older messages when the context overflows. No manual wiring needed.
+
+::: tip Provider factories for every major LLM
+
+```typescript
+import { openai, anthropic, google, mistral, ollama } from '@slotmux/providers';
+```
+
+Each factory accepts an API key and optional overrides. See [Providers](/concepts/providers#provider-factories) for all options.
+:::
 
 ## Send to an LLM
 

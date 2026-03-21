@@ -11,6 +11,7 @@ import type { TokenCount } from './branded.js';
 import type { ContentItem, MessageRole } from './content.js';
 import type { ContextEvent } from './events.js';
 import type { ContextPlugin } from './plugin.js';
+import type { SlotmuxProvider } from './provider.js';
 import type { TokenAccountant } from './token-accountant.js';
 
 // Re-export content, event, and plugin types for consumers that import from config
@@ -269,6 +270,19 @@ export interface ContextConfig {
 
   /** Provider-specific adapter configuration */
   provider?: ProviderConfig;
+
+  /**
+   * Provider with auto-wired LLM capabilities (§10.3).
+   *
+   * When set, the orchestrator automatically wires summarization and embeddings
+   * into the overflow engine. Created via provider factories:
+   *
+   * ```typescript
+   * import { openai } from '@slotmux/providers';
+   * slotmuxProvider: openai({ apiKey: process.env.OPENAI_API_KEY })
+   * ```
+   */
+  slotmuxProvider?: SlotmuxProvider;
 
   /** Plugin instances to activate */
   plugins?: ContextPlugin[];

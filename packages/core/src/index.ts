@@ -287,11 +287,12 @@ export {
 } from './plugins/sanitize-plugin.js';
 export type { SanitizePluginOptions } from './plugins/sanitize-plugin.js';
 
-// Provider types (§10.1)
+// Provider types (§10.1, §10.3)
 export type {
   Tokenizer,
   ModelCapabilities,
   ProviderAdapter,
+  SlotmuxProvider,
 } from './types/provider.js';
 export {
   BaseProviderAdapter,

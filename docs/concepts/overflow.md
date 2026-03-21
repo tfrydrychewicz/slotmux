@@ -80,8 +80,21 @@ overflowConfig: {
   <img src="/overflow-summarize.svg" alt="summarize overflow strategy" style="max-width: 440px; width: 100%;" />
 </p>
 
-::: warning
-The `summarize` strategy requires a `progressiveSummarize` implementation to be injected (via engine options or the `@slotmux/compression` package). Without it, the build will throw an `InvalidConfigError`.
+::: tip Auto-wired with provider factories
+When you configure `slotmuxProvider` (e.g. `openai({ apiKey })`), the summarize strategy works automatically — the provider factory creates the summarization function for you. No manual wiring needed.
+
+```typescript
+import { openai } from '@slotmux/providers';
+
+createContext({
+  model: 'gpt-5.4',
+  preset: 'chat',   // history slot uses overflow: 'summarize'
+  slotmuxProvider: openai({ apiKey: process.env.OPENAI_API_KEY! }),
+});
+// summarization just works ✓
+```
+
+Without a `slotmuxProvider`, you must inject a `progressiveSummarize` implementation manually via the overflow engine options.
 :::
 
 ### `semantic`

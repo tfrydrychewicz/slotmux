@@ -1,7 +1,7 @@
 import { stdin, stdout } from 'node:process';
 import * as readline from 'node:readline/promises';
 
-import { formatOpenAIMessages } from '@slotmux/providers';
+import { formatOpenAIMessages, openai } from '@slotmux/providers';
 import { createContext, Context } from 'slotmux';
 
 const OPENAI_KEY = process.env['OPENAI_API_KEY'];
@@ -15,6 +15,7 @@ const { config } = createContext({
   preset: 'chat',
   reserveForResponse: 4096,
   lazyContentItemTokens: true,
+  slotmuxProvider: openai({ apiKey: OPENAI_KEY }),
 });
 
 const ctx = Context.fromParsedConfig(config);

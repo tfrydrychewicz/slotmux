@@ -1,4 +1,4 @@
-import { formatOpenAIMessages } from '@slotmux/providers';
+import { formatOpenAIMessages, openai } from '@slotmux/providers';
 import { NextResponse } from 'next/server';
 import { createContext, Context } from 'slotmux';
 
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     preset: 'chat',
     reserveForResponse: 4096,
     charTokenEstimateForMissing: true,
+    slotmuxProvider: openai({ apiKey }),
   });
 
   const ctx = Context.fromParsedConfig(config);

@@ -188,6 +188,17 @@ export const contextConfigSchema = z
     requireAuthoritativeTokenCounts: z.boolean().optional(),
     lazyContentItemTokens: z.boolean().optional(),
     charTokenEstimateForMissing: z.boolean().optional(),
+    slotmuxProvider: z
+      .custom<import('../types/provider.js').SlotmuxProvider | undefined>(
+        (val) =>
+          val === undefined ||
+          (typeof val === 'object' &&
+            val !== null &&
+            'adapter' in val &&
+            typeof (val as { adapter: { id?: unknown } }).adapter?.id === 'string'),
+        { message: 'slotmuxProvider must be a SlotmuxProvider (use openai(), anthropic(), etc. from @slotmux/providers)' },
+      )
+      .optional(),
   })
   .strict()
   .superRefine((data, ctx) => {
