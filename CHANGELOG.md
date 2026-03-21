@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This file is managed by [Changesets](https://github.com/changesets/changesets). Package-specific changelogs are generated when publishing.
 
+## 1.0.0-rc.3 — 2026-03-21
+
+### Fixed
+
+#### `slotmux` (core)
+
+- **`forceCompress` on error-strategy slots** — Fixed `ContextOverflowError` thrown when `forceCompress: true` was used with the `chat` preset. The synthetic 50% budget caused the system slot's `overflow: 'error'` strategy to fire even though content was within its real budget. Error-strategy slots are now skipped when `forceCompress` is active and content is within budget.
+
 ## 1.0.0-rc.2 — 2026-03-21
 
 ### Added
