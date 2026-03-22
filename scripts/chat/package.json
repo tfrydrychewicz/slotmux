@@ -1,0 +1,11 @@
+{
+  "name": "@slotmux/chat",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "slotmux": "workspace:*",
+    "@slotmux/debug": "workspace:*",
+    "@slotmux/providers": "workspace:*"
+  }
+}

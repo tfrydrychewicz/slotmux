@@ -3,3 +3,4 @@ packages:
   - 'docs'
   - 'examples/*'
   - 'benchmarks/longmemeval'
+  - 'scripts/chat'

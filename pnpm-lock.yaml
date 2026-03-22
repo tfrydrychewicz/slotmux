@@ -461,6 +461,18 @@ importers:
         specifier: ^1.0.22
         version: 1.0.22
 
+  scripts/chat:
+    dependencies:
+      '@slotmux/debug':
+        specifier: workspace:*
+        version: link:../../packages/debug
+      '@slotmux/providers':
+        specifier: workspace:*
+        version: link:../../packages/providers
+      slotmux:
+        specifier: workspace:*
+        version: link:../../packages/core
+
 packages:
 
   '@algolia/abtesting@1.15.2':

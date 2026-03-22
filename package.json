@@ -29,6 +29,7 @@
     "bench:longmemeval:report": "tsx benchmarks/longmemeval/report.mts",
     "bench:longmemeval:trace": "tsx benchmarks/longmemeval/trace-question.mts",
     "bench:longmemeval:analyze": "tsx benchmarks/longmemeval/analyze-trace.mts",
+    "chat": "tsx scripts/chat/chat.mts",
     "lint": "eslint .",
     "audit": "pnpm audit --audit-level=high",
     "verify:core-runtime-deps": "node scripts/verify-core-runtime-deps.mjs",
