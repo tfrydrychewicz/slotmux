@@ -45,8 +45,19 @@ export function mistral(opts: SlotmuxProviderOptions): SlotmuxProvider {
 
   const summarizeText: SummarizeTextFn = opts.summarize
     ? wrapCustomSummarize(opts.summarize)
-    : async ({ systemPrompt, userPayload }) =>
+    : async ({ systemPrompt, userPayload, responseSchema }) =>
         limiter.run(async () => {
+          const requestBody: Record<string, unknown> = {
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPayload },
+            ],
+            temperature: 0.3,
+          };
+          if (responseSchema !== undefined) {
+            requestBody['response_format'] = { type: 'json_object' };
+          }
           const res = await fetchWithRetry(
             `${baseUrl}/chat/completions`,
             {
@@ -55,14 +66,7 @@ export function mistral(opts: SlotmuxProviderOptions): SlotmuxProvider {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${opts.apiKey}`,
               },
-              body: JSON.stringify({
-                model,
-                messages: [
-                  { role: 'system', content: systemPrompt },
-                  { role: 'user', content: userPayload },
-                ],
-                temperature: 0.3,
-              }),
+              body: JSON.stringify(requestBody),
             },
             { maxRetries: 0 },
           );

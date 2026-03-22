@@ -158,4 +158,30 @@ describe('computeDynamicPreserveLastN', () => {
     const large = computeDynamicPreserveLastN(items, 5000, countTokens);
     expect(large).toBeGreaterThan(small);
   });
+
+  it('uses estimateItemsTokens when provided (§9.3.1)', () => {
+    const items = Array.from({ length: 20 }, (_, i) => mkItem(`m${String(i)}`, i, 100));
+    const exactCalls: number[] = [];
+    const exactCounter = (arr: readonly ProgressiveItem[]) => {
+      exactCalls.push(arr.length);
+      return countTokens(arr);
+    };
+    const estimateCalls: number[] = [];
+    const estimator = (arr: readonly ProgressiveItem[]) => {
+      estimateCalls.push(arr.length);
+      return Math.ceil(countTokens(arr) * 1.1);
+    };
+
+    const withEstimate = computeDynamicPreserveLastN(
+      items, 1000, exactCounter, undefined, estimator,
+    );
+    const withoutEstimate = computeDynamicPreserveLastN(
+      items, 1000, countTokens,
+    );
+
+    expect(estimateCalls.length).toBeGreaterThan(0);
+    expect(exactCalls.length).toBe(0);
+    expect(withEstimate).toBeGreaterThanOrEqual(4);
+    expect(Math.abs(withEstimate - withoutEstimate)).toBeLessThanOrEqual(2);
+  });
 });

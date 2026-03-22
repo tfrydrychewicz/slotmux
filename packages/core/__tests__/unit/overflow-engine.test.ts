@@ -775,6 +775,54 @@ describe('OverflowEngine (§7.2)', () => {
     expect(out[0]!.id).toBe(anchorUser.id);
   });
 
+  it('semanticCompressAsOverflow passes adaptiveThreshold from overflowConfig', async () => {
+    const embedFn = async (text: string) => {
+      const k = text.trim();
+      if (k === 'high') return [0.99, 0.01, 0];
+      if (k === 'mid') return [0.5, 0.5, 0];
+      if (k === 'low') return [0.01, 0.99, 0];
+      return [0, 0, 1];
+    };
+    const high = createContentItem({
+      slot: 's',
+      role: 'user',
+      content: 'high',
+      tokens: toTokenCount(10),
+      createdAt: 1000,
+    });
+    const mid = createContentItem({
+      slot: 's',
+      role: 'user',
+      content: 'mid',
+      tokens: toTokenCount(10),
+      createdAt: 2000,
+    });
+    const low = createContentItem({
+      slot: 's',
+      role: 'user',
+      content: 'low',
+      tokens: toTokenCount(10),
+      createdAt: 3000,
+    });
+    const slotConfig: SlotConfig = {
+      priority: 50,
+      budget: { flex: true },
+      overflow: 'semantic',
+      overflowConfig: {
+        embedFn,
+        anchorTo: 'high',
+        adaptiveThreshold: true,
+      },
+    };
+    const out = await semanticCompressAsOverflow([high, mid, low], toTokenCount(100), {
+      slot: 's',
+      slotConfig,
+      tokenAccountant: { countItems: countSum },
+    });
+    expect(out.map((i) => (i.content as string))).toContain('high');
+    expect(out.map((i) => (i.content as string))).not.toContain('low');
+  });
+
   it('invokes custom overflow function with strategy label custom', async () => {
     const seen: string[] = [];
     const item = createContentItem({

@@ -129,6 +129,26 @@ overflowConfig: {
 
 Items below the similarity threshold are dropped first. Among remaining items, the least similar are evicted until the slot fits within budget.
 
+#### Adaptive similarity thresholds
+
+Fixed thresholds are brittle — a value calibrated for one embedding model may not work for another. Enable `adaptiveThreshold` to have slotmux automatically compute the cutoff from the actual score distribution:
+
+```typescript
+overflowConfig: {
+  embedFn: async (text) => embeddings.create(text),
+  anchorTo: 'lastUserMessage',
+  adaptiveThreshold: true,        // default k = 1.0 (mean + 1 stddev)
+  // adaptiveThreshold: 0.5,      // more permissive
+  // adaptiveThreshold: 2.0,      // stricter
+}
+```
+
+The algorithm computes `mean + k × stddev` of all non-pinned similarity scores and uses that as the effective threshold. When both `adaptiveThreshold` and `similarityThreshold` are set, the effective threshold is `max(adaptive, fixed)`, so the fixed value acts as a floor.
+
+<p align="center">
+  <img src="/semantic-adaptive-threshold.svg" alt="adaptive similarity threshold" style="max-width: 500px; width: 100%;" />
+</p>
+
 <p align="center">
   <img src="/overflow-semantic.svg" alt="semantic overflow strategy" style="max-width: 440px; width: 100%;" />
 </p>

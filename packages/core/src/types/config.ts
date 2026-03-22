@@ -193,6 +193,17 @@ export interface OverflowConfig {
 
   /** Minimum similarity score to retain content 0.0–1.0 (semantic strategy) */
   similarityThreshold?: number;
+
+  /**
+   * Enable adaptive similarity thresholds for the semantic strategy (§8.2.1).
+   *
+   * - `true` uses default `k = 1.0` (keep items above mean + 1 stddev)
+   * - A number sets a custom `k` value (higher = stricter)
+   * - When both `adaptiveThreshold` and `similarityThreshold` are set,
+   *   the effective threshold is `max(adaptive, fixed)`
+   */
+  adaptiveThreshold?: boolean | number;
+
   /** What content to score relevance against (semantic strategy) */
   anchorTo?: 'lastUserMessage' | 'systemPrompt' | ContentItem | string;
   /** Embedding function (semantic strategy) */
@@ -284,16 +295,31 @@ export interface OverflowConfig {
    * scoring to decide which items go to the OLD zone (compressed most aggressively)
    * vs MIDDLE zone. Higher-scored items survive longer in the context window.
    *
-   * - Omit to use the default scorer (entity density, decisions, preferences).
+   * - **Omit** to use the default scorer, which uses language-agnostic structural
+   *   signals: entity density, numbers/dates/quoted strings, code blocks, URLs,
+   *   lists, key-value pairs, message length, and lexical diversity.
    * - Set to `null` to disable importance-weighted partitioning (pure chronological).
-   * - Set to a function to provide domain-specific scoring.
+   * - Set to a function to provide domain-specific or embedding-based scoring.
    *
-   * @example
+   * The default scorer intentionally avoids hardcoded English keywords so it
+   * works regardless of the user's language. For semantic scoring, pre-compute
+   * embeddings and look them up synchronously:
+   *
+   * @example Domain-specific keyword scorer
    * ```typescript
    * overflowConfig: {
    *   importanceScorer: (item) => {
-   *     // Custom: score higher if content mentions a product name
    *     return /ProductX|ProductY/i.test(item.content) ? 10 : 0;
+   *   },
+   * }
+   * ```
+   *
+   * @example Pre-computed embedding scorer
+   * ```typescript
+   * overflowConfig: {
+   *   importanceScorer: (item) => {
+   *     const vec = embeddingMap.get(hash(item.content));
+   *     return vec ? cosineSimilarity(vec, anchorVec) : 0;
    *   },
    * }
    * ```

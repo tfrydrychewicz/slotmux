@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 240" fill="none">
+  <style>text { font-family: system-ui, -apple-system, sans-serif; }</style>
+  <text x="250" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#e2e2e2">Adaptive similarity threshold</text>
+  <text x="250" y="34" text-anchor="middle" font-size="9" fill="#a3a3a3">Cutoff adapts to score distribution: &#x03BC; + k &#x00B7; &#x03C3;</text>
+
+  <!-- Chart area -->
+  <rect x="15" y="44" width="470" height="180" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+
+  <!-- Y axis -->
+  <line x1="50" y1="60" x2="50" y2="200" stroke="#333" stroke-width="1"/>
+  <text x="44" y="66" text-anchor="end" font-size="6.5" fill="#94a3b8">1.0</text>
+  <text x="44" y="133" text-anchor="end" font-size="6.5" fill="#94a3b8">0.5</text>
+  <text x="44" y="204" text-anchor="end" font-size="6.5" fill="#94a3b8">0.0</text>
+  <text x="12" y="133" text-anchor="middle" font-size="7" fill="#64748b" transform="rotate(-90,12,133)">Cosine similarity</text>
+
+  <!-- X axis -->
+  <line x1="50" y1="200" x2="460" y2="200" stroke="#333" stroke-width="1"/>
+  <text x="255" y="218" text-anchor="middle" font-size="7.5" fill="#94a3b8">Items (sorted by similarity descending)</text>
+
+  <!-- Adaptive threshold line -->
+  <line x1="50" y1="114" x2="460" y2="114" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="463" y="110" font-size="7" font-weight="600" fill="#60a5fa">adaptive</text>
+  <text x="463" y="120" font-size="6" fill="#60a5fa">&#x03BC;+k&#x00B7;&#x03C3;</text>
+
+  <!-- Fixed threshold line -->
+  <line x1="50" y1="148" x2="460" y2="148" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="463" y="152" font-size="7" fill="#94a3b8">fixed</text>
+
+  <!-- Bars: kept (above adaptive) -->
+  <rect x="66" y="66" width="20" height="134" rx="2" fill="#22c55e" opacity="0.5"/>
+  <rect x="96" y="74" width="20" height="126" rx="2" fill="#22c55e" opacity="0.5"/>
+  <rect x="126" y="82" width="20" height="118" rx="2" fill="#22c55e" opacity="0.5"/>
+  <rect x="156" y="90" width="20" height="110" rx="2" fill="#22c55e" opacity="0.5"/>
+  <rect x="186" y="98" width="20" height="102" rx="2" fill="#22c55e" opacity="0.45"/>
+  <rect x="216" y="106" width="20" height="94" rx="2" fill="#22c55e" opacity="0.4"/>
+
+  <!-- Bars: dropped by adaptive but above fixed -->
+  <rect x="256" y="124" width="20" height="76" rx="2" fill="#f59e0b" opacity="0.4"/>
+  <rect x="286" y="134" width="20" height="66" rx="2" fill="#f59e0b" opacity="0.4"/>
+  <rect x="316" y="142" width="20" height="58" rx="2" fill="#f59e0b" opacity="0.35"/>
+
+  <!-- Bars: dropped by both -->
+  <rect x="356" y="158" width="20" height="42" rx="2" fill="#ef4444" opacity="0.35"/>
+  <rect x="386" y="172" width="20" height="28" rx="2" fill="#ef4444" opacity="0.3"/>
+  <rect x="416" y="184" width="20" height="16" rx="2" fill="#ef4444" opacity="0.25"/>
+
+  <!-- Legend -->
+  <rect x="66" y="54" width="8" height="8" rx="1.5" fill="#22c55e" opacity="0.5"/>
+  <text x="78" y="61" font-size="7" fill="#22c55e">Kept</text>
+  <rect x="116" y="54" width="8" height="8" rx="1.5" fill="#f59e0b" opacity="0.4"/>
+  <text x="128" y="61" font-size="7" fill="#fbbf24">Dropped by adaptive</text>
+  <rect x="236" y="54" width="8" height="8" rx="1.5" fill="#ef4444" opacity="0.35"/>
+  <text x="248" y="61" font-size="7" fill="#f87171">Dropped by both</text>
+</svg>

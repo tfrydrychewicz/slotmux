@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-
 import { toTokenCount } from 'slotmux';
 import { describe, expect, it } from 'vitest';
 
@@ -51,21 +49,31 @@ describe('LRUCache', () => {
 });
 
 describe('TokenCountCache.computeKey', () => {
-  it('uses SHA-256 of tokenizer id, NUL, and content', () => {
-    const id = 'cl100k_base';
-    const content = 'hello';
-    const expected = createHash('sha256')
-      .update(id, 'utf8')
-      .update('\0', 'utf8')
-      .update(content, 'utf8')
-      .digest('hex');
-    expect(TokenCountCache.computeKey(id, content)).toBe(expected);
+  it('returns a deterministic hex string', () => {
+    const key1 = TokenCountCache.computeKey('cl100k_base', 'hello');
+    const key2 = TokenCountCache.computeKey('cl100k_base', 'hello');
+    expect(key1).toBe(key2);
+    expect(key1).toMatch(/^[0-9a-f]+$/);
   });
 
   it('differs when tokenizer id differs for same content', () => {
     expect(TokenCountCache.computeKey('a', 'x')).not.toBe(
       TokenCountCache.computeKey('b', 'x'),
     );
+  });
+
+  it('differs when content differs for same tokenizer id', () => {
+    expect(TokenCountCache.computeKey('t', 'hello')).not.toBe(
+      TokenCountCache.computeKey('t', 'world'),
+    );
+  });
+
+  it('produces unique keys for 10K distinct strings (collision safety)', () => {
+    const keys = new Set<string>();
+    for (let i = 0; i < 10_000; i++) {
+      keys.add(TokenCountCache.computeKey('tok', `content-${String(i)}`));
+    }
+    expect(keys.size).toBe(10_000);
   });
 });
 

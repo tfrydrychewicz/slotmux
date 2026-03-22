@@ -93,6 +93,7 @@ export const overflowConfigSchema = z
     summaryBudget: slotBudgetSchema.optional(),
     summarizeThreshold: z.number().int().nonnegative().optional(),
     similarityThreshold: z.number().min(0).max(1).optional(),
+    adaptiveThreshold: z.union([z.boolean(), z.number()]).optional(),
     anchorTo: z.unknown().optional(),
     embedFn: z.custom<(...args: unknown[]) => unknown>(
       (val) => val === undefined || typeof val === 'function',

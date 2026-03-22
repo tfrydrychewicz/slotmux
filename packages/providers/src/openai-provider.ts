@@ -60,13 +60,16 @@ export function openai(opts: SlotmuxProviderOptions): SlotmuxProvider {
           ...(opts.maxRetries !== undefined ? { maxRetries: opts.maxRetries } : {}),
         });
 
-        return async ({ systemPrompt, userPayload }): Promise<SummarizeTextResult> =>
+        return async ({ systemPrompt, userPayload, responseSchema }): Promise<SummarizeTextResult> =>
           limiter.run(async () => {
             const { content, finishReason, httpStatus } = await chat({
               messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPayload },
               ],
+              ...(responseSchema !== undefined
+                ? { responseFormat: { type: 'json_schema', json_schema: { name: 'facts', schema: responseSchema, strict: true } } }
+                : {}),
             });
             return { text: content, finishReason, httpStatus };
           });

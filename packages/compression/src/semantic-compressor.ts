@@ -18,6 +18,15 @@ export type RunSemanticCompressParams = {
    * @defaultValue 0
    */
   readonly similarityThreshold?: number;
+  /**
+   * Enable adaptive similarity thresholds (§8.2.1).
+   *
+   * - `true` uses default `k = 1.0` (keep items above mean + 1 stddev)
+   * - A number sets a custom `k` value (higher = stricter)
+   * - When both `adaptiveThreshold` and `similarityThreshold` are set,
+   *   the effective threshold is `max(adaptive, fixed)`
+   */
+  readonly adaptiveThreshold?: boolean | number;
   /** Token estimate for a single item (aligned with overflow engine counter). */
   readonly countItemTokens: (item: SemanticScorableItem) => number;
 };
@@ -47,13 +56,29 @@ export function cosineSimilarity(
 }
 
 /**
+ * Computes an adaptive similarity threshold from the distribution of scores.
+ *
+ * @param scores - Non-pinned similarity scores
+ * @param k - Standard deviations above the mean (default 1.0).
+ *   Higher values are stricter (fewer items retained).
+ * @returns The computed threshold (`mean + k * stddev`), or 0 when scores is empty
+ */
+export function computeAdaptiveThreshold(scores: readonly number[], k: number = 1.0): number {
+  const n = scores.length;
+  if (n === 0) return 0;
+  const mean = scores.reduce((a, b) => a + b, 0) / n;
+  const variance = scores.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
+  return mean + k * Math.sqrt(variance);
+}
+
+/**
  * Selects items: all **pinned** first, then non-pinned by descending similarity to the anchor
  * until the token budget is exhausted. Result sorted by `createdAt` ascending.
  */
 export async function runSemanticCompress(
   params: RunSemanticCompressParams,
 ): Promise<readonly SemanticScorableItem[]> {
-  const threshold = params.similarityThreshold ?? 0;
+  const fixedThreshold = params.similarityThreshold ?? 0;
   const anchorIn = params.anchorText.trim();
   const anchorVec =
     anchorIn.length === 0 ? ([] as number[]) : await params.embed(anchorIn);
@@ -71,7 +96,17 @@ export async function runSemanticCompress(
   }
 
   const pinned = scored.filter((s) => s.item.pinned);
-  const pool = scored.filter((s) => !s.item.pinned && s.sim >= threshold);
+  const nonPinned = scored.filter((s) => !s.item.pinned);
+
+  let effectiveThreshold = fixedThreshold;
+  if (params.adaptiveThreshold !== undefined && params.adaptiveThreshold !== false) {
+    const k = typeof params.adaptiveThreshold === 'number' ? params.adaptiveThreshold : 1.0;
+    const nonPinnedScores = nonPinned.map((s) => s.sim);
+    const adaptive = computeAdaptiveThreshold(nonPinnedScores, k);
+    effectiveThreshold = Math.max(adaptive, fixedThreshold);
+  }
+
+  const pool = nonPinned.filter((s) => s.sim >= effectiveThreshold);
   pool.sort((a, b) => b.sim - a.sim || a.item.createdAt - b.item.createdAt);
 
   let used = 0;

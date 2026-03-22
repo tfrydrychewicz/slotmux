@@ -43,7 +43,11 @@ if (!existsSync(inputPath)) {
 // ── Load data ────────────────────────────────────────────────────────
 
 const lines = readFileSync(inputPath, 'utf-8').trim().split('\n').filter(Boolean);
-const rows: EvaluatedRun[] = lines.map((line) => JSON.parse(line) as EvaluatedRun);
+const allParsed = lines.map((line) => JSON.parse(line) as Record<string, unknown>);
+const rows: EvaluatedRun[] = allParsed
+  .filter((obj) => obj['_type'] === undefined) as unknown as EvaluatedRun[];
+const llmSummaryLine = allParsed.find((obj) => obj['_type'] === 'llm-usage-summary') as
+  | { totalLlmRequests: number; totalLlmTokensSent: number } | undefined;
 console.log(`Loaded ${String(rows.length)} evaluated runs`);
 
 // ── Collect unique strategies and budgets ─────────────────────────────
@@ -147,6 +151,11 @@ const totalQuestions = new Set(rows.map((r) => r.questionId)).size;
 const totalCorrect = rows.filter((r) => r.correct).length;
 const errorRuns = rows.filter((r) => r.modelAnswer.startsWith('[ERROR]')).length;
 
+const perRunRequests = rows.map((r) => r.llmRequests ?? 0);
+const perRunTokensSent = rows.map((r) => r.llmTokensSent ?? 0);
+const totalLlmRequests = llmSummaryLine?.totalLlmRequests ?? perRunRequests.reduce((a, b) => a + b, 0);
+const totalLlmTokensSent = llmSummaryLine?.totalLlmTokensSent ?? perRunTokensSent.reduce((a, b) => a + b, 0);
+
 const summary = [
   '## Summary',
   '',
@@ -156,7 +165,37 @@ const summary = [
   `- **Error runs**: ${String(errorRuns)}`,
   `- **Strategies**: ${strategies.join(', ')}`,
   `- **Budgets**: ${budgets.map(String).join(', ')} tokens`,
+  `- **Total LLM requests**: ${String(totalLlmRequests)}`,
+  `- **Total LLM tokens sent (est.)**: ${String(totalLlmTokensSent)}`,
   `- **Run ID**: ${RUN_ID}`,
+].join('\n');
+
+// ── LLM usage table ──────────────────────────────────────────────────
+
+const llmUsageRows = strategies.map((strategy) => {
+  const stratRows = rows.filter((r) => r.strategy === strategy);
+  const budgetCells = budgets.map((budget) => {
+    const subset = stratRows.filter((r) => r.budgetTokens === budget);
+    const totalReqs = subset.reduce((s, r) => s + (r.llmRequests ?? 0), 0);
+    const totalToks = subset.reduce((s, r) => s + (r.llmTokensSent ?? 0), 0);
+    const avgReqs = subset.length > 0 ? (totalReqs / subset.length).toFixed(1) : '-';
+    const avgToks = subset.length > 0 ? Math.round(totalToks / subset.length) : '-';
+    return `${avgReqs} / ${String(avgToks)}`;
+  });
+  const totalStratReqs = stratRows.reduce((s, r) => s + (r.llmRequests ?? 0), 0);
+  const totalStratToks = stratRows.reduce((s, r) => s + (r.llmTokensSent ?? 0), 0);
+  return `| ${strategy} | ${budgetCells.join(' | ')} | ${String(totalStratReqs)} / ${String(totalStratToks)} |`;
+});
+
+const llmUsageHeader = `| Strategy | ${budgetLabels.map((b) => `${b} (avg reqs / avg tokens)`).join(' | ')} | Total (reqs / tokens) |`;
+const llmUsageSep = `|${budgetLabels.map(() => '------').join('|')}|---------|---------|`;
+
+const llmUsageTable = [
+  '## LLM usage (estimated tokens sent)',
+  '',
+  llmUsageHeader,
+  llmUsageSep,
+  ...llmUsageRows,
 ].join('\n');
 
 // ── Assemble report ──────────────────────────────────────────────────
@@ -170,6 +209,8 @@ const report = [
   '',
   ...categoryTables.map((t) => t + '\n'),
   efficiencyTable,
+  '',
+  llmUsageTable,
   '',
 ].join('\n');
 

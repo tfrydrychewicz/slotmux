@@ -1,16 +1,28 @@
 /**
- * Two-tier token count cache (§9.3): L1 LRU + L2 Map, SHA-256 keys.
+ * Two-tier token count cache (§9.3): L1 LRU + L2 Map, FNV-1a keys.
  *
  * @packageDocumentation
  */
-
-import { createHash } from 'node:crypto';
 
 import type { TokenCount } from 'slotmux';
 
 import { LRUCache } from './lru-cache.js';
 import type { Tokenizer } from './tokenizer.js';
 
+/**
+ * FNV-1a 32-bit hash — fast, non-cryptographic, pure JS.
+ *
+ * Used for cache key generation where collision resistance at the
+ * level of SHA-256 is unnecessary. Returns a hex string.
+ */
+function fnv1a32(input: string): string {
+  let hash = 0x811c9dc5; // FNV offset basis
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193); // FNV prime
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
 
 const DEFAULT_L1_CAPACITY = 10_000;
 
@@ -30,7 +42,7 @@ export interface TokenCountCacheOptions {
 }
 
 /**
- * Caches `tokenizer.count(content)` by `SHA-256(tokenizerId + NUL + content)` (hex digest).
+ * Caches `tokenizer.count(content)` by `FNV-1a(tokenizerId + NUL + content)`.
  */
 export class TokenCountCache {
   private readonly l1: LRUCache<string, TokenCount>;
@@ -52,14 +64,11 @@ export class TokenCountCache {
 
   /**
    * Stable cache key for a tokenizer id and raw string content.
+   * Uses FNV-1a (non-cryptographic, ~50x faster than SHA-256).
    * Exposed for tests and custom storage layers.
    */
   static computeKey(tokenizerId: string, content: string): string {
-    return createHash('sha256')
-      .update(tokenizerId, 'utf8')
-      .update('\0', 'utf8')
-      .update(content, 'utf8')
-      .digest('hex');
+    return fnv1a32(tokenizerId + '\0' + content);
   }
 
   /** Instance alias for {@link TokenCountCache.computeKey}. */

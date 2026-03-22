@@ -83,6 +83,15 @@ export type RunProgressiveSummarizeOptions = {
    * Default: `undefined` (no decay — raw confidence is used as-is).
    */
   readonly factDecayHalfLifeMs?: number;
+  /**
+   * Fast character-based token estimator for heuristic paths (§9.3.1 Tier 0).
+   *
+   * When provided, used instead of exact `countItemsTokens` in
+   * `chunkZoneByTokenBudget`, `computeDynamicPreserveLastN`, and adaptive
+   * zone skip (first pass). The exact counter is still used for final budget
+   * enforcement and `enrichSummaryTokens`.
+   */
+  readonly estimateItemsTokens?: (items: readonly ProgressiveItem[]) => number;
 };
 
 function plain(item: ProgressiveItem): string {
@@ -229,6 +238,7 @@ export async function runProgressiveSummarize(
   const nowFn = options.now ?? Date.now;
   const { summarizeText } = options;
   const sumTok = (arr: readonly ProgressiveItem[]) => options.countItemsTokens(arr);
+  const fastEstimate = options.estimateItemsTokens ?? sumTok;
 
   const sorted = [...items].sort((a, b) => a.createdAt - b.createdAt);
   if (sumTok(sorted) <= budgetTokens) {
@@ -356,6 +366,8 @@ export async function runProgressiveSummarize(
   // --- Adaptive zone skip (§8.9 P1) ---
   // After old-zone summarization, check if l2Summaries + middle + recent fits.
   // If so, skip middle-zone LLM calls entirely.
+  // Uses fast estimate for early rejection only; exact counter for the accept path
+  // (fast estimates can diverge significantly from exact counters, e.g. char-based tests).
   const afterOldZone = [...l2Summaries, ...middle, ...recentWork];
   const afterOldZoneFactItem = makeFactItem();
   const afterOldCheck = [
@@ -363,7 +375,11 @@ export async function runProgressiveSummarize(
     ...afterOldZone,
   ];
 
-  if (sumTok(afterOldCheck) <= budgetTokens) {
+  const skipMiddle = fastEstimate(afterOldCheck) > budgetTokens
+    ? false
+    : sumTok(afterOldCheck) <= budgetTokens;
+
+  if (skipMiddle) {
     // Middle zone fits verbatim — skip middle-zone LLM calls
     l1Summaries = [...middle];
   } else {

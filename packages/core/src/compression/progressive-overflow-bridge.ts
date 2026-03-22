@@ -7,6 +7,7 @@
 
 import {
   computeDynamicPreserveLastN,
+  getPlainTextForLossless,
   runMapReduceSummarize,
   runProgressiveSummarize,
   type MapReduceSummarizeDeps,
@@ -18,6 +19,8 @@ import { InvalidConfigError } from '../errors.js';
 import { createContentId, toTokenCount } from '../types/branded.js';
 import type { OverflowStrategyFn, SlotBudget } from '../types/config.js';
 import type { ContentItem } from '../types/content.js';
+
+const CHARS_PER_TOKEN_FAST = 3.5;
 
 function summaryBudgetTokensFromConfig(slotBudget: number, sb: SlotBudget | undefined): number {
   if (sb === undefined) return Math.max(64, Math.floor(slotBudget * 0.15));
@@ -91,6 +94,15 @@ export function createProgressiveSummarizeOverflow(
     const progressiveItems = items as unknown as ProgressiveItem[];
     const createId = () => createContentId();
 
+    const estimateItemsTokens = (arr: readonly ProgressiveItem[]) => {
+      let total = 0;
+      for (const item of arr) {
+        const text = getPlainTextForLossless(item);
+        total += Math.ceil(text.length / CHARS_PER_TOKEN_FAST);
+      }
+      return total;
+    };
+
     const preserveLastN = computeDynamicPreserveLastN(
       progressiveItems,
       budgetNum,
@@ -132,6 +144,7 @@ export function createProgressiveSummarizeOverflow(
       summaryBudgetTokens: summaryCap,
       slot,
       createId,
+      estimateItemsTokens,
       ...(maxConc !== undefined ? { maxConcurrency: maxConc } : {}),
       ...(factBudget !== undefined ? { factBudgetTokens: factBudget } : {}),
       ...(importanceScorer !== undefined ? { importanceScorer } : {}),

@@ -24,6 +24,10 @@ export type BenchmarkRun = {
   readonly question: string;
   readonly expectedAnswer: string;
   readonly modelAnswer: string;
+  /** Number of LLM API requests made during this run (compression + reader). */
+  readonly llmRequests?: number;
+  /** Estimated tokens sent to the LLM across all requests (compression + reader). */
+  readonly llmTokensSent?: number;
 };
 
 /** A benchmark run after LLM-as-judge evaluation. */

@@ -50,22 +50,26 @@ export function ollama(opts: OllamaProviderOptions = {}): SlotmuxProvider {
 
   const summarizeText: SummarizeTextFn = opts.summarize
     ? wrapCustomSummarize(opts.summarize)
-    : async ({ systemPrompt, userPayload }) =>
+    : async ({ systemPrompt, userPayload, responseSchema }) =>
         limiter.run(async () => {
+          const requestBody: Record<string, unknown> = {
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPayload },
+            ],
+            stream: false,
+            options: { num_predict: 4096 },
+          };
+          if (responseSchema !== undefined) {
+            requestBody['format'] = 'json';
+          }
           const res = await fetchWithRetry(
             `${baseUrl}/api/chat`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                model,
-                messages: [
-                  { role: 'system', content: systemPrompt },
-                  { role: 'user', content: userPayload },
-                ],
-                stream: false,
-                options: { num_predict: 4096 },
-              }),
+              body: JSON.stringify(requestBody),
             },
             { maxRetries: 0 },
           );

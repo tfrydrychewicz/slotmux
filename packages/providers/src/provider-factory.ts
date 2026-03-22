@@ -40,6 +40,14 @@ export type SummarizeTextFn = (params: {
   readonly systemPrompt: string;
   readonly userPayload: string;
   readonly targetTokens?: number;
+  /**
+   * When set, the provider should request structured JSON output (§8.4.1a).
+   * Each provider uses its native mechanism (OpenAI `response_format`,
+   * Anthropic tool use, Google `responseMimeType`, etc.).
+   * Providers that don't support structured output ignore this field —
+   * the caller falls back to text parsing.
+   */
+  readonly responseSchema?: Record<string, unknown>;
 }) => Promise<string | SummarizeTextResult>;
 
 /**

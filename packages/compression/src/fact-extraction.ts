@@ -308,30 +308,96 @@ export type ExtractFactsParams = {
 export type ExtractFactsFn = (params: ExtractFactsParams) => Promise<readonly FactEntry[]>;
 
 /**
- * System prompt for the default LLM-based fact extraction.
+ * System prompt for JSON structured extraction.
  *
- * Instructs the model to output only `FACT:` lines — no narrative.
+ * Shorter than the text-based prompt since the JSON schema enforces structure.
  */
-const DEFAULT_EXTRACTION_PROMPT =
-  `Extract every specific, concrete fact from the following conversation text. ` +
-  `Output ONLY lines in this exact format:\n` +
-  `FACT: subject | predicate | value | confidence\n\n` +
-  `where confidence is 0.0–1.0 indicating how useful this fact would be if asked about later ` +
-  `(1.0 = critical, 0.5 = moderately useful).\n\n` +
-  `Include: names, numbers, dates, user preferences, decisions, places, products, ` +
-  `accounts, URLs, versions, prices, quantities, and any other concrete detail ` +
-  `that could be asked about later.\n\n` +
-  `Do NOT extract trivial social interactions (greetings, thank-yous, farewells, ` +
-  `small talk, acknowledgments like "ok" or "thanks"). ` +
-  `Do NOT include opinions, vague statements, or narrative. ` +
-  `Do NOT include any text besides FACT: lines.`;
+const JSON_EXTRACTION_PROMPT =
+  `Extract every specific, concrete fact from the conversation. ` +
+  `Include names, numbers, dates, preferences, decisions, places, products, ` +
+  `accounts, URLs, versions, prices, and quantities. ` +
+  `Exclude trivial social interactions, opinions, and vague statements. ` +
+  `Set confidence 0.0–1.0 (1.0 = critical, 0.5 = moderately useful).`;
+
+/**
+ * JSON schema for structured fact extraction (§8.4.1a).
+ *
+ * Sent to providers that support `responseSchema` to get type-safe JSON output
+ * instead of parsing `FACT:` text lines.
+ */
+export const FACT_EXTRACTION_SCHEMA: Record<string, unknown> = {
+  type: 'object',
+  properties: {
+    facts: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          subject: { type: 'string' },
+          predicate: { type: 'string' },
+          value: { type: 'string' },
+          confidence: { type: 'number' },
+        },
+        required: ['subject', 'predicate', 'value', 'confidence'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['facts'],
+  additionalProperties: false,
+};
+
+type JsonFactEntry = {
+  subject?: string;
+  predicate?: string;
+  value?: string;
+  confidence?: number;
+};
+
+type JsonFactPayload = {
+  facts?: JsonFactEntry[];
+};
+
+/**
+ * Attempts to parse a JSON response into FactEntry[].
+ * Returns `null` if parsing fails, so the caller can fall back to text parsing.
+ */
+function tryParseJsonFacts(
+  output: string,
+  sourceItemId: string,
+  createdAt: number,
+): readonly FactEntry[] | null {
+  try {
+    const parsed = JSON.parse(output) as JsonFactPayload;
+    if (!Array.isArray(parsed.facts)) return null;
+
+    return parsed.facts
+      .filter(
+        (f): f is Required<JsonFactEntry> =>
+          typeof f.subject === 'string' &&
+          typeof f.predicate === 'string' &&
+          typeof f.value === 'string' &&
+          typeof f.confidence === 'number',
+      )
+      .map((f) => ({
+        subject: f.subject,
+        predicate: f.predicate,
+        value: f.value,
+        sourceItemId,
+        confidence: Math.min(MAX_CONFIDENCE, Math.max(MIN_CONFIDENCE, f.confidence)),
+        createdAt,
+      }));
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Creates a default {@link ExtractFactsFn} that uses an LLM call to extract facts.
  *
- * The implementation calls `summarizeText` with a dedicated extraction prompt
- * that instructs the model to output only `FACT:` lines. The output is then
- * parsed with {@link parseFactLines}.
+ * When the provider supports structured output, the extraction uses JSON
+ * (`responseSchema`) for reliable, type-safe extraction. If JSON parsing fails
+ * or the provider ignores the schema, it falls back to `FACT:` line parsing.
  *
  * @param summarizeText - The LLM summarization function (same one used for
  *   progressive summarization). Layer 1 is used for extraction calls.
@@ -351,17 +417,24 @@ export function createDefaultExtractFacts(
     readonly systemPrompt: string;
     readonly userPayload: string;
     readonly targetTokens?: number;
+    readonly responseSchema?: Record<string, unknown>;
   }) => Promise<string | { readonly text: string }>,
 ): ExtractFactsFn {
   return async ({ text }: ExtractFactsParams): Promise<readonly FactEntry[]> => {
+    const now = Date.now();
     try {
       const raw = await summarizeText({
         layer: 1,
-        systemPrompt: DEFAULT_EXTRACTION_PROMPT,
+        systemPrompt: JSON_EXTRACTION_PROMPT,
         userPayload: text,
+        responseSchema: FACT_EXTRACTION_SCHEMA,
       });
       const output = typeof raw === 'string' ? raw : raw.text;
-      const { facts } = parseFactLines(output, 'extract-facts', Date.now());
+
+      const jsonFacts = tryParseJsonFacts(output, 'extract-facts', now);
+      if (jsonFacts !== null) return jsonFacts;
+
+      const { facts } = parseFactLines(output, 'extract-facts', now);
       return facts;
     } catch {
       return [];

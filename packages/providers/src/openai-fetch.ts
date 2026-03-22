@@ -118,6 +118,7 @@ export function createOpenAIChatFetcher(opts: OpenAIChatFetcherOptions) {
     maxOutputTokens: number | undefined,
     temperature: number,
     paramOverride?: TokenParamName,
+    responseFormat?: Record<string, unknown>,
   ): Promise<OpenAIChatResult> {
     const paramName = paramOverride ?? detectedParam ?? MAX_COMPLETION_TOKENS;
 
@@ -128,6 +129,9 @@ export function createOpenAIChatFetcher(opts: OpenAIChatFetcherOptions) {
     };
     if (maxOutputTokens !== undefined) {
       body[paramName] = maxOutputTokens;
+    }
+    if (responseFormat !== undefined) {
+      body['response_format'] = responseFormat;
     }
 
     const res = await fetchWithRetry(
@@ -158,7 +162,7 @@ export function createOpenAIChatFetcher(opts: OpenAIChatFetcherOptions) {
       ) {
         const otherParam = paramName === MAX_COMPLETION_TOKENS ? MAX_TOKENS : MAX_COMPLETION_TOKENS;
         detectedParam = otherParam;
-        return callApi(messages, maxOutputTokens, temperature, otherParam);
+        return callApi(messages, maxOutputTokens, temperature, otherParam, responseFormat);
       }
 
       throw new OpenAIApiError(
@@ -198,7 +202,9 @@ export function createOpenAIChatFetcher(opts: OpenAIChatFetcherOptions) {
     readonly messages: ReadonlyArray<{ readonly role: string; readonly content: string }>;
     readonly maxOutputTokens?: number;
     readonly temperature?: number;
+    /** When set, adds `response_format` to the request for structured JSON output. */
+    readonly responseFormat?: Record<string, unknown>;
   }): Promise<OpenAIChatResult> {
-    return callApi(params.messages, params.maxOutputTokens, params.temperature ?? 0.3);
+    return callApi(params.messages, params.maxOutputTokens, params.temperature ?? 0.3, undefined, params.responseFormat);
   };
 }

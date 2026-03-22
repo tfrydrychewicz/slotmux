@@ -92,6 +92,7 @@ export const semanticCompressAsOverflow: OverflowStrategyFn = async (items, budg
     embed: embedFn,
     anchorText,
     similarityThreshold: threshold,
+    ...(oc?.adaptiveThreshold !== undefined ? { adaptiveThreshold: oc.adaptiveThreshold } : {}),
     countItemTokens,
   });
 

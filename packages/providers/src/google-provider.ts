@@ -45,9 +45,16 @@ export function google(opts: SlotmuxProviderOptions): SlotmuxProvider {
 
   const summarizeText: SummarizeTextFn = opts.summarize
     ? wrapCustomSummarize(opts.summarize)
-    : async ({ systemPrompt, userPayload }) =>
+    : async ({ systemPrompt, userPayload, responseSchema }) =>
         limiter.run(async () => {
           const url = `${baseUrl}/models/${model}:generateContent?key=${opts.apiKey}`;
+          const generationConfig: Record<string, unknown> = {
+            temperature: 0.3,
+          };
+          if (responseSchema !== undefined) {
+            generationConfig['responseMimeType'] = 'application/json';
+            generationConfig['responseSchema'] = responseSchema;
+          }
           const res = await fetchWithRetry(
             url,
             {
@@ -56,9 +63,7 @@ export function google(opts: SlotmuxProviderOptions): SlotmuxProvider {
               body: JSON.stringify({
                 systemInstruction: { parts: [{ text: systemPrompt }] },
                 contents: [{ role: 'user', parts: [{ text: userPayload }] }],
-                generationConfig: {
-                  temperature: 0.3,
-                },
+                generationConfig,
               }),
             },
             { maxRetries: 0 },

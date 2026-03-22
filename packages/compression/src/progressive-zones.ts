@@ -28,22 +28,27 @@ export type ProgressiveZones = {
  * @param budgetTokens - Token budget for the slot
  * @param countItemsTokens - Token counter for a slice of items
  * @param configuredPreserveLastN - Explicit user override (returned as-is when set)
+ * @param estimateItemsTokens - Optional fast estimator (§9.3.1 Tier 0).
+ *   When provided, this is used instead of the exact counter for the
+ *   heuristic budget calculation — sufficient since the result is approximate.
  */
 export function computeDynamicPreserveLastN(
   items: readonly ProgressiveItem[],
   budgetTokens: number,
   countItemsTokens: (items: readonly ProgressiveItem[]) => number,
   configuredPreserveLastN?: number,
+  estimateItemsTokens?: (items: readonly ProgressiveItem[]) => number,
 ): number {
   if (configuredPreserveLastN !== undefined) return configuredPreserveLastN;
 
+  const counter = estimateItemsTokens ?? countItemsTokens;
   const targetRecentBudget = Math.floor(budgetTokens * 0.5);
   const sorted = [...items].sort((a, b) => a.createdAt - b.createdAt);
 
   let count = 0;
   let tokens = 0;
   for (let i = sorted.length - 1; i >= 0; i--) {
-    const itemTokens = countItemsTokens([sorted[i]!]);
+    const itemTokens = counter([sorted[i]!]);
     if (tokens + itemTokens > targetRecentBudget && count >= 4) break;
     tokens += itemTokens;
     count++;

@@ -975,4 +975,42 @@ describe('runProgressiveSummarize (§8.1)', () => {
     const l3Calls = layers.filter((l) => l === 3);
     expect(l3Calls).toHaveLength(0);
   });
+
+  it('uses estimateItemsTokens for chunking when provided (§9.3.1)', async () => {
+    const items = Array.from({ length: 30 }, (_, i) =>
+      mk(`m${String(i)}`, i, 'x'.repeat(300)),
+    );
+
+    const estimateCalls: number[] = [];
+    const estimator = (arr: readonly ProgressiveItem[]) => {
+      estimateCalls.push(arr.length);
+      return arr.reduce(
+        (sum, it) => sum + Math.ceil((typeof it.content === 'string' ? it.content.length : 0) / 3.5),
+        0,
+      );
+    };
+
+    let llmCalls = 0;
+    const summarizeText = vi.fn(async () => {
+      llmCalls++;
+      return 'summary';
+    });
+
+    await runProgressiveSummarize(items, 2000, {
+      preserveLastN: 4,
+      summarizeText,
+      countItemsTokens: countChars,
+      countTextTokens: (t) => t.length,
+      slot: 's',
+      importanceScorer: null,
+      estimateItemsTokens: estimator,
+      createId: (() => {
+        let n = 0;
+        return () => `e-${n++}`;
+      })(),
+    });
+
+    expect(estimateCalls.length).toBeGreaterThan(0);
+    expect(llmCalls).toBeGreaterThan(0);
+  });
 });

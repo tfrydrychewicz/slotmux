@@ -109,16 +109,20 @@ overflowConfig: {
 By default, non-recent items are split into OLD and MIDDLE zones using importance scoring — not purely by age. Items are scored before splitting:
 
 - **Low-importance items** (generic filler, small talk) go to the OLD zone and get compressed first.
-- **High-importance items** (containing proper nouns, decisions, preferences, numbers, dates) stay in the MIDDLE zone and survive longer.
+- **High-importance items** (containing specific facts, code, structured data) stay in the MIDDLE zone and survive longer.
 
-The default scorer (`computeItemImportance`) evaluates:
+The default scorer (`computeItemImportance`) uses **language-agnostic structural signals** — no hardcoded English keywords, so it works regardless of the user's language:
 
 | Signal | Score contribution |
 | --- | --- |
 | Entity density (capitalized multi-word sequences) | `density × 2` |
-| Decision language ("decided", "chose", "settled on") | `+1` |
-| Preference language ("I prefer", "my favorite") | `+1` |
-| Specific facts (numbers, dates, quoted strings) | `+1` |
+| Specific facts (numbers ≥ 2 digits, numeric dates, quoted strings) | `+1` |
+| Code blocks (fenced or inline) | `+1.5` |
+| URLs | `+1` |
+| Structured lists (bullet or numbered) | `+1` |
+| Key-value pairs (`key: value` or `key=value`) | `+0.5` per pair (max 1.5) |
+| Substantive length | `0–1` (scaled by `text.length / 500`) |
+| Lexical diversity (unique/total word ratio ≥ 0.7) | `+0.5` |
 
 You can provide a custom scorer or disable importance scoring entirely:
 
@@ -129,6 +133,20 @@ overflowConfig: {
 
   // Or disable importance scoring (pure chronological)
   // importanceScorer: null,
+}
+```
+
+For semantic or embedding-based scoring, pre-compute embeddings and look them up synchronously in the scorer (since `ImportanceScorerFn` is sync):
+
+```typescript
+const embeddings = await precomputeEmbeddings(items, embedFn);
+const anchor = await embedFn('important decision preference');
+
+overflowConfig: {
+  importanceScorer: (item) => {
+    const vec = embeddings.get(hash(item.content));
+    return vec ? cosineSimilarity(vec, anchor) : 0;
+  },
 }
 ```
 
@@ -231,6 +249,34 @@ overflowConfig: {
 | A string | The literal string provided. |
 | A `ContentItem` | The content of the provided item. |
 
+### Adaptive similarity thresholds
+
+Fixed similarity thresholds are brittle across embedding models and content types. Enable `adaptiveThreshold` to automatically compute the cutoff from the score distribution of each query:
+
+```typescript
+overflowConfig: {
+  embedFn: async (text) => embed(text),
+  anchorTo: 'lastUserMessage',
+  adaptiveThreshold: true,     // mean + 1 stddev
+  // adaptiveThreshold: 0.5,   // more permissive
+  // adaptiveThreshold: 2.0,   // stricter
+}
+```
+
+The algorithm computes `mean + k × stddev` over all non-pinned similarity scores. When combined with a fixed `similarityThreshold`, the effective threshold is `max(adaptive, fixed)`.
+
+<p align="center">
+  <img src="/semantic-adaptive-threshold.svg" alt="Adaptive similarity threshold" style="max-width: 500px; width: 100%;" />
+</p>
+
+The `computeAdaptiveThreshold` utility is also available directly:
+
+```typescript
+import { computeAdaptiveThreshold } from '@slotmux/compression';
+
+const threshold = computeAdaptiveThreshold(scores, 1.0);
+```
+
 ### Direct API
 
 ```typescript
@@ -243,6 +289,24 @@ const result = await runSemanticCompress({
   anchorEmbedding: await embed('What is the user asking about?'),
 });
 ```
+
+## Tiered token estimation
+
+The progressive summarizer uses a **three-tier token counting strategy** to balance accuracy and speed:
+
+<p align="center">
+  <img src="/token-count-tiers.svg" alt="Tiered token estimation" style="max-width: 540px; width: 100%;" />
+</p>
+
+| Tier | Method | Speed | Used for |
+| --- | --- | --- | --- |
+| Tier 0 | `ceil(charLength / 3.5)` | <1&#x00B5;s | Zone sizing, chunk boundaries, adaptive skip |
+| Tier 1 | FNV-1a-keyed cache &#x2192; BPE | <10&#x00B5;s | Final budget checks, snapshot metadata |
+| Tier 2 | Full BPE tokenization | 0.1&#x2013;1ms | Cache misses only |
+
+For heuristic decisions (how many items to keep in the recent zone, where to place chunk boundaries), the fast Tier 0 estimate is sufficient — it over-estimates by ~10% for English text, which is the safe direction for budget checks. Exact counting is reserved for budget-critical paths: final overflow enforcement, summary token enrichment, and snapshot metadata.
+
+Cache keys use FNV-1a (pure JS, synchronous) instead of SHA-256 — cache lookups don't need cryptographic collision resistance, and FNV-1a is ~50x faster. Snapshot integrity checksums remain SHA-256.
 
 ## Lossless compression
 

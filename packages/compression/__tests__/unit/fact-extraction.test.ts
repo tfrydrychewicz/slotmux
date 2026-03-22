@@ -428,8 +428,8 @@ describe('createDefaultExtractFacts', () => {
 
     expect(summarizeText).toHaveBeenCalledOnce();
     const call = summarizeText.mock.calls[0]![0];
-    expect(call.systemPrompt).toContain('FACT:');
-    expect(call.systemPrompt).toContain('subject | predicate | value');
+    expect(call.systemPrompt).toContain('Extract');
+    expect(call.responseSchema).toBeDefined();
     expect(call.userPayload).toBe('Alice lives in NYC');
     expect(facts).toHaveLength(2);
     expect(facts[0]!.subject).toBe('user');
@@ -467,5 +467,98 @@ describe('createDefaultExtractFacts', () => {
     const facts = await extractFacts({ text: 'hello', existingFacts: [] });
 
     expect(facts).toHaveLength(0);
+  });
+
+  it('parses JSON response when provider supports structured output (§8.4.1a)', async () => {
+    const jsonResponse = JSON.stringify({
+      facts: [
+        { subject: 'user', predicate: 'name', value: 'Alice', confidence: 0.95 },
+        { subject: 'user', predicate: 'city', value: 'NYC', confidence: 0.8 },
+      ],
+    });
+    const summarizeText = vi.fn(async () => jsonResponse);
+    const extractFacts = createDefaultExtractFacts(summarizeText);
+
+    const facts = await extractFacts({ text: 'Alice lives in NYC', existingFacts: [] });
+
+    expect(summarizeText).toHaveBeenCalledOnce();
+    const call = summarizeText.mock.calls[0]![0];
+    expect(call.responseSchema).toBeDefined();
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.subject).toBe('user');
+    expect(facts[0]!.value).toBe('Alice');
+    expect(facts[0]!.confidence).toBe(0.95);
+    expect(facts[1]!.value).toBe('NYC');
+  });
+
+  it('falls back to FACT: text parsing when JSON parsing fails (§8.4.1a)', async () => {
+    const summarizeText = vi.fn(async () =>
+      'FACT: user | name | Alice | 0.9\nFACT: user | city | NYC | 0.85',
+    );
+    const extractFacts = createDefaultExtractFacts(summarizeText);
+
+    const facts = await extractFacts({ text: 'Alice lives in NYC', existingFacts: [] });
+
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.subject).toBe('user');
+    expect(facts[0]!.value).toBe('Alice');
+  });
+
+  it('falls back to text parsing on malformed JSON', async () => {
+    const summarizeText = vi.fn(async () => '{ broken json');
+    const extractFacts = createDefaultExtractFacts(summarizeText);
+
+    const facts = await extractFacts({ text: 'test', existingFacts: [] });
+
+    expect(facts).toHaveLength(0);
+  });
+
+  it('clamps confidence to valid range in JSON response', async () => {
+    const jsonResponse = JSON.stringify({
+      facts: [
+        { subject: 'user', predicate: 'name', value: 'Bob', confidence: 1.5 },
+        { subject: 'user', predicate: 'age', value: '30', confidence: -0.5 },
+      ],
+    });
+    const summarizeText = vi.fn(async () => jsonResponse);
+    const extractFacts = createDefaultExtractFacts(summarizeText);
+
+    const facts = await extractFacts({ text: 'Bob is 30', existingFacts: [] });
+
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.confidence).toBe(1.0);
+    expect(facts[1]!.confidence).toBe(0.1);
+  });
+
+  it('filters out entries with missing required fields in JSON response', async () => {
+    const jsonResponse = JSON.stringify({
+      facts: [
+        { subject: 'user', predicate: 'name', value: 'Alice', confidence: 0.9 },
+        { subject: 'user', predicate: 'city' },
+        { subject: 'user' },
+      ],
+    });
+    const summarizeText = vi.fn(async () => jsonResponse);
+    const extractFacts = createDefaultExtractFacts(summarizeText);
+
+    const facts = await extractFacts({ text: 'test', existingFacts: [] });
+
+    expect(facts).toHaveLength(1);
+    expect(facts[0]!.value).toBe('Alice');
+  });
+
+  it('passes responseSchema to summarizeText for structured output', async () => {
+    const summarizeText = vi.fn(async () => JSON.stringify({ facts: [] }));
+    const extractFacts = createDefaultExtractFacts(summarizeText);
+
+    await extractFacts({ text: 'test', existingFacts: [] });
+
+    const call = summarizeText.mock.calls[0]![0];
+    expect(call.responseSchema).toEqual(expect.objectContaining({
+      type: 'object',
+      properties: expect.objectContaining({
+        facts: expect.any(Object),
+      }),
+    }));
   });
 });

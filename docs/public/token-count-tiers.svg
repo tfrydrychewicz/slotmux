@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 220" fill="none">
+  <defs>
+    <marker id="arrowGray" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#a3a3a3"/></marker>
+  </defs>
+  <style>text { font-family: system-ui, -apple-system, sans-serif; }</style>
+  <text x="260" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#e2e2e2">Tiered token estimation</text>
+  <text x="260" y="34" text-anchor="middle" font-size="9" fill="#a3a3a3">Fast estimates for heuristics, exact counts for budget enforcement</text>
+
+  <!-- Three tier boxes -->
+  <rect x="15" y="48" width="150" height="90" rx="6" fill="#1a1a2e" stroke="#3b82f6" stroke-width="1"/>
+  <text x="90" y="64" text-anchor="middle" font-size="8.5" font-weight="700" fill="#60a5fa">Tier 0</text>
+  <text x="90" y="76" text-anchor="middle" font-size="7.5" font-weight="600" fill="#e2e2e2">Fast estimate</text>
+  <text x="90" y="90" text-anchor="middle" font-size="7" fill="#94a3b8">ceil(chars / 3.5)</text>
+  <text x="90" y="103" text-anchor="middle" font-size="6.5" fill="#3b82f6">&lt;1&#x00B5;s per item</text>
+  <text x="90" y="118" text-anchor="middle" font-size="6.5" fill="#64748b">Zone sizing, adaptive</text>
+  <text x="90" y="128" text-anchor="middle" font-size="6.5" fill="#64748b">skip (first pass)</text>
+
+  <!-- Arrow 1 -->
+  <line x1="165" y1="93" x2="183" y2="93" stroke="#a3a3a3" stroke-width="1" marker-end="url(#arrowGray)"/>
+  <text x="174" y="86" text-anchor="middle" font-size="6" fill="#64748b">miss</text>
+
+  <rect x="185" y="48" width="150" height="90" rx="6" fill="#1a1a2e" stroke="#f59e0b" stroke-width="1"/>
+  <text x="260" y="64" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fbbf24">Tier 1</text>
+  <text x="260" y="76" text-anchor="middle" font-size="7.5" font-weight="600" fill="#e2e2e2">Cached BPE</text>
+  <text x="260" y="90" text-anchor="middle" font-size="7" fill="#94a3b8">FNV-1a key &#x2192; L1/L2</text>
+  <text x="260" y="103" text-anchor="middle" font-size="6.5" fill="#f59e0b">&lt;10&#x00B5;s per item</text>
+  <text x="260" y="118" text-anchor="middle" font-size="6.5" fill="#64748b">Budget enforcement,</text>
+  <text x="260" y="128" text-anchor="middle" font-size="6.5" fill="#64748b">snapshot metadata</text>
+
+  <!-- Arrow 2 -->
+  <line x1="335" y1="93" x2="353" y2="93" stroke="#a3a3a3" stroke-width="1" marker-end="url(#arrowGray)"/>
+  <text x="344" y="86" text-anchor="middle" font-size="6" fill="#64748b">miss</text>
+
+  <rect x="355" y="48" width="150" height="90" rx="6" fill="#1a1a2e" stroke="#ef4444" stroke-width="1"/>
+  <text x="430" y="64" text-anchor="middle" font-size="8.5" font-weight="700" fill="#f87171">Tier 2</text>
+  <text x="430" y="76" text-anchor="middle" font-size="7.5" font-weight="600" fill="#e2e2e2">Full BPE</text>
+  <text x="430" y="90" text-anchor="middle" font-size="7" fill="#94a3b8">tokenizer.count()</text>
+  <text x="430" y="103" text-anchor="middle" font-size="6.5" fill="#ef4444">0.1&#x2013;1ms per item</text>
+  <text x="430" y="118" text-anchor="middle" font-size="6.5" fill="#64748b">Cache misses only</text>
+
+  <!-- Usage section -->
+  <rect x="15" y="152" width="490" height="60" rx="6" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+  <text x="260" y="168" text-anchor="middle" font-size="8" font-weight="600" fill="#e2e2e2">How tiers are used in progressive summarization</text>
+
+  <rect x="30" y="178" width="140" height="24" rx="4" fill="#3b82f6" opacity="0.08" stroke="#3b82f6" stroke-width="1"/>
+  <text x="100" y="192" text-anchor="middle" font-size="7" font-weight="600" fill="#60a5fa">computePreserveLastN</text>
+  <text x="100" y="201" text-anchor="middle" font-size="6" fill="#3b82f6">Tier 0</text>
+
+  <rect x="190" y="178" width="140" height="24" rx="4" fill="#3b82f6" opacity="0.08" stroke="#3b82f6" stroke-width="1"/>
+  <text x="260" y="192" text-anchor="middle" font-size="7" font-weight="600" fill="#60a5fa">adaptiveZoneSkip</text>
+  <text x="260" y="201" text-anchor="middle" font-size="6" fill="#3b82f6">Tier 0 &#x2192; Tier 1 fallback</text>
+
+  <rect x="350" y="178" width="140" height="24" rx="4" fill="#f59e0b" opacity="0.08" stroke="#f59e0b" stroke-width="1"/>
+  <text x="420" y="192" text-anchor="middle" font-size="7" font-weight="600" fill="#fbbf24">enrichSummaryTokens</text>
+  <text x="420" y="201" text-anchor="middle" font-size="6" fill="#f59e0b">Tier 1 (exact)</text>
+</svg>

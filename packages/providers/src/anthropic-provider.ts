@@ -45,8 +45,27 @@ export function anthropic(opts: SlotmuxProviderOptions): SlotmuxProvider {
 
   const summarizeText: SummarizeTextFn = opts.summarize
     ? wrapCustomSummarize(opts.summarize)
-    : async ({ systemPrompt, userPayload }) =>
+    : async ({ systemPrompt, userPayload, responseSchema }) =>
         limiter.run(async () => {
+          const requestBody: Record<string, unknown> = {
+            model,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: userPayload }],
+            max_tokens: 4096,
+            temperature: 0.3,
+          };
+
+          if (responseSchema !== undefined) {
+            requestBody['tools'] = [
+              {
+                name: 'extract_facts',
+                description: 'Extract structured facts from the conversation.',
+                input_schema: responseSchema,
+              },
+            ];
+            requestBody['tool_choice'] = { type: 'tool', name: 'extract_facts' };
+          }
+
           const res = await fetchWithRetry(
             `${baseUrl}/messages`,
             {
@@ -56,19 +75,21 @@ export function anthropic(opts: SlotmuxProviderOptions): SlotmuxProvider {
                 'x-api-key': opts.apiKey,
                 'anthropic-version': '2023-06-01',
               },
-              body: JSON.stringify({
-                model,
-                system: systemPrompt,
-                messages: [{ role: 'user', content: userPayload }],
-                max_tokens: 4096,
-                temperature: 0.3,
-              }),
+              body: JSON.stringify(requestBody),
             },
             { maxRetries: 0 },
           );
           const json = (await res.json()) as {
-            content?: Array<{ type: string; text?: string }>;
+            content?: Array<{ type: string; text?: string; input?: unknown }>;
           };
+
+          if (responseSchema !== undefined) {
+            const toolBlock = json.content?.find((b) => b.type === 'tool_use');
+            if (toolBlock?.input !== undefined) {
+              return JSON.stringify(toolBlock.input);
+            }
+          }
+
           const textBlock = json.content?.find((b) => b.type === 'text');
           return textBlock?.text ?? '';
         });

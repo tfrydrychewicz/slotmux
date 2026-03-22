@@ -69,7 +69,9 @@ if (existsSync(outputPath)) {
 // ── Load input rows ──────────────────────────────────────────────────
 
 const inputLines = readFileSync(inputPath, 'utf-8').trim().split('\n').filter(Boolean);
-const rows: BenchmarkRun[] = inputLines.map((line) => JSON.parse(line) as BenchmarkRun);
+const rows: BenchmarkRun[] = inputLines
+  .map((line) => JSON.parse(line) as Record<string, unknown>)
+  .filter((obj) => obj['_type'] === undefined) as unknown as BenchmarkRun[];
 console.log(`Loaded ${String(rows.length)} runs from ${inputPath}`);
 
 // ── Judge helper ─────────────────────────────────────────────────────

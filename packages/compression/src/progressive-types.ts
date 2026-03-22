@@ -60,6 +60,11 @@ export type ProgressiveSummarizeTextFn = (params: {
   readonly systemPrompt: string;
   readonly userPayload: string;
   readonly targetTokens?: number;
+  /**
+   * When set, the provider should request structured JSON output (§8.4.1a).
+   * The caller falls back to text parsing if JSON response parsing fails.
+   */
+  readonly responseSchema?: Record<string, unknown>;
 }) => Promise<string | SummarizeTextResult>;
 
 export type ProgressivePrompts = {

@@ -89,17 +89,54 @@ const completed = new Set<string>();
 if (existsSync(resultsPath)) {
   const lines = readFileSync(resultsPath, 'utf-8').trim().split('\n').filter(Boolean);
   for (const line of lines) {
-    const row = JSON.parse(line) as BenchmarkRun;
-    completed.add(`${row.questionId}::${row.strategy}::${String(row.budgetTokens)}`);
+    const row = JSON.parse(line) as Record<string, unknown>;
+    if (row['_type'] !== undefined) continue;
+    const run = row as unknown as BenchmarkRun;
+    completed.add(`${run.questionId}::${run.strategy}::${String(run.budgetTokens)}`);
   }
   console.log(`Resuming: ${String(completed.size)} runs already completed`);
 }
 
-// ── LLM helper ───────────────────────────────────────────────────────
+// ── LLM usage tracking ───────────────────────────────────────────────
 
 type ChatMessage = { role: string; content: string };
 
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+function estimateMessagesTokens(messages: readonly ChatMessage[]): number {
+  let total = 0;
+  for (const m of messages) {
+    total += estimateTokens(m.content) + 4;
+  }
+  return total;
+}
+
+let runLlmRequests = 0;
+let runLlmTokensSent = 0;
+
+let globalLlmRequests = 0;
+let globalLlmTokensSent = 0;
+
+function resetRunCounters(): void {
+  runLlmRequests = 0;
+  runLlmTokensSent = 0;
+}
+
+function recordLlmCall(tokensSent: number): void {
+  runLlmRequests++;
+  runLlmTokensSent += tokensSent;
+  globalLlmRequests++;
+  globalLlmTokensSent += tokensSent;
+}
+
+// ── LLM helper ───────────────────────────────────────────────────────
+
 async function callOpenAI(messages: ChatMessage[], model: string): Promise<string> {
+  const tokensSent = estimateMessagesTokens(messages);
+  recordLlmCall(tokensSent);
+
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -139,7 +176,20 @@ let skipCount = 0;
 console.log(`\nBenchmark matrix: ${String(STRATEGIES.length)} strategies × ${String(BUDGETS.length)} budgets × ${String(questions.length)} questions = ${String(totalRuns)} runs`);
 console.log(`Run ID: ${RUN_ID}\n`);
 
-const provider = openai({ apiKey: OPENAI_API_KEY, compressionModel: COMPRESSION_MODEL });
+const rawProvider = openai({ apiKey: OPENAI_API_KEY, compressionModel: COMPRESSION_MODEL });
+
+const provider: typeof rawProvider = {
+  ...rawProvider,
+  ...(rawProvider.summarizeText !== undefined
+    ? {
+        summarizeText: async (params) => {
+          const tokensSent = estimateTokens(params.systemPrompt) + estimateTokens(params.userPayload) + 4;
+          recordLlmCall(tokensSent);
+          return rawProvider.summarizeText!(params);
+        },
+      }
+    : {}),
+};
 
 for (const strategy of STRATEGIES) {
   for (const budget of BUDGETS) {
@@ -152,6 +202,7 @@ for (const strategy of STRATEGIES) {
 
       runCount++;
       const progress = `[${String(runCount + skipCount)}/${String(totalRuns)}]`;
+      resetRunCounters();
 
       try {
         const systemBudget = 200;
@@ -220,6 +271,8 @@ for (const strategy of STRATEGIES) {
           question: entry.question,
           expectedAnswer: entry.answer,
           modelAnswer,
+          llmRequests: runLlmRequests,
+          llmTokensSent: runLlmTokensSent,
         };
 
         appendFileSync(resultsPath, JSON.stringify(result) + '\n');
@@ -227,7 +280,8 @@ for (const strategy of STRATEGIES) {
 
         console.log(
           `${progress} ${strategy}@${String(budget)} q=${entry.question_id} ` +
-          `tokens=${String(result.actualTokens)} build=${String(result.buildTimeMs)}ms`,
+          `tokens=${String(result.actualTokens)} build=${String(result.buildTimeMs)}ms ` +
+          `llm_reqs=${String(runLlmRequests)} llm_tokens_sent=${String(runLlmTokensSent)}`,
         );
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -243,6 +297,8 @@ for (const strategy of STRATEGIES) {
           question: entry.question,
           expectedAnswer: entry.answer,
           modelAnswer: `[ERROR] ${msg}`,
+          llmRequests: runLlmRequests,
+          llmTokensSent: runLlmTokensSent,
         };
         appendFileSync(resultsPath, JSON.stringify(failResult) + '\n');
         completed.add(key);
@@ -251,5 +307,16 @@ for (const strategy of STRATEGIES) {
   }
 }
 
+const llmUsageSummary = {
+  _type: 'llm-usage-summary' as const,
+  totalLlmRequests: globalLlmRequests,
+  totalLlmTokensSent: globalLlmTokensSent,
+  totalRuns: runCount,
+  skippedRuns: skipCount,
+};
+appendFileSync(resultsPath, JSON.stringify(llmUsageSummary) + '\n');
+
 console.log(`\nDone. ${String(runCount)} new runs, ${String(skipCount)} skipped (already complete).`);
+console.log(`Total LLM requests: ${String(globalLlmRequests)}`);
+console.log(`Total LLM tokens sent (estimated): ${String(globalLlmTokensSent)}`);
 console.log(`Results: ${resultsPath}`);
