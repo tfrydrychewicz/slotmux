@@ -264,11 +264,33 @@ export async function runMapReduceSummarize(
   const nextSummaryTime = (): number => minRecentTime - 1000 - tick++ * 1000;
 
   if (bulk.length === 0) {
-    const chain = recentWork;
-    while (sumTok(chain) > budgetTokens) {
-      const dropIdx = recentWork.findIndex((i) => !i.pinned);
-      if (dropIdx < 0) break;
-      recentWork = recentWork.filter((_, j) => j !== dropIdx);
+    if (sumTok(recentWork) > budgetTokens) {
+      const toDrop: ProgressiveItem[] = [];
+      while (sumTok(recentWork) > budgetTokens) {
+        const dropIdx = recentWork.findIndex((i) => !i.pinned);
+        if (dropIdx < 0) break;
+        toDrop.push(recentWork[dropIdx]!);
+        recentWork = recentWork.filter((_, j) => j !== dropIdx);
+      }
+      if (toDrop.length > 0) {
+        const dropPayload = toDrop.map(plain).filter((t) => t.length > 0).join('\n\n');
+        if (dropPayload.length > 0) {
+          const dropCap = Math.max(64, Math.floor(summaryCap * 0.3));
+          const dropWords = Math.floor(dropCap * 0.75);
+          const dropPrompt =
+            promptPack.map +
+            `\n\nTarget output length: approximately ${String(dropWords)} words (~${String(dropCap)} tokens). ` +
+            'Use the available space to preserve as many specific facts, names, numbers, dates, and user preferences as possible.';
+          try {
+            const dropText = await mapChunk({ systemPrompt: dropPrompt, userPayload: dropPayload });
+            const dropIds = toDrop.map((x) => x.id);
+            const dropSummary = makeSummary(dropText, dropIds, options.slot, createId, nextSummaryTime());
+            recentWork = [dropSummary, ...recentWork];
+          } catch {
+            /* summarization failure is non-fatal; items are already removed */
+          }
+        }
+      }
     }
     return recentWork.sort((a, b) => a.createdAt - b.createdAt);
   }
@@ -316,14 +338,34 @@ export async function runMapReduceSummarize(
     head !== undefined ? [head, ...recentWork] : recentWork;
 
   let out = chain();
-  while (sumTok(out) > budgetTokens) {
-    const dropIdx = recentWork.findIndex((i) => !i.pinned);
-    if (dropIdx >= 0) {
+  if (sumTok(out) > budgetTokens && recentWork.length > 0) {
+    const toDrop: ProgressiveItem[] = [];
+    while (sumTok(chain()) > budgetTokens) {
+      const dropIdx = recentWork.findIndex((i) => !i.pinned);
+      if (dropIdx < 0) break;
+      toDrop.push(recentWork[dropIdx]!);
       recentWork = recentWork.filter((_, j) => j !== dropIdx);
-      out = chain();
-      continue;
     }
-    break;
+    if (toDrop.length > 0) {
+      const dropPayload = toDrop.map(plain).filter((t) => t.length > 0).join('\n\n');
+      if (dropPayload.length > 0) {
+        const dropCap = Math.max(64, Math.floor(summaryCap * 0.3));
+        const dropWords = Math.floor(dropCap * 0.75);
+        const dropPrompt =
+          promptPack.map +
+          `\n\nTarget output length: approximately ${String(dropWords)} words (~${String(dropCap)} tokens). ` +
+          'Use the available space to preserve as many specific facts, names, numbers, dates, and user preferences as possible.';
+        try {
+          const dropText = await mapChunk({ systemPrompt: dropPrompt, userPayload: dropPayload });
+          const dropIds = toDrop.map((x) => x.id);
+          const dropSummary = makeSummary(dropText, dropIds, options.slot, createId, nextSummaryTime());
+          recentWork = [dropSummary, ...recentWork];
+        } catch {
+          /* summarization failure is non-fatal */
+        }
+      }
+      out = chain();
+    }
   }
 
   return out.sort((a, b) => a.createdAt - b.createdAt);

@@ -73,6 +73,16 @@ export type RunProgressiveSummarizeOptions = {
    * provide a custom function (e.g. regex-based domain extraction).
    */
   readonly extractFacts?: ExtractFactsFn;
+  /**
+   * Half-life in milliseconds for time-based fact confidence decay (§8.4).
+   *
+   * When set, older facts lose effective confidence over time, causing them
+   * to be dropped first when the fact budget is tight. The decay formula is
+   * `confidence * 0.5^(age / halfLifeMs)`.
+   *
+   * Default: `undefined` (no decay — raw confidence is used as-is).
+   */
+  readonly factDecayHalfLifeMs?: number;
 };
 
 function plain(item: ProgressiveItem): string {
@@ -247,7 +257,7 @@ export async function runProgressiveSummarize(
   const maxConc = options.maxConcurrency ?? Infinity;
 
   const factStore = new FactStore();
-  const { extractFacts } = options;
+  const { extractFacts, factDecayHalfLifeMs } = options;
 
   const summarizeChunk = async (
     chunk: readonly ProgressiveItem[],
@@ -323,7 +333,7 @@ export async function runProgressiveSummarize(
   let recentWork = [...recent];
 
   const makeFactItem = (): ProgressiveItem | null => {
-    const rendered = factStore.render(factBudgetChars);
+    const rendered = factStore.render(factBudgetChars, factDecayHalfLifeMs);
     if (rendered.length === 0) return null;
     return {
       id: createId(),
@@ -375,7 +385,7 @@ export async function runProgressiveSummarize(
       const l3Cap = Math.max(MIN_PER_CHUNK_TOKENS, Math.floor(summaryCap * 0.15));
 
       let l3Prompt = promptPack.layer3;
-      const pinnedFactBlock = factStore.renderAsFactLines(factBudgetChars);
+      const pinnedFactBlock = factStore.renderAsFactLines(factBudgetChars, factDecayHalfLifeMs);
       if (pinnedFactBlock.length > 0) {
         l3Prompt +=
           '\n\nThe following facts MUST be preserved verbatim in your output:\n' +
@@ -409,13 +419,26 @@ export async function runProgressiveSummarize(
     }
   }
 
-  while (sumTok(out) > budgetTokens) {
-    const dropIdx = recentWork.findIndex((i) => !i.pinned);
-    if (dropIdx < 0) {
-      break;
+  if (sumTok(out) > budgetTokens && recentWork.length > 0) {
+    const toDrop: ProgressiveItem[] = [];
+    while (sumTok(chain()) > budgetTokens) {
+      const dropIdx = recentWork.findIndex((i) => !i.pinned);
+      if (dropIdx < 0) break;
+      toDrop.push(recentWork[dropIdx]!);
+      recentWork = recentWork.filter((_, j) => j !== dropIdx);
     }
-    recentWork = recentWork.filter((_, j) => j !== dropIdx);
-    out = chain();
+
+    if (toDrop.length > 0) {
+      const dropCap = Math.max(MIN_PER_CHUNK_TOKENS, perMidCap);
+      const dropSummary = await summarizeChunk(
+        toDrop, 1, dropCap, promptPack.layer1,
+        totalOldChunks + freshMidChunks.length + 1,
+      );
+      if (dropSummary !== null) {
+        l1Summaries = [...l1Summaries, dropSummary];
+      }
+      out = chain();
+    }
   }
 
   return out.sort((a, b) => a.createdAt - b.createdAt);

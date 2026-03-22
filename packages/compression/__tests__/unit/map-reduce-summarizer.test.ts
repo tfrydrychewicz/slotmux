@@ -112,7 +112,7 @@ describe('runMapReduceSummarize', () => {
       createId: () => 's0',
     });
 
-    expect(mapChunk).toHaveBeenCalledTimes(1);
+    expect(mapChunk).toHaveBeenCalledTimes(2);
     expect(reduceMerge).not.toHaveBeenCalled();
     expect(out.some((i) => i.content === 'only')).toBe(true);
   });
