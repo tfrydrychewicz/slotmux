@@ -9,7 +9,7 @@
   "dependencies": {
     "slotmux": "workspace:*",
     "@slotmux/providers": "workspace:*",
-    "gpt-tokenizer": "^2.8.1"
+    "gpt-tokenizer": "^3.4.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

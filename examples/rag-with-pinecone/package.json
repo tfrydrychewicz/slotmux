@@ -11,7 +11,7 @@
     "@slotmux/providers": "workspace:*",
     "@slotmux/plugin-rag": "workspace:*",
     "@pinecone-database/pinecone": "^4.0.0",
-    "gpt-tokenizer": "^2.8.1"
+    "gpt-tokenizer": "^3.4.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

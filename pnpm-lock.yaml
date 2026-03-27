@@ -93,8 +93,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/providers
       gpt-tokenizer:
-        specifier: ^2.8.1
-        version: 2.9.0
+        specifier: ^3.4.0
+        version: 3.4.0
       slotmux:
         specifier: workspace:*
         version: link:../../packages/core
@@ -128,8 +128,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/providers
       gpt-tokenizer:
-        specifier: ^2.8.1
-        version: 2.9.0
+        specifier: ^3.4.0
+        version: 3.4.0
       slotmux:
         specifier: workspace:*
         version: link:../../packages/core
@@ -147,8 +147,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/providers
       gpt-tokenizer:
-        specifier: ^2.8.1
-        version: 2.9.0
+        specifier: ^3.4.0
+        version: 3.4.0
       slotmux:
         specifier: workspace:*
         version: link:../../packages/core
@@ -200,8 +200,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/providers
       gpt-tokenizer:
-        specifier: ^2.8.1
-        version: 2.9.0
+        specifier: ^3.4.0
+        version: 3.4.0
       slotmux:
         specifier: workspace:*
         version: link:../../packages/core
@@ -253,8 +253,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/providers
       gpt-tokenizer:
-        specifier: ^2.8.1
-        version: 2.9.0
+        specifier: ^3.4.0
+        version: 3.4.0
       slotmux:
         specifier: workspace:*
         version: link:../../packages/core
@@ -2701,9 +2701,6 @@ packages:
   gopd@1.2.0:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
-
-  gpt-tokenizer@2.9.0:
-    resolution: {integrity: sha512-YSpexBL/k4bfliAzMrRqn3M6+it02LutVyhVpDeMKrC/O9+pCe/5s8U2hYKa2vFLD5/vHhsKc8sOn/qGqII8Kg==}
 
   gpt-tokenizer@3.4.0:
     resolution: {integrity: sha512-wxFLnhIXTDjYebd9A9pGl3e31ZpSypbpIJSOswbgop5jLte/AsZVDvjlbEuVFlsqZixVKqbcoNmRlFDf6pz/UQ==}
@@ -6765,8 +6762,6 @@ snapshots:
       slash: 3.0.0
 
   gopd@1.2.0: {}
-
-  gpt-tokenizer@2.9.0: {}
 
   gpt-tokenizer@3.4.0: {}
 
