@@ -11,7 +11,7 @@
   "devDependencies": {
     "@slotmux/providers": "workspace:*",
     "slotmux": "workspace:*",
-    "typedoc": "~0.27.9",
+    "typedoc": "~0.28.18",
     "typedoc-plugin-markdown": "~4.4.2",
     "vitepress": "^1.6.3"
   }
